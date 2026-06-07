@@ -27,9 +27,9 @@ function boatIconHtml(heading: number) {
       justify-content:center;
       transform:rotate(${heading}deg);
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
-      font-size:36px;
+      font-size:32px;
       line-height:1;
-    ">⛵</div>`
+    ">🛥️</div>`
 }
 
 export default function MapView() {
