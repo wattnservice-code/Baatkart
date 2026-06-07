@@ -3,9 +3,6 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useMapStore } from '../store/useMapStore'
 
-// OSM as global fallback base layer
-const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-const OSM_ATTR = '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
 
 // Kartverket sjøkart WMS — official Norwegian nautical charts
 const SJOKAART_WMS = 'https://wms.geonorge.no/skwms1/wms.sjokartraster2'
@@ -51,7 +48,6 @@ export default function MapView() {
       zoomControl: false,
     })
 
-    L.tileLayer(OSM_URL, { attribution: OSM_ATTR, maxZoom: 19 }).addTo(map)
 
     L.tileLayer.wms(SJOKAART_WMS, {
       layers: 'sjokartraster2',
