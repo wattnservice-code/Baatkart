@@ -1,17 +1,261 @@
 @import "tailwindcss";
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, #root {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
+  width: 100%; height: 100%;
   overflow: hidden;
+  background: #0f172a;
+  font-family: system-ui, sans-serif;
 }
 
-/* Leaflet z-index fix */
+.app-root {
+  position: relative;
+  width: 100%; height: 100%;
+}
+
+/* ── Leaflet fixes ── */
 .leaflet-pane { z-index: 10; }
 .leaflet-top, .leaflet-bottom { z-index: 20; }
+
+/* ── Status bar ── */
+.status-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 30;
+  background: rgba(15,23,42,0.92);
+  backdrop-filter: blur(6px);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  font-size: 13px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.status-item { display: flex; align-items: center; gap: 5px; }
+.status-icon { color: #64748b; flex-shrink: 0; }
+.status-value { font-variant-numeric: tabular-nums; font-weight: 500; }
+.status-unit { color: #64748b; font-size: 11px; }
+.status-divider { width: 1px; height: 16px; background: rgba(255,255,255,0.12); }
+.status-tracking { color: #f87171; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; animation: blink 1.2s infinite; }
+@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+/* ── Floating controls ── */
+.map-controls {
+  position: absolute;
+  right: 12px;
+  bottom: 60px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fab {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: rgba(15,23,42,0.92);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.fab:active { transform: scale(0.94); }
+.fab-active { background: #2563eb; border-color: #3b82f6; }
+
+/* ── Menu panel ── */
+.menu-panel {
+  position: absolute;
+  right: 68px;
+  bottom: 60px;
+  z-index: 31;
+  background: rgba(15,23,42,0.96);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  color: white;
+  min-width: 220px;
+  padding: 8px 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.menu-title {
+  padding: 8px 16px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.menu-section {
+  padding: 4px 16px 2px;
+  font-size: 11px;
+  color: #64748b;
+  letter-spacing: 0.06em;
+}
+.menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+.menu-item:active { background: rgba(255,255,255,0.08); }
+.menu-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 4px 0; }
+
+/* ── Add-spot banner ── */
+.map-banner {
+  position: absolute;
+  top: 12px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  background: #2563eb;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  white-space: nowrap;
+}
+.map-banner button { background: none; border: none; color: white; cursor: pointer; display: flex; }
+
+/* ── Fishing spot marker ── */
+.spot-marker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(15,23,42,0.85);
+  border: 1px solid rgba(59,130,246,0.5);
+  border-radius: 999px;
+  padding: 3px 8px 3px 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.spot-emoji { font-size: 16px; line-height: 1; }
+.spot-label { font-size: 12px; color: white; font-weight: 500; }
+
+/* ── Dialog ── */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.dialog {
+  background: #1e293b;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 340px;
+  color: white;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+}
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.dialog-input {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: white;
+  padding: 10px 12px;
+  font-size: 15px;
+  outline: none;
+}
+.dialog-input:focus { border-color: #3b82f6; }
+.dialog-input::placeholder { color: #64748b; }
+.dialog-coords { font-size: 11px; color: #64748b; margin: 6px 0 16px; }
+.dialog-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn-secondary {
+  padding: 8px 16px; border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: white; cursor: pointer; font-size: 14px;
+}
+.btn-primary {
+  padding: 8px 16px; border-radius: 8px;
+  background: #2563eb; border: none;
+  color: white; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 500;
+}
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Update banner ── */
+.update-banner {
+  position: absolute;
+  top: 12px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  background: #1e293b;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: white;
+  padding: 8px 8px 8px 16px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.update-btn {
+  background: #2563eb; border: none;
+  color: white; padding: 5px 12px;
+  border-radius: 999px; cursor: pointer;
+  font-size: 12px; font-weight: 600;
+}
+
+/* ── Landscape mode ── */
+@media (orientation: landscape) {
+  .status-bar {
+    top: 0; bottom: auto;
+    right: auto; left: 0;
+    flex-direction: column;
+    width: 80px;
+    height: 100%;
+    padding: 12px 8px;
+    border-top: none;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    font-size: 11px;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .status-divider { width: 40px; height: 1px; }
+  .status-item { flex-direction: column; gap: 2px; text-align: center; }
+
+  .map-controls {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .menu-panel {
+    right: 68px;
+    bottom: 12px;
+  }
+}
