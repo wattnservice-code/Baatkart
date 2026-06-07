@@ -3,7 +3,11 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useMapStore } from '../store/useMapStore'
 
-// Kartverket sjøkartraster (Norwegian nautical charts, free/public)
+// OSM as global fallback base layer
+const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+const OSM_ATTR = '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
+
+// Kartverket sjøkartraster on top — covers Norwegian waters, transparent elsewhere
 const SJOKAART_URL =
   'https://opencache.statkart.no/gatekeeper/gk/gk.open_nib?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=sjokartraster&STYLE=default&FORMAT=image/png&TILEMATRIXSET=googlemaps&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}'
 const SJOKAART_ATTR = '&copy; <a href="https://kartverket.no">Kartverket</a>'
@@ -48,10 +52,13 @@ export default function MapView() {
       zoomControl: false,
     })
 
+    L.tileLayer(OSM_URL, { attribution: OSM_ATTR, maxZoom: 19 }).addTo(map)
+
     L.tileLayer(SJOKAART_URL, {
       attribution: SJOKAART_ATTR,
       maxZoom: 19,
       tileSize: 256,
+      errorTileUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
     }).addTo(map)
 
     L.tileLayer(SEAMARK_URL, {
