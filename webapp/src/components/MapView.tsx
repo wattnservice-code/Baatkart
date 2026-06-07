@@ -3,9 +3,12 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useMapStore } from '../store/useMapStore'
 
+// OSM as fallback base layer
+const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+const OSM_ATTR = '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
 
-// Kartverket sjøkart WMS — official Norwegian nautical charts
-const SJOKAART_WMS = 'https://wms.geonorge.no/skwms1/wms.sjokartraster2'
+// Kartverket sjøkart via tile cache (CORS-friendly)
+const SJOKAART_URL = 'https://cache.kartverket.no/v1/wmts/1.0.0/sjokartraster/default/webmercator/{z}/{y}/{x}.png'
 const SJOKAART_ATTR = '&copy; <a href="https://kartverket.no">Kartverket</a>'
 
 // OpenSeaMap seamark overlay (buoys, rocks, lights etc)
@@ -49,13 +52,12 @@ export default function MapView() {
     })
 
 
-    L.tileLayer.wms(SJOKAART_WMS, {
-      layers: 'sjokartraster2',
-      format: 'image/png',
-      transparent: false,
-      version: '1.3.0',
+    L.tileLayer(OSM_URL, { attribution: OSM_ATTR, maxZoom: 19 }).addTo(map)
+
+    L.tileLayer(SJOKAART_URL, {
       attribution: SJOKAART_ATTR,
       maxZoom: 19,
+      opacity: 1,
     }).addTo(map)
 
     L.tileLayer(SEAMARK_URL, {
