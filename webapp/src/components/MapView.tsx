@@ -9,7 +9,7 @@ const OSM_ATTR = '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
 
 // Kartverket sjøkartraster on top — covers Norwegian waters, transparent elsewhere
 const SJOKAART_URL =
-  'https://opencache.statkart.no/gatekeeper/gk/gk.open_nib?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=sjokartraster&STYLE=default&FORMAT=image/png&TILEMATRIXSET=googlemaps&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}'
+  'https://opencache.statkart.no/gatekeeper/gk/gk.open_nib?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=sjokartraster&STYLE=default&FORMAT=image/png&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}'
 const SJOKAART_ATTR = '&copy; <a href="https://kartverket.no">Kartverket</a>'
 
 // OpenSeaMap seamark overlay (buoys, rocks, lights etc)
