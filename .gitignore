@@ -9,3 +9,6 @@ __pycache__/
 .DS_Store
 dist/
 build/
+
+# Local Netlify folder
+.netlify

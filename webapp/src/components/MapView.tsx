@@ -2,187 +2,396 @@ import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useMapStore } from '../store/useMapStore'
-import FishingSpotDialog from './FishingSpotDialog'
+import SpotDialog from './SpotDialog'
 
-const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-const OSM_ATTR = '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
-const SJOKAART_URL = 'https://cache.kartverket.no/v1/wmts/1.0.0/sjokartraster/default/webmercator/{z}/{y}/{x}.png'
+const OSM_URL   = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+const OSM_ATTR  = '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
+const DARK_URL  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+const DARK_ATTR = '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>'
+const SJOKAART_URL  = 'https://cache.kartverket.no/v1/wmts/1.0.0/sjokartraster/default/webmercator/{z}/{y}/{x}.png'
 const SJOKAART_ATTR = '&copy; <a href="https://kartverket.no">Kartverket</a>'
-const SEAMARK_URL = 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png'
-const SEAMARK_ATTR = '&copy; <a href="https://openseamap.org">OpenSeaMap</a>'
+const SEAMARK_URL   = 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png'
+const SEAMARK_ATTR  = '&copy; <a href="https://openseamap.org">OpenSeaMap</a>'
 
-const BOAT_SIZE = 48
-
-function boatIconHtml(heading: number) {
-  return `
-    <div style="
-      width:${BOAT_SIZE}px;
-      height:${BOAT_SIZE}px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      transform:rotate(${heading}deg);
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
-      font-size:32px;
-      line-height:1;
-    ">🛥️</div>`
+function boatSize(zoom: number): number {
+  if (zoom >= 16) return 30
+  if (zoom >= 14) return 24
+  if (zoom >= 12) return 20
+  return 16
 }
 
-function fishingSpotIcon(name: string) {
+function ringRadius(zoom: number): number {
+  if (zoom >= 15) return 100
+  if (zoom >= 13) return 500
+  if (zoom >= 11) return 1000
+  return 5000
+}
+
+function formatRingLabel(m: number): string {
+  return m >= 1000 ? `${m / 1000} km` : `${m} m`
+}
+
+function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000
+  const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180
+  const Δφ = (lat2 - lat1) * Math.PI / 180, Δλ = (lng2 - lng1) * Math.PI / 180
+  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+}
+
+// Compute endpoint given start, heading (degrees), distance (meters)
+function destPoint(lat: number, lng: number, heading: number, meters: number): L.LatLngExpression {
+  const R = 6371000
+  const δ = meters / R
+  const θ = (heading * Math.PI) / 180
+  const φ1 = (lat * Math.PI) / 180
+  const λ1 = (lng * Math.PI) / 180
+  const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(θ))
+  const λ2 = λ1 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2))
+  return [φ2 * 180 / Math.PI, λ2 * 180 / Math.PI]
+}
+
+function boatSvg(heading: number, size: number) {
+  return `<div style="
+    width:${size}px;height:${size}px;
+    transform:rotate(${heading}deg);
+    filter:drop-shadow(0 0 3px rgba(0,0,0,0.9)) drop-shadow(0 2px 5px rgba(0,0,0,0.8));
+  ">
+    <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 3 L34 36 L20 29 L6 36 Z" fill="white" stroke="#0f172a" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M20 8 L31 33 L20 27 L9 33 Z" fill="#38bdf8" stroke="none"/>
+      <circle cx="20" cy="20" r="3.5" fill="#0f172a"/>
+    </svg>
+  </div>`
+}
+
+function ringLabelIcon(radius: number) {
+  const text = formatRingLabel(radius)
   return L.divIcon({
     className: '',
-    html: `<div class="spot-marker">
-      <span class="spot-emoji">🎣</span>
-      <span class="spot-label">${name}</span>
-    </div>`,
-    iconSize: [120, 40],
-    iconAnchor: [20, 20],
+    html: `<div class="ring-label">${text}</div>`,
+    iconSize: [60, 18], iconAnchor: [30, 18],
   })
 }
 
 export default function MapView() {
-  const mapRef = useRef<L.Map | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const boatMarkerRef = useRef<L.Marker | null>(null)
-  const trackLineRef = useRef<L.Polyline | null>(null)
-  const spotMarkersRef = useRef<Map<string, L.Marker>>(new Map())
+  const mapRef          = useRef<L.Map | null>(null)
+  const containerRef    = useRef<HTMLDivElement>(null)
+  const boatMarkerRef   = useRef<L.Marker | null>(null)
+  const trackLineRef    = useRef<L.Polyline | null>(null)
+  const courseLineRef   = useRef<L.Polyline | null>(null)
+  const rangeRingRef    = useRef<L.Circle | null>(null)
+  const ringLabelRef    = useRef<L.Marker | null>(null)
+  const mobTrackLineRef   = useRef<L.Polyline | null>(null)
+  const mobMarkerRef      = useRef<L.Marker | null>(null)
+  const anchorMarkerRef   = useRef<L.Marker | null>(null)
+  const anchorCircleRef   = useRef<L.Circle | null>(null)
+  const navLineRef        = useRef<L.Polyline | null>(null)
+  const navMarkerRef      = useRef<L.Marker | null>(null)
+  const previewLineRef    = useRef<L.Polyline | null>(null)
+  const previewMarkerRef  = useRef<L.Marker | null>(null)
+  const baseTileRef     = useRef<L.TileLayer | null>(null)
+  const kartvTileRef    = useRef<L.TileLayer | null>(null)
+  const seamarkTileRef  = useRef<L.TileLayer | null>(null)
 
   const [pendingSpot, setPendingSpot] = useState<{ lat: number; lng: number } | null>(null)
 
-  const position = useMapStore((s) => s.position)
-  const track = useMapStore((s) => s.track)
-  const fishingSpots = useMapStore((s) => s.fishingSpots)
-  const followBoat = useMapStore((s) => s.followBoat)
-  const addingSpot = useMapStore((s) => s.addingSpot)
-  const setFollowBoat = useMapStore((s) => s.setFollowBoat)
-  const removeFishingSpot = useMapStore((s) => s.removeFishingSpot)
+  const position         = useMapStore((s) => s.position)
+  const track            = useMapStore((s) => s.track)
+  const mobTrack         = useMapStore((s) => s.mobTrack)
+  const mobPoint         = useMapStore((s) => s.mobPoint)
+  const followBoat       = useMapStore((s) => s.followBoat)
+  const addingSpot       = useMapStore((s) => s.addingSpot)
+  const flyTo            = useMapStore((s) => s.flyTo)
+  const navPreview       = useMapStore((s) => s.navPreview)
+  const navTarget        = useMapStore((s) => s.navTarget)
+  const darkMode         = useMapStore((s) => s.darkMode)
+  const seamarkVisible   = useMapStore((s) => s.seamarkVisible)
+  const anchorPoint      = useMapStore((s) => s.anchorPoint)
+  const anchorRadius     = useMapStore((s) => s.anchorRadius)
+  const anchorAlarm      = useMapStore((s) => s.anchorAlarm)
+  const customRingRadius = useMapStore((s) => s.customRingRadius)
+  const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
+  const setFlyTo         = useMapStore((s) => s.setFlyTo)
 
   // Init map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
+    const map = L.map(containerRef.current, { center: [59.9, 10.7], zoom: 13, zoomControl: false })
 
-    const map = L.map(containerRef.current, {
-      center: [59.9, 10.7],
-      zoom: 13,
-      zoomControl: false,
-    })
-
-    L.tileLayer(OSM_URL, { attribution: OSM_ATTR, maxZoom: 19 }).addTo(map)
-    L.tileLayer(SJOKAART_URL, { attribution: SJOKAART_ATTR, maxZoom: 19 }).addTo(map)
-    L.tileLayer(SEAMARK_URL, { attribution: SEAMARK_ATTR, maxZoom: 19, opacity: 1 }).addTo(map)
-    L.control.zoom({ position: 'bottomright' }).addTo(map)
-
+    const isDark = useMapStore.getState().darkMode
+    baseTileRef.current = L.tileLayer(isDark ? DARK_URL : OSM_URL, {
+      attribution: isDark ? DARK_ATTR : OSM_ATTR, maxZoom: 19,
+    }).addTo(map)
+    kartvTileRef.current = L.tileLayer(SJOKAART_URL, {
+      attribution: SJOKAART_ATTR, maxZoom: 19, opacity: isDark ? 0.5 : 0.7,
+    }).addTo(map)
+    seamarkTileRef.current = L.tileLayer(SEAMARK_URL, { attribution: SEAMARK_ATTR, maxZoom: 19 }).addTo(map)
+    L.control.zoom({ position: 'topright' }).addTo(map)
     map.on('dragstart', () => setFollowBoat(false))
+
+    map.on('zoom', () => {
+      const zoom = map.getZoom()
+      const pos = useMapStore.getState().position
+      const customR = useMapStore.getState().customRingRadius
+
+      if (pos && boatMarkerRef.current) {
+        const size = boatSize(zoom)
+        boatMarkerRef.current.setIcon(L.divIcon({
+          className: '', html: boatSvg(pos.heading, size),
+          iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+        }))
+      }
+      if (rangeRingRef.current && pos) {
+        const r = customR ?? ringRadius(zoom)
+        rangeRingRef.current.setRadius(r)
+        const labelPos = destPoint(pos.lat, pos.lng, 0, r)
+        ringLabelRef.current?.setLatLng(labelPos)
+        const el = ringLabelRef.current?.getElement()?.querySelector('.ring-label')
+        if (el) el.textContent = formatRingLabel(r)
+      }
+    })
 
     mapRef.current = map
     return () => { map.remove(); mapRef.current = null }
   }, [setFollowBoat])
 
-  // Handle map click for adding fishing spot
+  // Dark/day mode tile switch
   useEffect(() => {
-    if (!mapRef.current) return
-    const map = mapRef.current
+    if (!baseTileRef.current || !kartvTileRef.current) return
+    baseTileRef.current.setUrl(darkMode ? DARK_URL : OSM_URL)
+    kartvTileRef.current.setOpacity(darkMode ? 0.5 : 0.7)
+  }, [darkMode])
 
-    const onClick = (e: L.LeafletMouseEvent) => {
-      if (!addingSpot) return
-      setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng })
-    }
+  // Seamark toggle
+  useEffect(() => {
+    if (!seamarkTileRef.current) return
+    seamarkTileRef.current.setOpacity(seamarkVisible ? 1 : 0)
+  }, [seamarkVisible])
 
-    map.on('click', onClick)
-    if (addingSpot) {
-      map.getContainer().style.cursor = 'crosshair'
-    } else {
-      map.getContainer().style.cursor = ''
-    }
+  // Fly-to command
+  useEffect(() => {
+    if (!mapRef.current || !flyTo) return
+    mapRef.current.flyTo([flyTo.lat, flyTo.lng], Math.max(mapRef.current.getZoom(), 14), { animate: true, duration: 1 })
+    setFlyTo(null)
+  }, [flyTo, setFlyTo])
 
-    return () => { map.off('click', onClick) }
-  }, [addingSpot])
-
-  // Update boat position
+  // Boat position + course line + range ring + ring label
   useEffect(() => {
     if (!mapRef.current || !position) return
+    const map = mapRef.current
     const latlng: L.LatLngExpression = [position.lat, position.lng]
+    const zoom = map.getZoom()
+    const radius = customRingRadius ?? ringRadius(zoom)
 
+    // Boat marker
+    const size = boatSize(zoom)
     if (!boatMarkerRef.current) {
-      const icon = L.divIcon({
-        className: '',
-        html: boatIconHtml(position.heading),
-        iconSize: [BOAT_SIZE, BOAT_SIZE],
-        iconAnchor: [BOAT_SIZE / 2, BOAT_SIZE / 2],
-      })
-      boatMarkerRef.current = L.marker(latlng, { icon, zIndexOffset: 1000 }).addTo(mapRef.current)
-      mapRef.current.setView(latlng, mapRef.current.getZoom(), { animate: false })
+      const icon = L.divIcon({ className: '', html: boatSvg(position.heading, size), iconSize: [size, size], iconAnchor: [size / 2, size / 2] })
+      boatMarkerRef.current = L.marker(latlng, { icon, zIndexOffset: 1000 }).addTo(map)
+      map.setView(latlng, zoom, { animate: false })
     } else {
       boatMarkerRef.current.setLatLng(latlng)
-      const el = boatMarkerRef.current.getElement()
-      if (el) {
-        const inner = el.querySelector('div') as HTMLElement
-        if (inner) inner.style.transform = `rotate(${position.heading}deg)`
-      }
-      if (followBoat) {
-        mapRef.current.panTo(latlng, { animate: true, duration: 0.5 })
-      }
+      const inner = boatMarkerRef.current.getElement()?.querySelector('div') as HTMLElement | null
+      if (inner) inner.style.transform = `rotate(${position.heading}deg)`
+      if (followBoat) map.panTo(latlng, { animate: true, duration: 0.5 })
     }
-  }, [position, followBoat])
 
-  // Update track
+    // Course predictor line (2 min ahead, min 300m)
+    const courseLen = Math.max(300, Math.min(position.speed * 120, 3000))
+    const courseEnd = destPoint(position.lat, position.lng, position.heading, courseLen)
+    if (!courseLineRef.current) {
+      courseLineRef.current = L.polyline([latlng, courseEnd], { color: '#fb923c', weight: 3, opacity: 0.9, dashArray: '8, 6' }).addTo(map)
+    } else {
+      courseLineRef.current.setLatLngs([latlng, courseEnd])
+    }
+
+    // Range ring
+    if (!rangeRingRef.current) {
+      rangeRingRef.current = L.circle(latlng, {
+        radius, color: '#94a3b8', weight: 1.5, opacity: 0.6,
+        fill: true, fillColor: '#94a3b8', fillOpacity: 0.04,
+      }).addTo(map)
+    } else {
+      rangeRingRef.current.setLatLng(latlng).setRadius(radius)
+    }
+
+    // Ring label (north edge, red text)
+    const labelPos = destPoint(position.lat, position.lng, 0, radius)
+    if (!ringLabelRef.current) {
+      ringLabelRef.current = L.marker(labelPos, {
+        icon: ringLabelIcon(radius),
+        interactive: false, zIndexOffset: 400,
+      }).addTo(map)
+    } else {
+      ringLabelRef.current.setLatLng(labelPos)
+      const el = ringLabelRef.current.getElement()?.querySelector('.ring-label')
+      if (el) el.textContent = formatRingLabel(radius)
+    }
+  }, [position, followBoat, customRingRadius])
+
+  // Track line
   useEffect(() => {
     if (!mapRef.current) return
-    const points = track.map((p) => [p.lat, p.lng] as L.LatLngExpression)
+    const pts = track.map((p) => [p.lat, p.lng] as L.LatLngExpression)
     if (!trackLineRef.current) {
-      trackLineRef.current = L.polyline(points, { color: '#3b82f6', weight: 3, opacity: 0.8 }).addTo(mapRef.current)
+      trackLineRef.current = L.polyline(pts, { color: '#3b82f6', weight: 3, opacity: 0.8 }).addTo(mapRef.current)
     } else {
-      trackLineRef.current.setLatLngs(points)
+      trackLineRef.current.setLatLngs(pts)
     }
   }, [track])
 
-  // Sync fishing spot markers
+  // MOB rescue track (red)
+  useEffect(() => {
+    if (!mapRef.current) return
+    if (mobTrack.length < 2) {
+      mobTrackLineRef.current?.remove()
+      mobTrackLineRef.current = null
+      return
+    }
+    const pts = mobTrack.map((p) => [p.lat, p.lng] as L.LatLngExpression)
+    if (!mobTrackLineRef.current) {
+      mobTrackLineRef.current = L.polyline(pts, { color: '#ef4444', weight: 3, opacity: 0.9, dashArray: '8, 5' }).addTo(mapRef.current)
+    } else {
+      mobTrackLineRef.current.setLatLngs(pts)
+    }
+  }, [mobTrack])
+
+  // Navigation line
+  useEffect(() => {
+    if (!mapRef.current) return
+    if (!navTarget) {
+      navLineRef.current?.remove(); navLineRef.current = null
+      navMarkerRef.current?.remove(); navMarkerRef.current = null
+      return
+    }
+    const targetLL: L.LatLngExpression = [navTarget.lat, navTarget.lng]
+    if (!navMarkerRef.current) {
+      const icon = L.divIcon({ className: '', html: `<div class="nav-target-marker"><div class="nav-target-dot"></div></div>`, iconSize: [20, 20], iconAnchor: [10, 10] })
+      navMarkerRef.current = L.marker(targetLL, { icon, zIndexOffset: 1500 }).addTo(mapRef.current)
+    } else {
+      navMarkerRef.current.setLatLng(targetLL)
+    }
+    const from: L.LatLngExpression = position ? [position.lat, position.lng] : targetLL
+    if (!navLineRef.current) {
+      navLineRef.current = L.polyline([from, targetLL], { color: '#4ade80', weight: 4, opacity: 1, dashArray: '14, 8' }).addTo(mapRef.current)
+    } else {
+      navLineRef.current.setLatLngs([from, targetLL])
+    }
+    if (position) {
+      const dist = haversineM(position.lat, position.lng, navTarget.lat, navTarget.lng)
+      if (dist < 800) {
+        // Close: show both boat and target
+        mapRef.current.fitBounds(L.latLngBounds([from, targetLL]), { padding: [100, 100], maxZoom: 16, animate: true })
+      } else {
+        // Far: center on boat, zoom to show direction — not the full route
+        const zoom = dist < 4000 ? 14 : 13
+        mapRef.current.setView([position.lat, position.lng], zoom, { animate: true })
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navTarget])
+
+  useEffect(() => {
+    if (!navLineRef.current || !navTarget || !position) return
+    navLineRef.current.setLatLngs([[position.lat, position.lng], [navTarget.lat, navTarget.lng]])
+  }, [position, navTarget])
+
+  // Nav preview line (blue dashed, no overlay)
+  useEffect(() => {
+    if (!mapRef.current) return
+    if (!navPreview) {
+      previewLineRef.current?.remove(); previewLineRef.current = null
+      previewMarkerRef.current?.remove(); previewMarkerRef.current = null
+      return
+    }
+    const targetLL: L.LatLngExpression = [navPreview.lat, navPreview.lng]
+    if (!previewMarkerRef.current) {
+      const icon = L.divIcon({ className: '', html: `<div class="nav-target-marker"><div class="nav-target-dot" style="background:#60a5fa;box-shadow:0 0 8px rgba(96,165,250,0.8)"></div></div>`, iconSize: [20, 20], iconAnchor: [10, 10] })
+      previewMarkerRef.current = L.marker(targetLL, { icon, zIndexOffset: 1500 }).addTo(mapRef.current)
+    } else {
+      previewMarkerRef.current.setLatLng(targetLL)
+    }
+    const from: L.LatLngExpression = position ? [position.lat, position.lng] : targetLL
+    if (!previewLineRef.current) {
+      previewLineRef.current = L.polyline([from, targetLL], { color: '#60a5fa', weight: 3, opacity: 0.8, dashArray: '10, 8' }).addTo(mapRef.current)
+    } else {
+      previewLineRef.current.setLatLngs([from, targetLL])
+    }
+    if (position) {
+      // Show both boat and destination — user wants to see the full route before confirming
+      mapRef.current.fitBounds(L.latLngBounds([from, targetLL]), {
+        padding: [80, 100], maxZoom: 15, animate: true,
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navPreview])
+
+  useEffect(() => {
+    if (!previewLineRef.current || !navPreview || !position) return
+    previewLineRef.current.setLatLngs([[position.lat, position.lng], [navPreview.lat, navPreview.lng]])
+  }, [position, navPreview])
+
+  // Anchor marker + alarm circle
+  useEffect(() => {
+    if (!mapRef.current) return
+    if (!anchorPoint) {
+      anchorMarkerRef.current?.remove(); anchorMarkerRef.current = null
+      anchorCircleRef.current?.remove(); anchorCircleRef.current = null
+      return
+    }
+    const latlng: L.LatLngExpression = [anchorPoint.lat, anchorPoint.lng]
+    const color = anchorAlarm ? '#ef4444' : '#f59e0b'
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="font-size:24px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.7))">⚓</div>`,
+      iconSize: [28, 28], iconAnchor: [14, 14],
+    })
+    if (!anchorMarkerRef.current) {
+      anchorMarkerRef.current = L.marker(latlng, { icon, zIndexOffset: 900 }).addTo(mapRef.current)
+    } else {
+      anchorMarkerRef.current.setLatLng(latlng)
+    }
+    if (!anchorCircleRef.current) {
+      anchorCircleRef.current = L.circle(latlng, {
+        radius: anchorRadius, color, weight: 2, opacity: 0.8,
+        fill: true, fillColor: color, fillOpacity: 0.08,
+      }).addTo(mapRef.current)
+    } else {
+      anchorCircleRef.current.setLatLng(latlng).setRadius(anchorRadius)
+        .setStyle({ color, fillColor: color })
+    }
+  }, [anchorPoint, anchorRadius, anchorAlarm])
+
+  // MOB marker
+  useEffect(() => {
+    if (!mapRef.current) return
+    if (!mobPoint) {
+      mobMarkerRef.current?.remove(); mobMarkerRef.current = null
+      return
+    }
+    const icon = L.divIcon({ className: '', html: `<div class="mob-map-marker"><div class="mob-map-pulse"></div><div class="mob-map-dot">⚠</div></div>`, iconSize: [40, 40], iconAnchor: [20, 20] })
+    if (!mobMarkerRef.current) {
+      mobMarkerRef.current = L.marker([mobPoint.lat, mobPoint.lng], { icon, zIndexOffset: 2000 }).addTo(mapRef.current)
+    } else {
+      mobMarkerRef.current.setLatLng([mobPoint.lat, mobPoint.lng]).setIcon(icon)
+    }
+  }, [mobPoint])
+
+  // Click to add spot
   useEffect(() => {
     if (!mapRef.current) return
     const map = mapRef.current
-    const existing = spotMarkersRef.current
-
-    // Remove deleted spots
-    existing.forEach((marker, id) => {
-      if (!fishingSpots.find((s) => s.id === id)) {
-        marker.remove()
-        existing.delete(id)
-      }
-    })
-
-    // Add new spots
-    fishingSpots.forEach((spot) => {
-      if (!existing.has(spot.id)) {
-        const marker = L.marker([spot.lat, spot.lng], { icon: fishingSpotIcon(spot.name) })
-          .addTo(map)
-          .bindPopup(`
-            <div style="text-align:center">
-              <strong>${spot.name}</strong><br/>
-              <small>${spot.lat.toFixed(5)}, ${spot.lng.toFixed(5)}</small><br/>
-              <button onclick="window.deleteSpot('${spot.id}')" style="margin-top:6px;padding:2px 10px;background:#ef4444;color:white;border:none;border-radius:4px;cursor:pointer">Slett</button>
-            </div>
-          `)
-        existing.set(spot.id, marker)
-      }
-    })
-
-    // Global delete handler for popup button
-    ;(window as unknown as Record<string, unknown>).deleteSpot = (id: string) => {
-      removeFishingSpot(id)
-      map.closePopup()
-    }
-  }, [fishingSpots, removeFishingSpot])
+    const onClick = (e: L.LeafletMouseEvent) => { if (addingSpot) setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng }) }
+    map.on('click', onClick)
+    map.getContainer().style.cursor = addingSpot ? 'crosshair' : ''
+    return () => { map.off('click', onClick) }
+  }, [addingSpot])
 
   return (
     <>
       <div ref={containerRef} className="w-full h-full" />
-      {pendingSpot && (
-        <FishingSpotDialog
-          lat={pendingSpot.lat}
-          lng={pendingSpot.lng}
-          onClose={() => setPendingSpot(null)}
-        />
-      )}
+      {pendingSpot && <SpotDialog lat={pendingSpot.lat} lng={pendingSpot.lng} onClose={() => setPendingSpot(null)} />}
     </>
   )
 }

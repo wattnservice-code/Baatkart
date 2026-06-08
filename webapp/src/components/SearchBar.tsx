@@ -1,0 +1,87 @@
+import { useState, useRef } from 'react'
+import { Search, X, Navigation, MapPin } from 'lucide-react'
+import { useMapStore } from '../store/useMapStore'
+
+interface NominatimResult {
+  place_id: number
+  display_name: string
+  lat: string
+  lon: string
+}
+
+interface Props {
+  onClose: () => void
+}
+
+export default function SearchBar({ onClose }: Props) {
+  const [query, setQuery]     = useState('')
+  const [results, setResults] = useState<NominatimResult[]>([])
+  const [loading, setLoading] = useState(false)
+  const debounceRef           = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const setNavPreview = useMapStore((s) => s.setNavPreview)
+  const setFlyTo      = useMapStore((s) => s.setFlyTo)
+
+  const search = async (q: string) => {
+    if (q.trim().length < 2) { setResults([]); return }
+    setLoading(true)
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&countrycodes=no`
+      const res = await fetch(url, { headers: { 'Accept-Language': 'no' } })
+      setResults(await res.json())
+    } catch { setResults([]) }
+    setLoading(false)
+  }
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const q = e.target.value
+    setQuery(q)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => search(q), 400)
+  }
+
+  const selectResult = (r: NominatimResult, nav: boolean) => {
+    const lat = parseFloat(r.lat)
+    const lng = parseFloat(r.lon)
+    const name = r.display_name.split(',')[0]
+    if (nav) setNavPreview({ lat, lng, name })
+    else setFlyTo({ lat, lng })
+    onClose()
+  }
+
+  return (
+    <div className="search-overlay">
+      <div className="search-input-row">
+        <Search size={17} className="search-icon-left" />
+        <input
+          autoFocus
+          className="search-input"
+          placeholder="Søk etter sted i Norge..."
+          value={query}
+          onChange={onChange}
+        />
+        {loading && <span className="search-spinner">↻</span>}
+        <button className="search-close-btn" onClick={onClose}><X size={17} /></button>
+      </div>
+      {results.length > 0 && (
+        <ul className="search-results">
+          {results.map((r) => (
+            <li key={r.place_id} className="search-result-item">
+              <span className="search-result-name">
+                {r.display_name.split(',').slice(0, 2).join(', ')}
+              </span>
+              <div className="search-result-btns">
+                <button title="Vis på kart" onClick={() => selectResult(r, false)}>
+                  <MapPin size={15} />
+                </button>
+                <button title="Naviger hit" onClick={() => selectResult(r, true)}>
+                  <Navigation size={15} />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}

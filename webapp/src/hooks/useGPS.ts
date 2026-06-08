@@ -1,11 +1,14 @@
 import { useEffect, useRef } from 'react'
 import { useMapStore } from '../store/useMapStore'
 
-const ALPHA = 0.25 // EMA smoothing — lower = smoother, higher = more responsive
+const ALPHA = 0.25       // EMA for position
+const SPEED_ALPHA = 0.2  // EMA for speed — lower = smoother
+const MIN_SPEED = 0.3    // m/s below this = show 0 (filters GPS noise ~1 km/h)
 
 export function useGPS() {
   const setPosition = useMapStore((s) => s.setPosition)
   const smoothed = useRef<{ lat: number; lng: number } | null>(null)
+  const smoothedSpeed = useRef<number>(0)
   const lastPos = useRef<{ lat: number; lng: number; timestamp: number } | null>(null)
 
   useEffect(() => {
@@ -44,12 +47,17 @@ export function useGPS() {
           }
         }
 
+        // EMA smoothing on speed, then threshold to kill GPS noise
+        const rawSpeed = speed ?? 0
+        smoothedSpeed.current = SPEED_ALPHA * rawSpeed + (1 - SPEED_ALPHA) * smoothedSpeed.current
+        const filteredSpeed = smoothedSpeed.current < MIN_SPEED ? 0 : smoothedSpeed.current
+
         lastPos.current = { lat, lng, timestamp }
 
         setPosition({
           lat: smoothed.current.lat,
           lng: smoothed.current.lng,
-          speed: speed ?? 0,
+          speed: filteredSpeed,
           heading,
           accuracy,
           timestamp,

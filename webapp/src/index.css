@@ -9,29 +9,32 @@ html, body, #root {
   font-family: system-ui, sans-serif;
 }
 
+/* ── Root layout: map on top, status bar below ── */
 .app-root {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100%; height: 100%;
 }
 
-/* ── Leaflet fixes ── */
-.leaflet-pane { z-index: 10; }
-.leaflet-top, .leaflet-bottom { z-index: 20; }
+.map-wrapper {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
 
-/* ── Status bar ── */
+/* ── Status bar – dedicated strip, no z-index battle ── */
 .status-bar {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  z-index: 30;
-  background: rgba(15,23,42,0.92);
-  backdrop-filter: blur(6px);
+  flex-shrink: 0;
+  background: #0f172a;
+  border-top: 1px solid rgba(255,255,255,0.10);
   color: white;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 8px 16px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
   font-size: 13px;
-  border-top: 1px solid rgba(255,255,255,0.08);
 }
 
 .status-item { display: flex; align-items: center; gap: 5px; }
@@ -42,12 +45,12 @@ html, body, #root {
 .status-tracking { color: #f87171; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; animation: blink 1.2s infinite; }
 @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
-/* ── Floating controls ── */
+/* ── Floating controls – inside map-wrapper ── */
 .map-controls {
   position: absolute;
   right: 12px;
-  bottom: 60px;
-  z-index: 30;
+  bottom: 12px;
+  z-index: 400;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -58,7 +61,7 @@ html, body, #root {
   border-radius: 50%;
   background: rgba(15,23,42,0.92);
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.15);
   color: white;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
@@ -68,12 +71,19 @@ html, body, #root {
 .fab:active { transform: scale(0.94); }
 .fab-active { background: #2563eb; border-color: #3b82f6; }
 
+/* ── Menu backdrop – catches taps on map to close menu ── */
+.menu-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 399;
+}
+
 /* ── Menu panel ── */
 .menu-panel {
   position: absolute;
   right: 68px;
-  bottom: 60px;
-  z-index: 31;
+  bottom: 12px;
+  z-index: 400;
   background: rgba(15,23,42,0.96);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255,255,255,0.12);
@@ -82,33 +92,25 @@ html, body, #root {
   min-width: 220px;
   padding: 8px 0;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
 }
 .menu-title {
   padding: 8px 16px 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #64748b;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 11px; font-weight: 600;
+  color: #64748b; letter-spacing: 0.08em; text-transform: uppercase;
 }
 .menu-section {
   padding: 4px 16px 2px;
-  font-size: 11px;
-  color: #64748b;
-  letter-spacing: 0.06em;
+  font-size: 11px; color: #64748b; letter-spacing: 0.06em;
 }
 .menu-item {
   width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: flex; align-items: center; gap: 10px;
   padding: 10px 16px;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 14px;
-  cursor: pointer;
-  text-align: left;
+  background: none; border: none;
+  color: white; font-size: 14px;
+  cursor: pointer; text-align: left;
   transition: background 0.1s;
 }
 .menu-item:active { background: rgba(255,255,255,0.08); }
@@ -119,16 +121,13 @@ html, body, #root {
   position: absolute;
   top: 12px; left: 50%;
   transform: translateX(-50%);
-  z-index: 30;
+  z-index: 400;
   background: #2563eb;
   color: white;
   padding: 8px 16px;
   border-radius: 999px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 500;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 500;
   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
   white-space: nowrap;
 }
@@ -136,9 +135,7 @@ html, body, #root {
 
 /* ── Fishing spot marker ── */
 .spot-marker {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  display: flex; align-items: center; gap: 4px;
   background: rgba(15,23,42,0.85);
   border: 1px solid rgba(59,130,246,0.5);
   border-radius: 999px;
@@ -151,42 +148,28 @@ html, body, #root {
 
 /* ── Dialog ── */
 .dialog-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
+  position: fixed; inset: 0; z-index: 500;
   background: rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   padding: 16px;
 }
 .dialog {
   background: #1e293b;
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 16px;
-  padding: 20px;
-  width: 100%;
-  max-width: 340px;
-  color: white;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+  border-radius: 16px; padding: 20px;
+  width: 100%; max-width: 340px;
+  color: white; box-shadow: 0 16px 48px rgba(0,0,0,0.6);
 }
 .dialog-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  font-size: 16px;
-  font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 16px; font-size: 16px; font-weight: 600;
 }
 .dialog-input {
   width: 100%;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 8px;
-  color: white;
-  padding: 10px 12px;
-  font-size: 15px;
-  outline: none;
+  border-radius: 8px; color: white;
+  padding: 10px 12px; font-size: 15px; outline: none;
 }
 .dialog-input:focus { border-color: #3b82f6; }
 .dialog-input::placeholder { color: #64748b; }
@@ -202,60 +185,512 @@ html, body, #root {
   padding: 8px 16px; border-radius: 8px;
   background: #2563eb; border: none;
   color: white; cursor: pointer; font-size: 14px;
-  display: flex; align-items: center; gap: 6px;
-  font-weight: 500;
+  display: flex; align-items: center; gap: 6px; font-weight: 500;
 }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ── Update banner ── */
-.update-banner {
+/* ── MOB button ── */
+.mob-btn {
+  position: absolute;
+  top: 12px; left: 12px;
+  z-index: 400;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: #dc2626;
+  border: 3px solid #fca5a5;
+  color: white;
+  font-size: 13px; font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(220,38,38,0.5);
+  animation: mob-idle 2.5s infinite;
+  transition: transform 0.1s;
+}
+.mob-btn:active { transform: scale(0.93); }
+.mob-btn-active {
+  background: #7f1d1d;
+  border-color: #dc2626;
+  animation: none;
+  cursor: default;
+}
+@keyframes mob-idle {
+  0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.5); }
+  50%      { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
+}
+
+/* ── MOB overlay ── */
+.mob-overlay {
   position: absolute;
   top: 12px; left: 50%;
   transform: translateX(-50%);
-  z-index: 50;
-  background: #1e293b;
-  border: 1px solid rgba(255,255,255,0.1);
+  z-index: 450;
+  background: #dc2626;
   color: white;
-  padding: 8px 8px 8px 16px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  border-radius: 14px;
+  padding: 10px 16px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  min-width: 220px;
+  text-align: center;
+  animation: mob-flash 1s infinite;
 }
-.update-btn {
+@keyframes mob-flash {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.85; }
+}
+.mob-title { font-size: 15px; font-weight: 800; letter-spacing: 0.06em; }
+.mob-stats { display: flex; gap: 12px; font-size: 13px; font-weight: 600; }
+.mob-stat { background: rgba(0,0,0,0.25); border-radius: 6px; padding: 2px 8px; }
+.mob-elapsed { opacity: 0.85; }
+.mob-actions { display: flex; gap: 8px; margin-top: 2px; }
+.mob-goto {
+  background: rgba(255,255,255,0.2); color: white;
+  border: 1px solid rgba(255,255,255,0.4); border-radius: 8px;
+  padding: 5px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.mob-clear {
+  background: white; color: #dc2626;
+  border: none; border-radius: 8px;
+  padding: 5px 14px; font-size: 13px; font-weight: 700;
+  cursor: pointer;
+}
+
+/* ── Spot list panel ── */
+.spot-panel {
+  position: absolute;
+  bottom: 70px; right: 68px;
+  z-index: 401;
+  background: rgba(15,23,42,0.97);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  color: white;
+  width: 280px;
+  max-height: 340px;
+  display: flex; flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+.spot-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 14px; font-weight: 600;
+}
+.spot-panel-header button { background: none; border: none; color: #94a3b8; cursor: pointer; display:flex; }
+.spot-panel-empty { padding: 20px 16px; color: #64748b; font-size: 13px; text-align: center; }
+.spot-panel-list { overflow-y: auto; }
+.spot-panel-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.spot-panel-item:last-child { border-bottom: none; }
+.spot-panel-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.spot-panel-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.spot-panel-coords { font-size: 11px; color: #64748b; }
+.spot-panel-actions { display: flex; gap: 6px; flex-shrink: 0; margin-left: 8px; }
+.spot-panel-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.spot-panel-goto { background: #1e40af; color: white; }
+.spot-panel-nav  { background: #2563eb; color: white; }
+.spot-panel-delete { background: rgba(255,255,255,0.08); color: #94a3b8; }
+
+/* ── Navigation overlay ── */
+.nav-overlay {
+  position: absolute;
+  bottom: 12px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 402;
+  background: rgba(15,23,42,0.96);
+  border: 1px solid #f59e0b;
+  border-radius: 14px;
+  color: white;
+  padding: 10px 16px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  min-width: 220px; text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.nav-arrived { border-color: #4ade80; }
+.nav-name { font-size: 13px; font-weight: 700; color: #f59e0b; }
+.nav-arrived .nav-name { color: #4ade80; }
+.nav-stats { display: flex; gap: 10px; }
+.nav-stat { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.nav-arrived-text { font-size: 13px; color: #4ade80; font-weight: 600; }
+.nav-stop {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  color: #94a3b8; border-radius: 8px;
+  padding: 4px 12px; font-size: 12px; cursor: pointer; margin-top: 2px;
+}
+
+/* ── Nav preview bar ── */
+.nav-preview-bar {
+  position: absolute;
+  bottom: 12px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 402;
+  background: rgba(15,23,42,0.96);
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  color: white;
+  padding: 12px 16px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  min-width: 240px; text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.nav-preview-info {
+  display: flex; flex-direction: column; gap: 3px; align-items: center;
+}
+.nav-preview-name { font-size: 14px; font-weight: 700; color: #60a5fa; }
+.nav-preview-dist { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.nav-preview-actions { display: flex; gap: 10px; }
+.nav-preview-cancel {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  color: #94a3b8; border-radius: 8px;
+  padding: 6px 14px; font-size: 13px; cursor: pointer;
+}
+.nav-preview-start {
   background: #2563eb; border: none;
-  color: white; padding: 5px 12px;
-  border-radius: 999px; cursor: pointer;
-  font-size: 12px; font-weight: 600;
+  color: white; border-radius: 8px;
+  padding: 6px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.nav-preview-start:active { opacity: 0.85; }
+
+.day .nav-preview-bar {
+  background: rgba(248,250,252,0.97);
+  border-color: #3b82f6;
+  color: #0f172a;
+}
+.day .nav-preview-dist { color: #0f172a; }
+
+/* ── Nav target marker ── */
+.nav-target-marker { position: relative; width: 20px; height: 20px; }
+.nav-target-dot {
+  position: absolute; inset: 0;
+  background: #f59e0b;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(245,158,11,0.8);
 }
 
-/* ── Landscape mode ── */
+/* ── MOB map marker ── */
+.mob-map-marker { position: relative; width: 40px; height: 40px; }
+.mob-map-pulse {
+  position: absolute; inset: 0;
+  background: rgba(220,38,38,0.4);
+  border-radius: 50%;
+  animation: mob-map-pulse 1.2s infinite;
+}
+@keyframes mob-map-pulse {
+  0%   { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.mob-map-dot {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 28px; height: 28px;
+  background: #dc2626;
+  border: 3px solid white;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; line-height: 1;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+/* ── Nav ETA stat ── */
+.nav-eta { color: #86efac; font-size: 14px !important; }
+
+/* ── Day mode overrides ── */
+.day .status-bar {
+  background: rgba(248,250,252,0.97);
+  border-top-color: rgba(0,0,0,0.10);
+  color: #0f172a;
+}
+.day .status-icon { color: #94a3b8; }
+.day .status-divider { background: rgba(0,0,0,0.12); }
+.day .status-tracking { color: #dc2626; }
+
+.day .fab {
+  background: rgba(248,250,252,0.97);
+  border-color: rgba(0,0,0,0.12);
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.day .fab-active { background: #2563eb; border-color: #3b82f6; color: white; }
+
+.day .menu-panel {
+  background: rgba(248,250,252,0.98);
+  border-color: rgba(0,0,0,0.10);
+  color: #0f172a;
+}
+.day .menu-title { color: #94a3b8; }
+.day .menu-section { color: #94a3b8; }
+.day .menu-item { color: #0f172a; }
+.day .menu-divider { background: rgba(0,0,0,0.08); }
+
+.day .spot-panel {
+  background: rgba(248,250,252,0.98);
+  border-color: rgba(0,0,0,0.10);
+  color: #0f172a;
+}
+.day .spot-panel-header { border-bottom-color: rgba(0,0,0,0.08); }
+.day .spot-panel-item { border-bottom-color: rgba(0,0,0,0.06); }
+.day .spot-panel-name { color: #0f172a; }
+.day .spot-panel-coords { color: #64748b; }
+.day .spot-panel-delete { background: rgba(0,0,0,0.06); color: #64748b; }
+
+.day .nav-overlay {
+  background: rgba(248,250,252,0.97);
+  border-color: #22c55e;
+  color: #0f172a;
+}
+.day .nav-name { color: #16a34a; }
+
+/* ── Spot mode popup ── */
+.spot-mode-popup {
+  position: absolute;
+  right: 68px; bottom: 64px;
+  z-index: 410;
+  background: rgba(15,23,42,0.97);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 14px;
+  color: white;
+  padding: 12px;
+  min-width: 200px;
+  display: flex; flex-direction: column; gap: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.spot-mode-title {
+  font-size: 12px; font-weight: 600; color: #64748b;
+  text-transform: uppercase; letter-spacing: 0.07em;
+  padding: 0 4px 4px;
+}
+.spot-mode-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: white; font-size: 14px; cursor: pointer;
+  text-align: left; transition: background 0.1s;
+}
+.spot-mode-btn:active { background: rgba(255,255,255,0.14); }
+.spot-mode-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.spot-mode-cancel {
+  background: none; border: none; color: #64748b;
+  font-size: 13px; cursor: pointer; text-align: center;
+  padding: 4px;
+}
+
+.day .spot-mode-popup {
+  background: rgba(248,250,252,0.98);
+  border-color: rgba(0,0,0,0.12);
+}
+.day .spot-mode-btn { color: #0f172a; }
+
+/* ── Range ring label ── */
+.ring-label {
+  background: rgba(15,23,42,0.75);
+  color: #ef4444;
+  font-size: 11px; font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  border: 1px solid rgba(239,68,68,0.4);
+}
+
+/* ── Search overlay ── */
+.search-overlay {
+  position: absolute;
+  top: 72px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 450;
+  width: min(360px, calc(100vw - 24px));
+  background: rgba(15,23,42,0.97);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+
+.search-input-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
+}
+.search-icon-left { color: #64748b; flex-shrink: 0; }
+.search-input {
+  flex: 1; background: none; border: none; outline: none;
+  color: white; font-size: 15px;
+}
+.search-input::placeholder { color: #475569; }
+.search-spinner { color: #94a3b8; font-size: 18px; animation: spin 0.8s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.search-close-btn {
+  background: none; border: none; color: #94a3b8;
+  cursor: pointer; display: flex; padding: 2px;
+}
+
+.search-results {
+  list-style: none;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  max-height: 260px; overflow-y: auto;
+}
+.search-result-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  gap: 8px;
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-result-name {
+  font-size: 13px; color: #e2e8f0;
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.search-result-btns {
+  display: flex; gap: 6px; flex-shrink: 0;
+}
+.search-result-btns button {
+  width: 30px; height: 30px; border-radius: 8px;
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: white;
+}
+.search-result-btns button:first-child { background: #1e40af; }
+.search-result-btns button:last-child  { background: #2563eb; }
+
+.day .search-overlay {
+  background: rgba(248,250,252,0.98);
+  border-color: rgba(0,0,0,0.12);
+}
+.day .search-input { color: #0f172a; }
+.day .search-result-name { color: #1e293b; }
+.day .search-results { border-top-color: rgba(0,0,0,0.08); }
+.day .search-result-item { border-bottom-color: rgba(0,0,0,0.06); }
+
+/* ── Left info panels (weather + tide) ── */
+.map-left-panels {
+  position: absolute;
+  top: 12px; left: 12px;
+  z-index: 400;
+  display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+.info-panel {
+  pointer-events: auto;
+  background: rgba(15,23,42,0.82);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 8px 12px;
+  backdrop-filter: blur(8px);
+  min-width: 120px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+.info-error, .info-loading { font-size: 12px; color: #64748b; }
+/* weather */
+.wx-row { display: flex; align-items: center; gap: 6px; }
+.wx-arrow { font-size: 18px; color: #60a5fa; display: inline-block; line-height: 1; }
+.wx-val { font-size: 15px; font-weight: 700; color: #e2e8f0; }
+.wx-sub { font-size: 11px; color: #64748b; }
+.wx-temp { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+/* tide */
+.tide-station { font-size: 11px; color: #64748b; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+.tide-row { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.tide-row + .tide-row { margin-top: 3px; }
+.tide-high { color: #4ade80; font-weight: 600; }
+.tide-low  { color: #f87171; font-weight: 600; }
+.tide-time { color: #cbd5e1; flex: 1; text-align: right; }
+.tide-level { color: #94a3b8; font-size: 11px; min-width: 36px; text-align: right; }
+
+.day .info-panel {
+  background: rgba(248,250,252,0.92);
+  border-color: rgba(0,0,0,0.12);
+}
+.day .wx-val { color: #0f172a; }
+.day .tide-time { color: #334155; }
+
+/* ── Anchor overlay ── */
+.anchor-overlay {
+  position: absolute;
+  bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 420;
+  min-width: 200px; max-width: 280px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+.anchor-ok {
+  background: rgba(15,23,42,0.88);
+  border: 1px solid #f59e0b;
+  color: #fbbf24;
+}
+.anchor-alarm {
+  background: rgba(127,29,29,0.92);
+  border: 2px solid #ef4444;
+  color: #fca5a5;
+  animation: anchor-pulse 1s infinite;
+}
+@keyframes anchor-pulse { 0%,100% { box-shadow: 0 4px 20px rgba(239,68,68,0.4); } 50% { box-shadow: 0 4px 32px rgba(239,68,68,0.8); } }
+.anchor-title { font-size: 15px; font-weight: 700; }
+.anchor-stats { font-size: 13px; color: inherit; opacity: 0.85; }
+.anchor-stat { display: inline-block; }
+.anchor-lift {
+  margin-top: 4px;
+  padding: 6px 18px; border-radius: 8px;
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+  color: white; font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.anchor-lift:hover { background: rgba(255,255,255,0.2); }
+
+/* ── Anchor dialog radius buttons ── */
+.anchor-radii {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+}
+.anchor-radius-btn {
+  padding: 8px 14px; border-radius: 8px;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+  color: #e2e8f0; font-size: 13px; cursor: pointer;
+}
+.anchor-radius-btn:hover { background: rgba(255,255,255,0.14); }
+.anchor-radius-active {
+  background: #f59e0b !important; border-color: #f59e0b !important;
+  color: #0f172a !important; font-weight: 700;
+}
+
+/* ── Landscape: side-by-side ── */
 @media (orientation: landscape) {
+  .app-root { flex-direction: row; }
+
   .status-bar {
-    top: 0; bottom: auto;
-    right: auto; left: 0;
     flex-direction: column;
-    width: 80px;
+    /* Wide enough to clear iPhone notch/sensor housing */
+    width: max(76px, calc(env(safe-area-inset-left) + 56px));
     height: 100%;
-    padding: 12px 8px;
     border-top: none;
-    border-right: 1px solid rgba(255,255,255,0.08);
-    font-size: 11px;
+    border-right: 1px solid rgba(255,255,255,0.10);
+    padding: 12px 6px 12px max(8px, env(safe-area-inset-left));
     justify-content: flex-start;
-    gap: 8px;
+    gap: 10px;
+    font-size: 11px;
+    order: -1;
   }
-  .status-divider { width: 40px; height: 1px; }
+  .status-divider { width: 44px; height: 1px; }
   .status-item { flex-direction: column; gap: 2px; text-align: center; }
+  .status-unit { font-size: 10px; }
 
+  /* Right-side safe area for FABs and menu (notch on opposite side) */
   .map-controls {
-    right: 12px;
-    bottom: 12px;
+    right: max(12px, calc(env(safe-area-inset-right) + 8px));
   }
-
   .menu-panel {
-    right: 68px;
-    bottom: 12px;
+    right: max(68px, calc(env(safe-area-inset-right) + 64px));
+    max-height: calc(100% - 24px);
   }
 }
