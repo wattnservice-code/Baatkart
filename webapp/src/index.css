@@ -104,6 +104,13 @@ html, body, #root {
   font-size: 11px; font-weight: 600;
   color: #64748b; letter-spacing: 0.08em; text-transform: uppercase;
 }
+.menu-section-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 6px 16px 3px;
+  font-size: 11px; font-weight: 600; color: #64748b; letter-spacing: 0.06em; text-transform: uppercase;
+  background: none; border: none; cursor: pointer;
+}
+.menu-section-toggle:active { opacity: 0.7; }
 .menu-section {
   padding: 4px 16px 2px;
   font-size: 11px; color: #64748b; letter-spacing: 0.06em;
@@ -455,6 +462,7 @@ html, body, #root {
 }
 .day .menu-title { color: #94a3b8; }
 .day .menu-section { color: #94a3b8; }
+.day .menu-section-toggle { color: #94a3b8; }
 .day .menu-item { color: #0f172a; }
 .day .menu-divider { background: rgba(0,0,0,0.08); }
 

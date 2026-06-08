@@ -113,16 +113,23 @@ function saveMob(mob: MobPoint | null) {
   localStorage.setItem('mobPoint', JSON.stringify(mob))
 }
 
-function loadDarkMode(): boolean {
-  return localStorage.getItem('darkMode') !== 'false'
+function loadBool(key: string, def: boolean): boolean {
+  const v = localStorage.getItem(key)
+  return v === null ? def : v === 'true'
 }
 
-function loadSpeedUnit(): SpeedUnit {
-  return (localStorage.getItem('speedUnit') as SpeedUnit) || 'kmh'
-}
-
-function loadDistUnit(): DistUnit {
-  return (localStorage.getItem('distUnit') as DistUnit) || 'm'
+function loadDarkMode(): boolean { return loadBool('darkMode', true) }
+function loadSpeedUnit(): SpeedUnit { return (localStorage.getItem('speedUnit') as SpeedUnit) || 'kmh' }
+function loadDistUnit(): DistUnit { return (localStorage.getItem('distUnit') as DistUnit) || 'm' }
+function loadSeamark(): boolean { return loadBool('seamarkVisible', false) }
+function loadWeather(): boolean { return loadBool('weatherVisible', false) }
+function loadTide(): boolean { return loadBool('tideVisible', false) }
+function loadCompass(): boolean { return loadBool('compassEnabled', false) }
+function loadRingRadius(): RingSize {
+  const v = localStorage.getItem('ringRadius')
+  if (!v || v === 'null') return null
+  const n = Number(v)
+  return (RING_CYCLE as readonly (number | null)[]).includes(n) ? n as RingSize : null
 }
 
 export const useMapStore = create<MapStore>((set) => ({
@@ -137,14 +144,14 @@ export const useMapStore = create<MapStore>((set) => ({
   anchorAlarm: false,
   followBoat: true,
   addingSpot: false,
-  compassEnabled: false,
+  compassEnabled: loadCompass(),
   darkMode: loadDarkMode(),
-  seamarkVisible: true,
-  weatherVisible: false,
-  tideVisible: false,
+  seamarkVisible: loadSeamark(),
+  weatherVisible: loadWeather(),
+  tideVisible: loadTide(),
   speedUnit: loadSpeedUnit(),
   distUnit: loadDistUnit(),
-  customRingRadius: null,
+  customRingRadius: loadRingRadius(),
   flyTo: null,
   navPreview: null,
   navTarget: null,
@@ -204,10 +211,10 @@ export const useMapStore = create<MapStore>((set) => ({
 
   setFollowBoat: (v) => set({ followBoat: v }),
   setAddingSpot: (v) => set({ addingSpot: v }),
-  toggleCompass: () => set((s) => ({ compassEnabled: !s.compassEnabled })),
-  toggleSeamark: () => set((s) => ({ seamarkVisible: !s.seamarkVisible })),
-  toggleWeather: () => set((s) => ({ weatherVisible: !s.weatherVisible })),
-  toggleTide: () => set((s) => ({ tideVisible: !s.tideVisible })),
+  toggleCompass: () => set((s) => { const v = !s.compassEnabled; localStorage.setItem('compassEnabled', String(v)); return { compassEnabled: v } }),
+  toggleSeamark: () => set((s) => { const v = !s.seamarkVisible; localStorage.setItem('seamarkVisible', String(v)); return { seamarkVisible: v } }),
+  toggleWeather: () => set((s) => { const v = !s.weatherVisible; localStorage.setItem('weatherVisible', String(v)); return { weatherVisible: v } }),
+  toggleTide: () => set((s) => { const v = !s.tideVisible; localStorage.setItem('tideVisible', String(v)); return { tideVisible: v } }),
   toggleDarkMode: () => set((s) => {
     const next = !s.darkMode
     localStorage.setItem('darkMode', String(next))
@@ -226,7 +233,9 @@ export const useMapStore = create<MapStore>((set) => ({
   }),
   cycleRingRadius: () => set((s) => {
     const idx = RING_CYCLE.indexOf(s.customRingRadius)
-    return { customRingRadius: RING_CYCLE[(idx + 1) % RING_CYCLE.length] }
+    const next = RING_CYCLE[(idx + 1) % RING_CYCLE.length]
+    localStorage.setItem('ringRadius', String(next))
+    return { customRingRadius: next }
   }),
 
   setAnchor: (pos, radius) => set({ anchorPoint: pos, anchorRadius: radius, anchorAlarm: false }),

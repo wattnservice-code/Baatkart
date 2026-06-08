@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff } from 'lucide-react'
+import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Map } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import SpotListPanel from './SpotListPanel'
 import SearchBar from './SearchBar'
@@ -20,6 +20,16 @@ export default function MapControls() {
   const [gpsSpot, setGpsSpot]             = useState<{ lat: number; lng: number } | null>(null)
   const [confirmTrack, setConfirmTrack]   = useState(false)
   const [anchorOpen, setAnchorOpen]       = useState(false)
+
+  const [sections, setSections] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem('menuSections') || '{}') } catch { return {} }
+  })
+  const isOpen = (key: string, def = true) => sections[key] ?? def
+  const toggleSec = (key: string, def = true) => setSections((prev) => {
+    const next = { ...prev, [key]: !(prev[key] ?? def) }
+    localStorage.setItem('menuSections', JSON.stringify(next))
+    return next
+  })
 
   const followBoat       = useMapStore((s) => s.followBoat)
   const addingSpot       = useMapStore((s) => s.addingSpot)
@@ -106,85 +116,129 @@ export default function MapControls() {
         <div className="menu-panel">
           <div className="menu-title">Meny</div>
 
-          <div className="menu-section">Navigasjon</div>
-          <button className="menu-item" onClick={() => { setFollowBoat(true); setMenuOpen(false) }}>
-            <Navigation size={20} /><span>Sentrer kart på båt</span>
-          </button>
-
           <div className="menu-divider" />
-          <div className="menu-section">Sporing</div>
-          {!isTracking ? (
-            <button className="menu-item" style={{ color: '#4ade80' }} onClick={() => { startTracking(); setMenuOpen(false) }}>
-              <Play size={20} /><span>Start spor</span>
-            </button>
-          ) : (
-            <button className="menu-item" style={{ color: '#f87171' }} onClick={() => { stopTracking(); setMenuOpen(false) }}>
-              <Square size={20} /><span>Stopp spor</span>
-            </button>
-          )}
-          {track.length > 0 && (
-            <button className="menu-item" style={{ color: '#94a3b8' }} onClick={() => { setConfirmTrack(true); setMenuOpen(false) }}>
-              <Trash2 size={20} /><span>Slett spor ({track.length} pkt)</span>
+          <button className="menu-section-toggle" onClick={() => toggleSec('nav')}>
+            <span>Navigasjon</span>
+            {isOpen('nav') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          </button>
+          {isOpen('nav') && (
+            <button className="menu-item" onClick={() => { setFollowBoat(true); setMenuOpen(false) }}>
+              <Navigation size={20} /><span>Sentrer kart på båt</span>
             </button>
           )}
 
           <div className="menu-divider" />
-          <div className="menu-section">Steder</div>
-          <button className="menu-item" onClick={() => { setSpotListOpen(true); setMenuOpen(false) }}>
-            <List size={20} /><span>Lagrede steder ({savedSpots.length})</span>
+          <button className="menu-section-toggle" onClick={() => toggleSec('sporing')}>
+            <span>Sporing</span>
+            {isOpen('sporing') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
-          <button className="menu-item" onClick={() => { setSearchOpen(true); setMenuOpen(false) }}>
-            <Search size={20} /><span>Søk etter sted</span>
-          </button>
+          {isOpen('sporing') && (<>
+            {!isTracking ? (
+              <button className="menu-item" style={{ color: '#4ade80' }} onClick={() => { startTracking(); setMenuOpen(false) }}>
+                <Play size={20} /><span>Start spor</span>
+              </button>
+            ) : (
+              <button className="menu-item" style={{ color: '#f87171' }} onClick={() => { stopTracking(); setMenuOpen(false) }}>
+                <Square size={20} /><span>Stopp spor</span>
+              </button>
+            )}
+            {track.length > 0 && (
+              <button className="menu-item" style={{ color: '#94a3b8' }} onClick={() => { setConfirmTrack(true); setMenuOpen(false) }}>
+                <Trash2 size={20} /><span>Slett spor ({track.length} pkt)</span>
+              </button>
+            )}
+          </>)}
 
           <div className="menu-divider" />
-          <div className="menu-section">Offline</div>
-          <button className="menu-item" onClick={() => { setOfflineOpen(true); setMenuOpen(false) }}>
-            <WifiOff size={20} /><span>Last ned kart offline</span>
+          <button className="menu-section-toggle" onClick={() => toggleSec('steder')}>
+            <span>Steder</span>
+            {isOpen('steder') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
-
-          <div className="menu-divider" />
-          <div className="menu-section">Kart og vær</div>
-          <button className="menu-item" style={{ color: seamarkVisible ? '#60a5fa' : undefined }} onClick={() => toggleSeamark()}>
-            <Layers size={20} /><span>Seamerker {seamarkVisible ? '(på)' : '(av)'}</span>
-          </button>
-          <button className="menu-item" style={{ color: weatherVisible ? '#60a5fa' : undefined }} onClick={() => toggleWeather()}>
-            <Wind size={20} /><span>Vær og vind {weatherVisible ? '(på)' : '(av)'}</span>
-          </button>
-          <button className="menu-item" style={{ color: tideVisible ? '#60a5fa' : undefined }} onClick={() => toggleTide()}>
-            <Waves size={20} /><span>Tidevann {tideVisible ? '(på)' : '(av)'}</span>
-          </button>
-          <button className="menu-item" onClick={() => cycleRingRadius()}>
-            <Circle size={20} /><span>Avstandsring: {formatRingLabel(customRingRadius)}</span>
-          </button>
-
-          <div className="menu-divider" />
-          <div className="menu-section">Anker</div>
-          {!anchorPoint ? (
-            <button className="menu-item" style={{ color: '#f59e0b' }} onClick={() => { setAnchorOpen(true); setMenuOpen(false) }}>
-              <Anchor size={20} /><span>Sett anker</span>
+          {isOpen('steder') && (<>
+            {position && (
+              <button className="menu-item" onClick={() => { useGpsPos(); setMenuOpen(false) }}>
+                <Navigation size={20} /><span>Min posisjon nå</span>
+              </button>
+            )}
+            <button className="menu-item" onClick={() => { useMapPos(); setMenuOpen(false) }}>
+              <Map size={20} /><span>Velg på kartet</span>
             </button>
-          ) : (
-            <button className="menu-item" style={{ color: '#94a3b8' }} onClick={() => { clearAnchor(); setMenuOpen(false) }}>
-              <Anchor size={20} /><span>Løft anker</span>
+            <button className="menu-item" onClick={() => { setSpotListOpen(true); setMenuOpen(false) }}>
+              <List size={20} /><span>Lagrede steder ({savedSpots.length})</span>
+            </button>
+            <button className="menu-item" onClick={() => { setSearchOpen(true); setMenuOpen(false) }}>
+              <Search size={20} /><span>Søk etter sted</span>
+            </button>
+          </>)}
+
+          <div className="menu-divider" />
+          <button className="menu-section-toggle" onClick={() => toggleSec('offline')}>
+            <span>Offline</span>
+            {isOpen('offline') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          </button>
+          {isOpen('offline') && (
+            <button className="menu-item" onClick={() => { setOfflineOpen(true); setMenuOpen(false) }}>
+              <WifiOff size={20} /><span>Last ned kart offline</span>
             </button>
           )}
 
           <div className="menu-divider" />
-          <div className="menu-section">Innstillinger</div>
-          <button className="menu-item" onClick={() => toggleSpeedUnit()}>
-            <Gauge size={20} /><span>Fart: {speedUnit === 'kn' ? 'Knop → km/t' : 'km/t → Knop'}</span>
+          <button className="menu-section-toggle" onClick={() => toggleSec('kart')}>
+            <span>Kart og vær</span>
+            {isOpen('kart') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
-          <button className="menu-item" onClick={() => cycleDistUnit()}>
-            <Gauge size={20} /><span>Avstand: {distUnit === 'nm' ? 'nm → m' : distUnit === 'm' ? 'm → km' : 'km → nm'}</span>
+          {isOpen('kart') && (<>
+            <button className="menu-item" style={{ color: seamarkVisible ? '#60a5fa' : undefined }} onClick={() => toggleSeamark()}>
+              <Layers size={20} /><span>Sjømerke {seamarkVisible ? '(på)' : '(av)'}</span>
+            </button>
+            <button className="menu-item" style={{ color: weatherVisible ? '#60a5fa' : undefined }} onClick={() => toggleWeather()}>
+              <Wind size={20} /><span>Vær og vind {weatherVisible ? '(på)' : '(av)'}</span>
+            </button>
+            <button className="menu-item" style={{ color: tideVisible ? '#60a5fa' : undefined }} onClick={() => toggleTide()}>
+              <Waves size={20} /><span>Tidevann {tideVisible ? '(på)' : '(av)'}</span>
+            </button>
+            <button className="menu-item" onClick={() => cycleRingRadius()}>
+              <Circle size={20} /><span>Avstandsring: {formatRingLabel(customRingRadius)}</span>
+            </button>
+          </>)}
+
+          <div className="menu-divider" />
+          <button className="menu-section-toggle" onClick={() => toggleSec('anker')}>
+            <span>Anker</span>
+            {isOpen('anker') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
-          <button className="menu-item" style={{ color: compassEnabled ? '#60a5fa' : undefined }} onClick={() => { toggleCompass(); setMenuOpen(false) }}>
-            <Compass size={20} /><span>Kompass {compassEnabled ? '(på)' : '(av)'}</span>
+          {isOpen('anker') && (
+            !anchorPoint ? (
+              <button className="menu-item" style={{ color: '#f59e0b' }} onClick={() => { setAnchorOpen(true); setMenuOpen(false) }}>
+                <Anchor size={20} /><span>Sett anker</span>
+              </button>
+            ) : (
+              <button className="menu-item" style={{ color: '#94a3b8' }} onClick={() => { clearAnchor(); setMenuOpen(false) }}>
+                <Anchor size={20} /><span>Løft anker</span>
+              </button>
+            )
+          )}
+
+          <div className="menu-divider" />
+          <button className="menu-section-toggle" onClick={() => toggleSec('innstillinger')}>
+            <span>Innstillinger</span>
+            {isOpen('innstillinger') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
-          <button className="menu-item" onClick={() => { toggleDarkMode(); setMenuOpen(false) }}>
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-            <span>{darkMode ? 'Dagmodus' : 'Nattmodus'}</span>
-          </button>
+          {isOpen('innstillinger') && (<>
+            <button className="menu-item" onClick={() => toggleSpeedUnit()}>
+              <Gauge size={20} /><span>Fart: {speedUnit === 'kn' ? 'Knop → km/t' : 'km/t → Knop'}</span>
+            </button>
+            <button className="menu-item" onClick={() => cycleDistUnit()}>
+              <Gauge size={20} /><span>Avstand: {distUnit === 'nm' ? 'nm → m' : distUnit === 'm' ? 'm → km' : 'km → nm'}</span>
+            </button>
+            <button className="menu-item" style={{ color: compassEnabled ? '#60a5fa' : undefined }} onClick={() => { toggleCompass(); setMenuOpen(false) }}>
+              <Compass size={20} /><span>Kompass {compassEnabled ? '(på)' : '(av)'}</span>
+            </button>
+            <button className="menu-item" onClick={() => { toggleDarkMode(); setMenuOpen(false) }}>
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+              <span>{darkMode ? 'Dagmodus' : 'Nattmodus'}</span>
+            </button>
+          </>)}
         </div>
       )}
 
