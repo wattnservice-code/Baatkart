@@ -9,7 +9,6 @@ interface Props { onClose: () => void }
 type Status = 'idle' | 'selecting' | 'downloading' | 'done' | 'error'
 
 const MIN_ZOOM = 8
-const MAX_ZOOM = 13
 const CONCURRENCY = 4
 
 export default function OfflinePanel({ onClose }: Props) {
@@ -21,6 +20,7 @@ export default function OfflinePanel({ onClose }: Props) {
   const [storedCount, setStoredCount] = useState(0)
   const [storageMB, setStorageMB]     = useState(0)
   const [error, setError]       = useState<string | null>(null)
+  const [maxZoom, setMaxZoom]   = useState<13 | 15>(13)
 
   useEffect(() => {
     countTiles().then(setStoredCount)
@@ -31,11 +31,11 @@ export default function OfflinePanel({ onClose }: Props) {
     ? { north: mapBounds.north, south: mapBounds.south, east: mapBounds.east, west: mapBounds.west }
     : null
 
-  const estimated = bounds ? estimateCount(bounds, MIN_ZOOM, MAX_ZOOM) : 0
+  const estimated = bounds ? estimateCount(bounds, MIN_ZOOM, maxZoom) : 0
 
   const startDownload = async () => {
     if (!bounds) return
-    const tiles = tilesForBounds(bounds, MIN_ZOOM, MAX_ZOOM)
+    const tiles = tilesForBounds(bounds, MIN_ZOOM, maxZoom)
     setTotal(tiles.length * 2) // sjokaart + seamark
     setProgress(0)
     setStatus('downloading')
@@ -114,9 +114,18 @@ export default function OfflinePanel({ onClose }: Props) {
         ) : (
           <div className="offline-area-coords">Ingen kartbounds</div>
         )}
+        {/* Zoom level choice */}
+        <div className="offline-zoom-choice">
+          <button className={`offline-zoom-btn ${maxZoom === 13 ? 'offline-zoom-active' : ''}`} onClick={() => setMaxZoom(13)}>
+            Oversikt<br/><span>Zoom 8–13 · raskere</span>
+          </button>
+          <button className={`offline-zoom-btn ${maxZoom === 15 ? 'offline-zoom-active' : ''}`} onClick={() => setMaxZoom(15)}>
+            Detaljert<br/><span>Zoom 8–15 · bunnforhold</span>
+          </button>
+        </div>
         <div className="offline-estimate">
-          Zoom {MIN_ZOOM}–{MAX_ZOOM} → ca. {estimated.toLocaleString()} tiles
-          {estimated > 20000 && <span className="offline-warn"> (stort område!)</span>}
+          Ca. {estimated.toLocaleString()} tiles
+          {estimated > 30000 && <span className="offline-warn"> — stort område, kan ta tid</span>}
         </div>
       </div>
 
