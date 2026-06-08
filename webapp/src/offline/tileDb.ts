@@ -47,6 +47,17 @@ export async function countTiles(): Promise<number> {
   })
 }
 
+export async function deleteTiles(keys: string[]): Promise<void> {
+  const d = await openDb()
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction(STORE, 'readwrite')
+    const store = tx.objectStore(STORE)
+    keys.forEach((k) => store.delete(k))
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
 export async function clearAllTiles(): Promise<void> {
   const d = await openDb()
   return new Promise((resolve, reject) => {

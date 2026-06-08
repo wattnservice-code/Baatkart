@@ -6,6 +6,26 @@ import SpotDialog from './SpotDialog'
 import { getTile } from '../offline/tileDb'
 import { tileKey } from '../offline/tileCalc'
 
+// Track cache vs network tile loads and report to store (debounced)
+let _cacheHits = 0
+let _netHits = 0
+let _tileDebounce: ReturnType<typeof setTimeout> | null = null
+
+function recordTileHit(fromCache: boolean) {
+  if (fromCache) { _cacheHits++ } else { _netHits++ }
+  if (_tileDebounce) clearTimeout(_tileDebounce)
+  _tileDebounce = setTimeout(() => {
+    const total = _cacheHits + _netHits
+    if (total > 0) {
+      const ratio = _cacheHits / total
+      const source = ratio >= 0.8 ? 'offline' : ratio <= 0.2 ? 'online' : 'mixed'
+      useMapStore.getState().setTileSource(source)
+    }
+    _cacheHits = 0
+    _netHits = 0
+  }, 1000)
+}
+
 // Custom tile layer that serves from IndexedDB when available
 class OfflineTileLayer extends L.TileLayer {
   private _layerName: 'sjokaart' | 'seamark'
@@ -19,8 +39,10 @@ class OfflineTileLayer extends L.TileLayer {
     const key = tileKey(coords.z, coords.x, coords.y, this._layerName)
     getTile(key).then((blob) => {
       if (blob) {
+        recordTileHit(true)
         img.src = URL.createObjectURL(blob)
       } else {
+        recordTileHit(false)
         img.src = this.getTileUrl(coords)
         img.crossOrigin = 'anonymous'
       }

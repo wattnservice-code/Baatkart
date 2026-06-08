@@ -1,4 +1,4 @@
-import { Gauge, MapPin, Compass } from 'lucide-react'
+import { Gauge, MapPin, Compass, WifiOff, Wifi } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 
 function formatSpeed(ms: number, unit: 'kn' | 'kmh'): string {
@@ -13,9 +13,10 @@ function headingLabel(deg: number): string {
 }
 
 export default function StatusBar() {
-  const position  = useMapStore((s) => s.position)
+  const position   = useMapStore((s) => s.position)
   const isTracking = useMapStore((s) => s.isTracking)
-  const speedUnit = useMapStore((s) => s.speedUnit)
+  const speedUnit  = useMapStore((s) => s.speedUnit)
+  const tileSource = useMapStore((s) => s.tileSource)
 
   return (
     <div className="status-bar">
@@ -48,6 +49,20 @@ export default function StatusBar() {
         <>
           <div className="status-divider" />
           <div className="status-tracking">● REC</div>
+        </>
+      )}
+
+      {tileSource && (
+        <>
+          <div className="status-divider" />
+          <div className={`status-tile-source status-tile-${tileSource}`}>
+            {tileSource === 'offline'
+              ? <><WifiOff size={13} /> Offline</>
+              : tileSource === 'mixed'
+              ? <><WifiOff size={13} /> Blandet</>
+              : <><Wifi size={13} /> Nett</>
+            }
+          </div>
         </>
       )}
     </div>
