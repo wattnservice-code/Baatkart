@@ -44,7 +44,6 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
             placeholder="Søk i lagrede steder…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            autoFocus
           />
         </div>
 
