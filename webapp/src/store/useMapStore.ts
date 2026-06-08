@@ -57,6 +57,7 @@ interface MapStore {
   flyTo: { lat: number; lng: number } | null
   navPreview: { lat: number; lng: number; name: string } | null
   navTarget: { lat: number; lng: number; name: string } | null
+  mapBounds: { north: number; south: number; east: number; west: number } | null
 
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
@@ -86,6 +87,7 @@ interface MapStore {
   clearNavPreview: () => void
   setNavTarget: (target: { lat: number; lng: number; name: string }) => void
   clearNav: () => void
+  setMapBounds: (b: { north: number; south: number; east: number; west: number }) => void
 }
 
 function loadSpots(): SavedSpot[] {
@@ -144,6 +146,7 @@ export const useMapStore = create<MapStore>((set) => ({
   flyTo: null,
   navPreview: null,
   navTarget: null,
+  mapBounds: null,
 
   setPosition: (pos) =>
     set((state) => {
@@ -233,4 +236,5 @@ export const useMapStore = create<MapStore>((set) => ({
   clearNavPreview: () => set({ navPreview: null }),
   setNavTarget: (target) => set({ navTarget: target, navPreview: null, followBoat: false }),
   clearNav: () => set({ navTarget: null, navPreview: null }),
+  setMapBounds: (b) => set({ mapBounds: b }),
 }))

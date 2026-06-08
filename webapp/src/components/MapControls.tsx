@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves } from 'lucide-react'
+import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import SpotListPanel from './SpotListPanel'
 import SearchBar from './SearchBar'
 import SpotDialog from './SpotDialog'
 import AnchorDialog from './AnchorDialog'
+import OfflinePanel from './OfflinePanel'
 
 function formatRingLabel(r: null | number): string {
   if (r === null) return 'Auto'
@@ -15,6 +16,7 @@ export default function MapControls() {
   const [menuOpen, setMenuOpen]           = useState(false)
   const [spotListOpen, setSpotListOpen]   = useState(false)
   const [searchOpen, setSearchOpen]       = useState(false)
+  const [offlineOpen, setOfflineOpen]     = useState(false)
   const [gpsSpot, setGpsSpot]             = useState<{ lat: number; lng: number } | null>(null)
   const [confirmTrack, setConfirmTrack]   = useState(false)
   const [anchorOpen, setAnchorOpen]       = useState(false)
@@ -136,6 +138,12 @@ export default function MapControls() {
           </button>
 
           <div className="menu-divider" />
+          <div className="menu-section">Offline</div>
+          <button className="menu-item" onClick={() => { setOfflineOpen(true); setMenuOpen(false) }}>
+            <WifiOff size={20} /><span>Last ned kart offline</span>
+          </button>
+
+          <div className="menu-divider" />
           <div className="menu-section">Kart og vær</div>
           <button className="menu-item" style={{ color: seamarkVisible ? '#60a5fa' : undefined }} onClick={() => toggleSeamark()}>
             <Layers size={20} /><span>Seamerker {seamarkVisible ? '(på)' : '(av)'}</span>
@@ -179,6 +187,8 @@ export default function MapControls() {
           </button>
         </div>
       )}
+
+      {offlineOpen && <OfflinePanel onClose={() => setOfflineOpen(false)} />}
 
       {spotListOpen && (
         <SpotListPanel

@@ -3,6 +3,33 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useMapStore } from '../store/useMapStore'
 import SpotDialog from './SpotDialog'
+import { getTile } from '../offline/tileDb'
+import { tileKey } from '../offline/tileCalc'
+
+// Custom tile layer that serves from IndexedDB when available
+class OfflineTileLayer extends L.TileLayer {
+  private _layerName: 'sjokaart' | 'seamark'
+  constructor(url: string, options: L.TileLayerOptions, layerName: 'sjokaart' | 'seamark') {
+    super(url, options)
+    this._layerName = layerName
+  }
+  createTile(coords: L.Coords, done: L.DoneCallback): HTMLElement {
+    const img = document.createElement('img')
+    img.alt = ''
+    const key = tileKey(coords.z, coords.x, coords.y, this._layerName)
+    getTile(key).then((blob) => {
+      if (blob) {
+        img.src = URL.createObjectURL(blob)
+      } else {
+        img.src = this.getTileUrl(coords)
+        img.crossOrigin = 'anonymous'
+      }
+      img.addEventListener('load', () => done(undefined, img))
+      img.addEventListener('error', (e) => done(e as unknown as Error, img))
+    })
+    return img
+  }
+}
 
 const OSM_URL   = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 const OSM_ATTR  = '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
@@ -113,6 +140,7 @@ export default function MapView() {
   const customRingRadius = useMapStore((s) => s.customRingRadius)
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
   const setFlyTo         = useMapStore((s) => s.setFlyTo)
+  const setMapBounds     = useMapStore((s) => s.setMapBounds)
 
   // Init map
   useEffect(() => {
@@ -123,12 +151,25 @@ export default function MapView() {
     baseTileRef.current = L.tileLayer(isDark ? DARK_URL : OSM_URL, {
       attribution: isDark ? DARK_ATTR : OSM_ATTR, maxZoom: 19,
     }).addTo(map)
-    kartvTileRef.current = L.tileLayer(SJOKAART_URL, {
+    kartvTileRef.current = new OfflineTileLayer(SJOKAART_URL, {
       attribution: SJOKAART_ATTR, maxZoom: 19, opacity: isDark ? 0.5 : 0.7,
-    }).addTo(map)
-    seamarkTileRef.current = L.tileLayer(SEAMARK_URL, { attribution: SEAMARK_ATTR, maxZoom: 19 }).addTo(map)
+    }, 'sjokaart').addTo(map)
+    seamarkTileRef.current = new OfflineTileLayer(SEAMARK_URL, {
+      attribution: SEAMARK_ATTR, maxZoom: 19,
+    }, 'seamark').addTo(map)
     L.control.zoom({ position: 'topright' }).addTo(map)
     map.on('dragstart', () => setFollowBoat(false))
+
+    const updateBounds = () => {
+      const b = map.getBounds()
+      useMapStore.getState().setMapBounds({
+        north: b.getNorth(), south: b.getSouth(),
+        east: b.getEast(), west: b.getWest(),
+      })
+    }
+    map.on('moveend', updateBounds)
+    map.on('zoomend', updateBounds)
+    updateBounds()
 
     map.on('zoom', () => {
       const zoom = map.getZoom()
