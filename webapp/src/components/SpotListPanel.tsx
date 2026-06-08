@@ -37,16 +37,6 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
           <button onClick={onClose}><X size={18} /></button>
         </div>
 
-        {/* Search */}
-        <div className="spot-panel-search">
-          <input
-            className="spot-panel-search-input"
-            placeholder="Søk i lagrede steder…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
-
         {/* Saved spots list */}
         <div className="spot-panel-list">
           {filtered.length === 0 && (
@@ -91,6 +81,16 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
             )}
           </div>
         )}
+
+        {/* Search – at the bottom so keyboard doesn't pop up automatically */}
+        <div className="spot-panel-search">
+          <input
+            className="spot-panel-search-input"
+            placeholder="Søk i lagrede steder…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
       </div>
 
       {confirmSpot && (
