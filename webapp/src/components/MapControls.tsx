@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, LocateFixed, Map, Anchor, Wind, Waves } from 'lucide-react'
+import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import SpotListPanel from './SpotListPanel'
 import SearchBar from './SearchBar'
@@ -15,7 +15,6 @@ export default function MapControls() {
   const [menuOpen, setMenuOpen]           = useState(false)
   const [spotListOpen, setSpotListOpen]   = useState(false)
   const [searchOpen, setSearchOpen]       = useState(false)
-  const [spotModeOpen, setSpotModeOpen]   = useState(false)
   const [gpsSpot, setGpsSpot]             = useState<{ lat: number; lng: number } | null>(null)
   const [confirmTrack, setConfirmTrack]   = useState(false)
   const [anchorOpen, setAnchorOpen]       = useState(false)
@@ -60,17 +59,15 @@ export default function MapControls() {
 
   const handlePinBtn = () => {
     if (addingSpot) { setAddingSpot(false); return }
-    setSpotModeOpen(true)
+    setSpotListOpen(true)
     setMenuOpen(false)
   }
 
   const useGpsPos = () => {
-    setSpotModeOpen(false)
     if (position) setGpsSpot({ lat: position.lat, lng: position.lng })
   }
 
   const useMapPos = () => {
-    setSpotModeOpen(false)
     setAddingSpot(true)
   }
 
@@ -83,21 +80,6 @@ export default function MapControls() {
         </div>
       )}
 
-      {spotModeOpen && (
-        <div className="spot-mode-popup">
-          <div className="spot-mode-title">Lagre sted</div>
-          <button className="spot-mode-btn" onClick={useGpsPos} disabled={!position}>
-            <LocateFixed size={18} />
-            <span>Min posisjon nå</span>
-          </button>
-          <button className="spot-mode-btn" onClick={useMapPos}>
-            <Map size={18} />
-            <span>Velg på kartet</span>
-          </button>
-          <button className="spot-mode-cancel" onClick={() => setSpotModeOpen(false)}>Avbryt</button>
-        </div>
-      )}
-
       <button className={`mob-btn ${mobPoint ? 'mob-btn-active' : ''}`} onClick={handleMob} title="Mann over bord" disabled={!!mobPoint}>
         MOB
       </button>
@@ -106,7 +88,7 @@ export default function MapControls() {
         <button className={`fab ${followBoat ? 'fab-active' : ''}`} onClick={() => setFollowBoat(true)} title="Sentrer kart">
           <Navigation size={22} />
         </button>
-        <button className={`fab ${addingSpot || spotModeOpen ? 'fab-active' : ''}`} onClick={handlePinBtn} title="Lagre sted">
+        <button className={`fab ${addingSpot || spotListOpen ? 'fab-active' : ''}`} onClick={handlePinBtn} title="Steder">
           <MapPin size={22} />
         </button>
         <button className={`fab ${menuOpen ? 'fab-active' : ''}`} onClick={() => setMenuOpen(!menuOpen)} title="Meny">
@@ -198,7 +180,13 @@ export default function MapControls() {
         </div>
       )}
 
-      {spotListOpen && <SpotListPanel onClose={() => setSpotListOpen(false)} />}
+      {spotListOpen && (
+        <SpotListPanel
+          onClose={() => setSpotListOpen(false)}
+          onAddGps={useGpsPos}
+          onAddMap={useMapPos}
+        />
+      )}
       {searchOpen && <SearchBar onClose={() => setSearchOpen(false)} />}
       {gpsSpot && <SpotDialog lat={gpsSpot.lat} lng={gpsSpot.lng} onClose={() => setGpsSpot(null)} />}
       {anchorOpen && <AnchorDialog onClose={() => setAnchorOpen(false)} />}

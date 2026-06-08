@@ -277,8 +277,30 @@ html, body, #root {
   font-size: 14px; font-weight: 600;
 }
 .spot-panel-header button { background: none; border: none; color: #94a3b8; cursor: pointer; display:flex; }
-.spot-panel-empty { padding: 20px 16px; color: #64748b; font-size: 13px; text-align: center; }
-.spot-panel-list { overflow-y: auto; }
+.spot-panel-empty { padding: 16px; color: #64748b; font-size: 13px; text-align: center; }
+.spot-panel-search { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.spot-panel-search-input {
+  width: 100%; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10); border-radius: 8px;
+  color: white; padding: 7px 10px; font-size: 14px; outline: none;
+}
+.spot-panel-search-input::placeholder { color: #475569; }
+.spot-panel-search-input:focus { border-color: #3b82f6; }
+.spot-panel-list { overflow-y: auto; max-height: 240px; }
+.spot-panel-add {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 8px 12px 10px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.spot-panel-add-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 0; }
+.spot-panel-add-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 8px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10);
+  color: white; font-size: 14px; cursor: pointer; text-align: left;
+}
+.spot-panel-add-btn:active { background: rgba(255,255,255,0.14); }
+.spot-panel-add-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .spot-panel-item {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 16px;
@@ -440,6 +462,10 @@ html, body, #root {
 .day .spot-panel-name { color: #0f172a; }
 .day .spot-panel-coords { color: #64748b; }
 .day .spot-panel-delete { background: rgba(0,0,0,0.06); color: #64748b; }
+.day .spot-panel-search { border-bottom-color: rgba(0,0,0,0.08); }
+.day .spot-panel-search-input { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.12); color: #0f172a; }
+.day .spot-panel-add { border-top-color: rgba(0,0,0,0.08); }
+.day .spot-panel-add-btn { color: #0f172a; background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.10); }
 
 .day .nav-overlay {
   background: rgba(248,250,252,0.97);
