@@ -114,11 +114,11 @@ function loadDarkMode(): boolean {
 }
 
 function loadSpeedUnit(): SpeedUnit {
-  return (localStorage.getItem('speedUnit') as SpeedUnit) || 'kn'
+  return (localStorage.getItem('speedUnit') as SpeedUnit) || 'kmh'
 }
 
 function loadDistUnit(): DistUnit {
-  return (localStorage.getItem('distUnit') as DistUnit) || 'nm'
+  return (localStorage.getItem('distUnit') as DistUnit) || 'm'
 }
 
 export const useMapStore = create<MapStore>((set) => ({
