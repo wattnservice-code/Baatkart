@@ -140,7 +140,6 @@ export default function MapView() {
   const customRingRadius = useMapStore((s) => s.customRingRadius)
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
   const setFlyTo         = useMapStore((s) => s.setFlyTo)
-  const setMapBounds     = useMapStore((s) => s.setMapBounds)
 
   // Init map
   useEffect(() => {

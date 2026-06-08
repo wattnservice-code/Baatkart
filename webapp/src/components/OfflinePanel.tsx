@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { X, Download, Trash2, Map } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { saveTile, countTiles, clearAllTiles, estimateStorageMB } from '../offline/tileDb'
-import { tilesForBounds, estimateCount, tileUrl, tileKey, Bounds } from '../offline/tileCalc'
+import { tilesForBounds, estimateCount, tileUrl, tileKey, type Bounds } from '../offline/tileCalc'
 
 interface Props { onClose: () => void }
 
