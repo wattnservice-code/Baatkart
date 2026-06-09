@@ -545,12 +545,13 @@ export default function MapView() {
     const map = mapRef.current
     if (!map) return
 
-    // Build full route: position → waypoints → navTarget
+    // Build full route: position → waypoints → navTarget (or navPreview while planning)
     const pos = positionRef.current
+    const terminal = navTarget ?? navPreview
     const routePts: L.LatLngExpression[] = [
       ...(pos ? [[pos.lat, pos.lng] as L.LatLngExpression] : []),
       ...waypoints.map((w) => [w.lat, w.lng] as L.LatLngExpression),
-      ...(navTarget ? [[navTarget.lat, navTarget.lng] as L.LatLngExpression] : []),
+      ...(terminal ? [[terminal.lat, terminal.lng] as L.LatLngExpression] : []),
     ]
 
     // Hide green nav line when waypoints exist — route shows the full path
@@ -558,6 +559,13 @@ export default function MapView() {
       navLineRef.current.setStyle({ opacity: 0 })
     } else if (navLineRef.current) {
       navLineRef.current.setStyle({ opacity: 1 })
+    }
+
+    // Hide blue preview line when waypoints exist — purple route line covers the path
+    if (waypoints.length > 0 && previewLineRef.current) {
+      previewLineRef.current.setStyle({ opacity: 0 })
+    } else if (previewLineRef.current) {
+      previewLineRef.current.setStyle({ opacity: 1 })
     }
 
     // Route line
@@ -616,7 +624,7 @@ export default function MapView() {
         waypointMarkersRef.current.set(wp.id, marker)
       }
     })
-  }, [waypoints, navTarget])
+  }, [waypoints, navTarget, navPreview])
 
   // Click to add spot or waypoint
   useEffect(() => {

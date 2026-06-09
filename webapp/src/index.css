@@ -399,16 +399,49 @@ html, body, #root {
 }
 .nav-preview-name { font-size: 14px; font-weight: 700; color: #60a5fa; }
 .nav-preview-dist { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.nav-preview-actions { display: flex; gap: 10px; }
+.nav-preview-waypoints {
+  width: 100%; display: flex; flex-direction: column; gap: 4px;
+  border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px;
+}
+.nav-preview-wp-item {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(167,139,250,0.12); border-radius: 6px;
+  padding: 4px 8px; font-size: 12px;
+}
+.nav-preview-wp-num {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #7c3aed; color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; flex-shrink: 0;
+}
+.nav-preview-wp-name { flex: 1; color: #c4b5fd; text-align: left; }
+.nav-preview-wp-remove {
+  background: none; border: none; color: #64748b; cursor: pointer; padding: 2px; line-height: 1;
+}
+.nav-preview-wp-remove:hover { color: #f87171; }
+.nav-preview-hint {
+  font-size: 11px; color: #7c3aed; background: rgba(124,58,237,0.12);
+  border-radius: 6px; padding: 4px 10px; width: 100%; text-align: center;
+}
+.nav-preview-actions { display: flex; gap: 8px; align-items: center; }
 .nav-preview-cancel {
   background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
   color: #94a3b8; border-radius: 8px;
-  padding: 6px 14px; font-size: 13px; cursor: pointer;
+  padding: 6px 12px; font-size: 13px; cursor: pointer;
+}
+.nav-preview-wp-add {
+  background: rgba(124,58,237,0.2); border: 1px solid #7c3aed;
+  color: #c4b5fd; border-radius: 8px;
+  padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+}
+.nav-preview-wp-add.active {
+  background: #7c3aed; color: white;
 }
 .nav-preview-start {
   background: #2563eb; border: none;
   color: white; border-radius: 8px;
-  padding: 6px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .nav-preview-start:active { opacity: 0.85; }
 
