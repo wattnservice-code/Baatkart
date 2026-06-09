@@ -274,8 +274,9 @@ export default function MapView() {
       boatMarkerRef.current.setLatLng(latlng)
       if (followBoat) {
         if (lookAhead && position.heading !== undefined) {
-          const aheadM = zoom >= 15 ? 150 : zoom >= 13 ? 400 : 900
-          const center = destPoint(position.lat, position.lng, position.heading, aheadM)
+          const b = map.getBounds()
+          const viewHeightM = haversineM(b.getSouth(), b.getCenter().lng, b.getNorth(), b.getCenter().lng)
+          const center = destPoint(position.lat, position.lng, position.heading, viewHeightM * 0.35)
           map.panTo(center, { animate: true, duration: 0.5 })
         } else {
           map.panTo(latlng, { animate: true, duration: 0.5 })

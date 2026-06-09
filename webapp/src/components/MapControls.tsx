@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship, Plus, Minus, Flag, Eye } from 'lucide-react'
+import { Navigation, Navigation2, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship, Plus, Minus, Flag } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import SpotListPanel from './SpotListPanel'
@@ -119,6 +119,13 @@ export default function MapControls() {
         <button className="fab" onClick={() => getMapInstance()?.zoomOut()} title="Zoom ut">
           <Minus size={22} />
         </button>
+        <button
+          className={`fab ${lookAhead ? 'fab-active' : ''}`}
+          onClick={() => toggleLookAhead()}
+          title={lookAhead ? 'Fremovervisning på' : 'Fremovervisning av'}
+        >
+          <Navigation2 size={22} />
+        </button>
         <button className={`fab ${followBoat ? 'fab-active' : ''}`} onClick={() => {
           setFollowBoat(true)
           const m = getMapInstance()
@@ -225,9 +232,6 @@ export default function MapControls() {
             </button>
             <button className="menu-item" style={{ color: tideVisible ? '#60a5fa' : undefined }} onClick={() => toggleTide()}>
               <Waves size={20} /><span>Tidevann {tideVisible ? '(på)' : '(av)'}</span>
-            </button>
-            <button className="menu-item" style={{ color: lookAhead ? '#60a5fa' : undefined }} onClick={() => toggleLookAhead()}>
-              <Eye size={20} /><span>Fremovervisning {lookAhead ? '(på)' : '(av)'}</span>
             </button>
           </>)}
 
