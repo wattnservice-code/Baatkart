@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Search, X, Navigation, MapPin } from 'lucide-react'
+import { Search, X, Navigation, MapPin, Bookmark, BookmarkCheck } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 
 interface NominatimResult {
@@ -21,6 +21,8 @@ export default function SearchBar({ onClose }: Props) {
 
   const setNavPreview = useMapStore((s) => s.setNavPreview)
   const setFlyTo      = useMapStore((s) => s.setFlyTo)
+  const addSpot       = useMapStore((s) => s.addSpot)
+  const savedSpots    = useMapStore((s) => s.savedSpots)
 
   const search = async (q: string) => {
     if (q.trim().length < 2) { setResults([]); return }
@@ -49,6 +51,16 @@ export default function SearchBar({ onClose }: Props) {
     onClose()
   }
 
+  const saveResult = (r: NominatimResult) => {
+    const lat = parseFloat(r.lat)
+    const lng = parseFloat(r.lon)
+    const name = r.display_name.split(',')[0]
+    addSpot({ id: `search-${r.place_id}`, lat, lng, name })
+  }
+
+  const isSaved = (r: NominatimResult) =>
+    savedSpots.some((s) => s.id === `search-${r.place_id}`)
+
   return (
     <div className="search-overlay">
       <div className="search-input-row">
@@ -73,6 +85,13 @@ export default function SearchBar({ onClose }: Props) {
               <div className="search-result-btns">
                 <button title="Vis på kart" onClick={() => selectResult(r, false)}>
                   <MapPin size={15} />
+                </button>
+                <button
+                  title={isSaved(r) ? 'Lagret' : 'Lagre sted'}
+                  style={isSaved(r) ? { background: '#15803d' } : undefined}
+                  onClick={() => { if (!isSaved(r)) saveResult(r) }}
+                >
+                  {isSaved(r) ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
                 </button>
                 <button title="Naviger hit" onClick={() => selectResult(r, true)}>
                   <Navigation size={15} />
