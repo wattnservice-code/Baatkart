@@ -185,7 +185,7 @@ export default function MapView() {
   // Init map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
-    const map = L.map(containerRef.current, { center: [59.9, 10.7], zoom: 13, zoomControl: false })
+    const map = L.map(containerRef.current, { center: [59.9, 10.7], zoom: 15, zoomControl: false })
 
     const isDark = useMapStore.getState().darkMode
     baseTileRef.current = L.tileLayer(isDark ? DARK_URL : OSM_URL, {
@@ -282,11 +282,12 @@ export default function MapView() {
     if (!boatMarkerRef.current) {
       const icon = L.divIcon({ className: '', html: boatSvg(position.heading, size), iconSize: [size, size], iconAnchor: [size / 2, size / 2] })
       boatMarkerRef.current = L.marker(latlng, { icon, zIndexOffset: 1000 }).addTo(map)
-      map.setView(latlng, zoom, { animate: false })
+      map.setView(latlng, Math.max(zoom, 15), { animate: false })
     } else {
       boatMarkerRef.current.setLatLng(latlng)
       if (followBoat) {
-        if (lookAhead && position.heading !== undefined) {
+        const autoLookAhead = position.speed > 1.0 && position.heading !== undefined
+        if ((lookAhead || autoLookAhead)) {
           const b = map.getBounds()
           const viewHeightM = haversineM(b.getSouth(), b.getCenter().lng, b.getNorth(), b.getCenter().lng)
           const center = destPoint(position.lat, position.lng, position.heading, viewHeightM * 0.35)

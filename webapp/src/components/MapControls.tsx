@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigation, Navigation2, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship, Plus, Minus, Flag } from 'lucide-react'
+import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship, Plus, Minus, Flag } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import SpotListPanel from './SpotListPanel'
@@ -62,13 +62,11 @@ export default function MapControls() {
   const toggleWeather    = useMapStore((s) => s.toggleWeather)
   const toggleTide       = useMapStore((s) => s.toggleTide)
   const distUnit           = useMapStore((s) => s.distUnit)
-  const lookAhead          = useMapStore((s) => s.lookAhead)
   const waypoints          = useMapStore((s) => s.waypoints)
   const addingWaypoint     = useMapStore((s) => s.addingWaypoint)
   const toggleSpeedUnit    = useMapStore((s) => s.toggleSpeedUnit)
   const cycleDistUnit      = useMapStore((s) => s.cycleDistUnit)
   const cycleRingRadius    = useMapStore((s) => s.cycleRingRadius)
-  const toggleLookAhead    = useMapStore((s) => s.toggleLookAhead)
   const setAddingWaypoint  = useMapStore((s) => s.setAddingWaypoint)
   const clearWaypoints     = useMapStore((s) => s.clearWaypoints)
   const removeWaypoint     = useMapStore((s) => s.removeWaypoint)
@@ -118,13 +116,6 @@ export default function MapControls() {
         </button>
         <button className="fab" onClick={() => getMapInstance()?.zoomOut()} title="Zoom ut">
           <Minus size={22} />
-        </button>
-        <button
-          className={`fab ${lookAhead ? 'fab-active' : ''}`}
-          onClick={() => toggleLookAhead()}
-          title={lookAhead ? 'Fremovervisning på' : 'Fremovervisning av'}
-        >
-          <Navigation2 size={22} />
         </button>
         <button className={`fab ${followBoat ? 'fab-active' : ''}`} onClick={() => {
           setFollowBoat(true)
