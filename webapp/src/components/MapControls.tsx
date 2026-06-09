@@ -242,8 +242,13 @@ export default function MapControls() {
           </button>
           {isOpen('waypoints', false) && (<>
             <button className="menu-item" style={{ color: addingWaypoint ? '#a78bfa' : undefined }} onClick={() => { setAddingWaypoint(!addingWaypoint); setMenuOpen(false) }}>
-              <Flag size={20} /><span>{addingWaypoint ? 'Avbryt waypoint' : 'Legg til waypoint'}</span>
+              <Flag size={20} /><span>{addingWaypoint ? 'Avbryt' : 'Trykk på kart for waypoint'}</span>
             </button>
+            {waypoints.length === 0 && (
+              <div style={{ padding: '4px 16px 8px', fontSize: 12, color: '#64748b' }}>
+                Legg til via kart, søk eller lagrede steder. Trykk på ruten for å sette inn mellompunkt. Trykk på waypoint for å slette. Dra for å flytte.
+              </div>
+            )}
             {waypoints.map((wp, i) => (
               <div key={wp.id} className="menu-item" style={{ justifyContent: 'space-between' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -258,7 +263,7 @@ export default function MapControls() {
             ))}
             {waypoints.length > 0 && (
               <button className="menu-item" style={{ color: '#f87171' }} onClick={() => clearWaypoints()}>
-                <Trash2 size={20} /><span>Slett alle waypoints</span>
+                <Trash2 size={20} /><span>Slett alle</span>
               </button>
             )}
           </>)}

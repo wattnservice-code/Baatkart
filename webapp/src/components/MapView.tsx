@@ -177,7 +177,7 @@ export default function MapView() {
   const lookAhead        = useMapStore((s) => s.lookAhead)
   const waypoints        = useMapStore((s) => s.waypoints)
   const addingWaypoint   = useMapStore((s) => s.addingWaypoint)
-  const addWaypoint      = useMapStore((s) => s.addWaypoint)
+  const addWaypoint        = useMapStore((s) => s.addWaypoint)
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
   const setFlyTo         = useMapStore((s) => s.setFlyTo)
 
@@ -526,11 +526,50 @@ export default function MapView() {
     })
   }, [savedSpots, activeSpotId])
 
-  // Waypoint markers + route line
+  // Route line + draggable waypoint markers
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
 
+    // Build full route: [...waypoints, navTarget]
+    const routePts: L.LatLngExpression[] = [
+      ...waypoints.map((w) => [w.lat, w.lng] as L.LatLngExpression),
+      ...(navTarget ? [[navTarget.lat, navTarget.lng] as L.LatLngExpression] : []),
+    ]
+
+    // Route line
+    if (routePts.length >= 2) {
+      if (!waypointLineRef.current) {
+        waypointLineRef.current = L.polyline(routePts, { color: '#a78bfa', weight: 4, opacity: 0.85, dashArray: '10, 6' }).addTo(map)
+      } else {
+        waypointLineRef.current.setLatLngs(routePts)
+      }
+
+      // Click on route line → insert waypoint at nearest segment
+      waypointLineRef.current.off('click')
+      waypointLineRef.current.on('click', (e: L.LeafletMouseEvent) => {
+        L.DomEvent.stopPropagation(e)
+        const clicked = e.latlng
+        const pts = routePts.map((p) => Array.isArray(p) ? L.latLng(p[0], p[1]) : L.latLng((p as L.LatLngLiteral).lat, (p as L.LatLngLiteral).lng))
+        let minDist = Infinity, insertIdx = 0
+        for (let i = 0; i < pts.length - 1; i++) {
+          const dx = pts[i + 1].lat - pts[i].lat, dy = pts[i + 1].lng - pts[i].lng
+          const t = dx || dy ? Math.max(0, Math.min(1, ((clicked.lat - pts[i].lat) * dx + (clicked.lng - pts[i].lng) * dy) / (dx * dx + dy * dy))) : 0
+          const d = clicked.distanceTo(L.latLng(pts[i].lat + t * dx, pts[i].lng + t * dy))
+          if (d < minDist) { minDist = d; insertIdx = i }
+        }
+        const wpIdx = Math.min(insertIdx, useMapStore.getState().waypoints.length)
+        useMapStore.getState().insertWaypointAt(
+          { id: `wp-${Date.now()}`, lat: clicked.lat, lng: clicked.lng, name: `WP${useMapStore.getState().waypoints.length + 1}` },
+          wpIdx
+        )
+      })
+    } else {
+      waypointLineRef.current?.remove()
+      waypointLineRef.current = null
+    }
+
+    // Waypoint markers (draggable)
     const currentIds = new Set(waypoints.map((w) => w.id))
     waypointMarkersRef.current.forEach((marker, id) => {
       if (!currentIds.has(id)) { marker.remove(); waypointMarkersRef.current.delete(id) }
@@ -542,23 +581,19 @@ export default function MapView() {
       if (waypointMarkersRef.current.has(wp.id)) {
         waypointMarkersRef.current.get(wp.id)!.setLatLng([wp.lat, wp.lng]).setIcon(icon)
       } else {
-        const marker = L.marker([wp.lat, wp.lng], { icon, zIndexOffset: 600 }).addTo(map)
+        const marker = L.marker([wp.lat, wp.lng], { icon, draggable: true, zIndexOffset: 600 }).addTo(map)
+        marker.on('dragend', () => {
+          const ll = marker.getLatLng()
+          useMapStore.getState().updateWaypoint(wp.id, ll.lat, ll.lng)
+        })
+        marker.on('click', (e) => {
+          L.DomEvent.stopPropagation(e)
+          useMapStore.getState().removeWaypoint(wp.id)
+        })
         waypointMarkersRef.current.set(wp.id, marker)
       }
     })
-
-    const pts = waypoints.map((w) => [w.lat, w.lng] as L.LatLngExpression)
-    if (pts.length >= 2) {
-      if (!waypointLineRef.current) {
-        waypointLineRef.current = L.polyline(pts, { color: '#a78bfa', weight: 3, opacity: 0.9, dashArray: '10, 6' }).addTo(map)
-      } else {
-        waypointLineRef.current.setLatLngs(pts)
-      }
-    } else {
-      waypointLineRef.current?.remove()
-      waypointLineRef.current = null
-    }
-  }, [waypoints])
+  }, [waypoints, navTarget])
 
   // Click to add spot or waypoint
   useEffect(() => {

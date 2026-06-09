@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Search, X, Navigation, MapPin, Bookmark, BookmarkCheck } from 'lucide-react'
+import { Search, X, Navigation, MapPin, Bookmark, BookmarkCheck, Flag } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 
 interface NominatimResult {
@@ -23,6 +23,8 @@ export default function SearchBar({ onClose }: Props) {
   const setFlyTo      = useMapStore((s) => s.setFlyTo)
   const addSpot       = useMapStore((s) => s.addSpot)
   const savedSpots    = useMapStore((s) => s.savedSpots)
+  const addWaypoint   = useMapStore((s) => s.addWaypoint)
+  const waypoints     = useMapStore((s) => s.waypoints)
 
   const search = async (q: string) => {
     if (q.trim().length < 2) { setResults([]); return }
@@ -61,6 +63,15 @@ export default function SearchBar({ onClose }: Props) {
   const isSaved = (r: NominatimResult) =>
     savedSpots.some((s) => s.id === `search-${r.place_id}`)
 
+  const addAsWaypoint = (r: NominatimResult) => {
+    const lat = parseFloat(r.lat), lng = parseFloat(r.lon)
+    const name = r.display_name.split(',')[0]
+    addWaypoint({ id: `wp-search-${r.place_id}`, lat, lng, name })
+  }
+
+  const isWaypoint = (r: NominatimResult) =>
+    waypoints.some((w) => w.id === `wp-search-${r.place_id}`)
+
   return (
     <div className="search-overlay">
       <div className="search-input-row">
@@ -92,6 +103,13 @@ export default function SearchBar({ onClose }: Props) {
                   onClick={() => { if (!isSaved(r)) saveResult(r) }}
                 >
                   {isSaved(r) ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
+                </button>
+                <button
+                  title={isWaypoint(r) ? 'Lagt til som waypoint' : 'Legg til som waypoint'}
+                  style={isWaypoint(r) ? { background: '#7c3aed' } : undefined}
+                  onClick={() => { if (!isWaypoint(r)) addAsWaypoint(r) }}
+                >
+                  <Flag size={15} />
                 </button>
                 <button title="Naviger hit" onClick={() => selectResult(r, true)}>
                   <Navigation size={15} />

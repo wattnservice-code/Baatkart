@@ -120,7 +120,9 @@ interface MapStore {
   setBoatInfo: (info: Partial<BoatInfo>) => void
   toggleLookAhead: () => void
   addWaypoint: (wp: Waypoint) => void
+  insertWaypointAt: (wp: Waypoint, index: number) => void
   removeWaypoint: (id: string) => void
+  updateWaypoint: (id: string, lat: number, lng: number) => void
   clearWaypoints: () => void
   setAddingWaypoint: (v: boolean) => void
 }
@@ -303,7 +305,13 @@ export const useMapStore = create<MapStore>((set) => ({
   toggleOfflineOnly: () => set((s) => { const v = !s.offlineOnly; localStorage.setItem('offlineOnly', String(v)); return { offlineOnly: v } }),
   toggleLookAhead: () => set((s) => { const v = !s.lookAhead; localStorage.setItem('lookAhead', String(v)); return { lookAhead: v } }),
   addWaypoint: (wp) => set((s) => ({ waypoints: [...s.waypoints, wp], addingWaypoint: false })),
+  insertWaypointAt: (wp, index) => set((s) => {
+    const wps = [...s.waypoints]; wps.splice(index, 0, wp); return { waypoints: wps }
+  }),
   removeWaypoint: (id) => set((s) => ({ waypoints: s.waypoints.filter((w) => w.id !== id) })),
+  updateWaypoint: (id, lat, lng) => set((s) => ({
+    waypoints: s.waypoints.map((w) => w.id === id ? { ...w, lat, lng } : w)
+  })),
   clearWaypoints: () => set({ waypoints: [] }),
   setAddingWaypoint: (v) => set({ addingWaypoint: v }),
   setBoatInfo: (info) => set((s) => {
