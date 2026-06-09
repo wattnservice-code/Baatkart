@@ -62,7 +62,7 @@ html, body, #root {
 .map-controls {
   position: absolute;
   right: 12px;
-  bottom: 12px;
+  bottom: 24px;
   z-index: 400;
   display: flex;
   flex-direction: column;
@@ -95,7 +95,7 @@ html, body, #root {
 .menu-panel {
   position: absolute;
   right: 68px;
-  bottom: 12px;
+  bottom: 24px;
   z-index: 400;
   background: rgba(15,23,42,0.96);
   backdrop-filter: blur(10px);
@@ -719,7 +719,7 @@ html, body, #root {
 /* ── Offline panel ── */
 .offline-panel {
   position: absolute;
-  right: 68px; bottom: 12px;
+  right: 68px; bottom: 24px;
   z-index: 401;
   background: rgba(15,23,42,0.97);
   border: 1px solid rgba(255,255,255,0.12);
