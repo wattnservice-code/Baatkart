@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { X, Download, Trash2, Map } from 'lucide-react'
+import { X, Download, Trash2, Map, WifiOff } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { saveTile, countTiles, clearAllTiles, estimateStorageMB, deleteTiles } from '../offline/tileDb'
 import { tilesForBounds, estimateCount, tileUrl, tileKey, type Bounds } from '../offline/tileCalc'
@@ -31,7 +31,9 @@ const MIN_ZOOM = 8
 const CONCURRENCY = 4
 
 export default function OfflinePanel({ onClose }: Props) {
-  const mapBounds = useMapStore((s) => s.mapBounds)
+  const mapBounds      = useMapStore((s) => s.mapBounds)
+  const offlineOnly    = useMapStore((s) => s.offlineOnly)
+  const toggleOfflineOnly = useMapStore((s) => s.toggleOfflineOnly)
 
   const [status, setStatus]               = useState<Status>('idle')
   const [progress, setProgress]           = useState(0)
@@ -141,6 +143,16 @@ export default function OfflinePanel({ onClose }: Props) {
         <span>Offline kart</span>
         <button onClick={onClose}><X size={18} /></button>
       </div>
+
+      {/* Offline-only toggle */}
+      <button
+        className={`offline-only-toggle ${offlineOnly ? 'offline-only-active' : ''}`}
+        onClick={toggleOfflineOnly}
+      >
+        <WifiOff size={16} />
+        <span>Bruk kun offline kart</span>
+        <span className="offline-only-badge">{offlineOnly ? 'PÅ' : 'AV'}</span>
+      </button>
 
       {/* Saved areas */}
       {areas.length > 0 && (

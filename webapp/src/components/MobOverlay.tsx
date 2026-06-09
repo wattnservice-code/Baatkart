@@ -3,6 +3,11 @@ import { Copy, Check } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
 
+function windDirLabel(deg: number): string {
+  const dirs = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV']
+  return dirs[Math.round(deg / 45) % 8]
+}
+
 function haversineM(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371000
   const φ1 = (lat1 * Math.PI) / 180
@@ -30,12 +35,13 @@ function formatElapsed(ts: number) {
 }
 
 export default function MobOverlay() {
-  const mobPoint = useMapStore((s) => s.mobPoint)
-  const position = useMapStore((s) => s.position)
-  const distUnit = useMapStore((s) => s.distUnit)
-  const clearMob = useMapStore((s) => s.clearMob)
-  const setFlyTo = useMapStore((s) => s.setFlyTo)
+  const mobPoint      = useMapStore((s) => s.mobPoint)
+  const position      = useMapStore((s) => s.position)
+  const distUnit      = useMapStore((s) => s.distUnit)
+  const clearMob      = useMapStore((s) => s.clearMob)
+  const setFlyTo      = useMapStore((s) => s.setFlyTo)
   const setNavTarget  = useMapStore((s) => s.setNavTarget)
+  const currentWeather = useMapStore((s) => s.currentWeather)
   const [elapsed, setElapsed] = useState('')
   const [copied, setCopied] = useState(false)
 
@@ -48,8 +54,19 @@ export default function MobOverlay() {
 
   const copyMobPos = () => {
     if (!mobPoint) return
-    const text = `MOB: ${mobPoint.lat.toFixed(5)}°N ${mobPoint.lng.toFixed(5)}°E`
-    navigator.clipboard?.writeText(text).then(() => {
+    const dt = new Date(mobPoint.timestamp).toLocaleString('nb-NO', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    })
+    const lines = [
+      `MOB ${dt}`,
+      `Posisjon: ${mobPoint.lat.toFixed(5)}°N ${mobPoint.lng.toFixed(5)}°E`,
+    ]
+    if (currentWeather) {
+      const dir = windDirLabel(currentWeather.windDir)
+      lines.push(`Vær: ${currentWeather.windSpeed.toFixed(1)} m/s ${dir}, ${Math.round(currentWeather.temp)}°C`)
+    }
+    navigator.clipboard?.writeText(lines.join('\n')).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 3000)
     })

@@ -61,6 +61,8 @@ interface MapStore {
   tileSource: 'offline' | 'online' | 'mixed' | null
   activeSpotId: string | null
   compassHeading: number | null
+  currentWeather: { windSpeed: number; windDir: number; temp: number } | null
+  offlineOnly: boolean
 
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
@@ -94,6 +96,8 @@ interface MapStore {
   setTileSource: (source: 'offline' | 'online' | 'mixed') => void
   setActiveSpot: (id: string | null) => void
   setCompassHeading: (h: number) => void
+  setCurrentWeather: (w: { windSpeed: number; windDir: number; temp: number } | null) => void
+  toggleOfflineOnly: () => void
 }
 
 function loadSpots(): SavedSpot[] {
@@ -163,6 +167,8 @@ export const useMapStore = create<MapStore>((set) => ({
   tileSource: null,
   activeSpotId: null,
   compassHeading: null,
+  currentWeather: null,
+  offlineOnly: loadBool('offlineOnly', false),
 
   setPosition: (pos) =>
     set((state) => {
@@ -258,4 +264,6 @@ export const useMapStore = create<MapStore>((set) => ({
   setTileSource: (source) => set({ tileSource: source }),
   setActiveSpot: (id) => set({ activeSpotId: id }),
   setCompassHeading: (h) => set({ compassHeading: h }),
+  setCurrentWeather: (w) => set({ currentWeather: w }),
+  toggleOfflineOnly: () => set((s) => { const v = !s.offlineOnly; localStorage.setItem('offlineOnly', String(v)); return { offlineOnly: v } }),
 }))

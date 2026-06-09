@@ -41,6 +41,9 @@ class OfflineTileLayer extends L.TileLayer {
       if (blob) {
         recordTileHit(true)
         img.src = URL.createObjectURL(blob)
+      } else if (useMapStore.getState().offlineOnly) {
+        recordTileHit(true) // treat as "offline" — tile is just missing
+        // leave img.src blank: tile renders as empty
       } else {
         recordTileHit(false)
         img.src = this.getTileUrl(coords)
@@ -496,6 +499,10 @@ export default function MapView() {
         spotMarkersRef.current.get(spot.id)!.setLatLng([spot.lat, spot.lng]).setIcon(icon)
       } else {
         const marker = L.marker([spot.lat, spot.lng], { icon, zIndexOffset: 500 }).addTo(map)
+        marker.on('click', () => {
+          useMapStore.getState().setActiveSpot(spot.id)
+          map.flyTo([spot.lat, spot.lng], Math.max(map.getZoom(), 14), { animate: true, duration: 0.8 })
+        })
         spotMarkersRef.current.set(spot.id, marker)
       }
     })

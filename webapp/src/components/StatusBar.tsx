@@ -78,11 +78,11 @@ export default function StatusBar() {
         {isOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
       </div>
 
-      {tileSource && (
+      {(tileSource === 'offline' || tileSource === 'mixed') && (
         <>
           <div className="status-divider" />
           <div className={`status-tile-source status-tile-${tileSource}`}>
-            {tileSource === 'offline' ? 'Offline' : tileSource === 'mixed' ? 'Blandet' : 'Nett-tiles'}
+            {tileSource === 'offline' ? 'Offline kart' : 'Blandet'}
           </div>
         </>
       )}

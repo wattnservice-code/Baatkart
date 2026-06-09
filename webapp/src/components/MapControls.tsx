@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Map } from 'lucide-react'
+import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import SpotListPanel from './SpotListPanel'
 import SearchBar from './SearchBar'
@@ -155,14 +155,6 @@ export default function MapControls() {
             {isOpen('steder') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
           {isOpen('steder') && (<>
-            {position && (
-              <button className="menu-item" onClick={() => { useGpsPos(); setMenuOpen(false) }}>
-                <Navigation size={20} /><span>Min posisjon nå</span>
-              </button>
-            )}
-            <button className="menu-item" onClick={() => { useMapPos(); setMenuOpen(false) }}>
-              <Map size={20} /><span>Velg på kartet</span>
-            </button>
             <button className="menu-item" onClick={() => { setSpotListOpen(true); setMenuOpen(false) }}>
               <List size={20} /><span>Lagrede steder ({savedSpots.length})</span>
             </button>
@@ -204,9 +196,6 @@ export default function MapControls() {
             <button className="menu-item" style={{ color: tideVisible ? '#60a5fa' : undefined }} onClick={() => toggleTide()}>
               <Waves size={20} /><span>Tidevann {tideVisible ? '(på)' : '(av)'}</span>
             </button>
-            <button className="menu-item" style={{ color: seamarkVisible ? '#60a5fa' : undefined }} onClick={() => toggleSeamark()}>
-              <Layers size={20} /><span>Sjømerke {seamarkVisible ? '(på)' : '(av)'}</span>
-            </button>
           </>)}
 
           <div className="menu-divider" />
@@ -232,6 +221,9 @@ export default function MapControls() {
             {isOpen('innstillinger') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
           {isOpen('innstillinger') && (<>
+            <button className="menu-item" style={{ color: seamarkVisible ? '#60a5fa' : undefined }} onClick={() => toggleSeamark()}>
+              <Layers size={20} /><span>Sjømerke {seamarkVisible ? '(på)' : '(av)'}</span>
+            </button>
             <button className="menu-item" onClick={() => toggleSpeedUnit()}>
               <Gauge size={20} /><span>Fart: {speedUnit === 'kn' ? 'Knop → km/t' : 'km/t → Knop'}</span>
             </button>

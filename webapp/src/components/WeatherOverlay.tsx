@@ -8,11 +8,12 @@ interface WxData {
 }
 
 export default function WeatherOverlay() {
-  const weatherVisible = useMapStore((s) => s.weatherVisible)
-  const position       = useMapStore((s) => s.position)
-  const [wx, setWx]   = useState<WxData | null>(null)
-  const [err, setErr] = useState<string | null>(null)
-  const fetchedKey    = useRef<string | null>(null)
+  const weatherVisible     = useMapStore((s) => s.weatherVisible)
+  const position           = useMapStore((s) => s.position)
+  const setCurrentWeather  = useMapStore((s) => s.setCurrentWeather)
+  const [wx, setWx]        = useState<WxData | null>(null)
+  const [err, setErr]      = useState<string | null>(null)
+  const fetchedKey         = useRef<string | null>(null)
 
   useEffect(() => {
     if (!weatherVisible) return
@@ -30,11 +31,13 @@ export default function WeatherOverlay() {
       .then((r) => r.json())
       .then((data) => {
         const d = data.properties.timeseries[0].data.instant.details
-        setWx({ windSpeed: d.wind_speed, windDir: d.wind_from_direction, temp: d.air_temperature })
+        const w = { windSpeed: d.wind_speed, windDir: d.wind_from_direction, temp: d.air_temperature }
+        setWx(w)
+        setCurrentWeather(w)
         setErr(null)
       })
       .catch(() => setErr('api'))
-  }, [weatherVisible, position?.lat, position?.lng])
+  }, [weatherVisible, position?.lat, position?.lng, setCurrentWeather])
 
   if (!weatherVisible) return null
 
