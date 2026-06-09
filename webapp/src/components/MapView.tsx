@@ -142,6 +142,7 @@ export default function MapView() {
   const baseTileRef     = useRef<L.TileLayer | null>(null)
   const kartvTileRef    = useRef<L.TileLayer | null>(null)
   const seamarkTileRef  = useRef<L.TileLayer | null>(null)
+  const spotMarkersRef  = useRef<Map<string, L.Marker>>(new Map())
 
   const [pendingSpot, setPendingSpot] = useState<{ lat: number; lng: number } | null>(null)
 
@@ -154,6 +155,8 @@ export default function MapView() {
   const flyTo            = useMapStore((s) => s.flyTo)
   const navPreview       = useMapStore((s) => s.navPreview)
   const navTarget        = useMapStore((s) => s.navTarget)
+  const savedSpots       = useMapStore((s) => s.savedSpots)
+  const activeSpotId     = useMapStore((s) => s.activeSpotId)
   const darkMode         = useMapStore((s) => s.darkMode)
   const seamarkVisible   = useMapStore((s) => s.seamarkVisible)
   const anchorPoint      = useMapStore((s) => s.anchorPoint)
@@ -439,6 +442,32 @@ export default function MapView() {
       mobMarkerRef.current.setLatLng([mobPoint.lat, mobPoint.lng]).setIcon(icon)
     }
   }, [mobPoint])
+
+  // Saved spot markers
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    const currentIds = new Set(savedSpots.map((s) => s.id))
+    spotMarkersRef.current.forEach((marker, id) => {
+      if (!currentIds.has(id)) { marker.remove(); spotMarkersRef.current.delete(id) }
+    })
+
+    savedSpots.forEach((spot) => {
+      const isActive = spot.id === activeSpotId
+      const size = isActive ? 22 : 14
+      const html = isActive
+        ? `<div class="spot-pin spot-pin-active"><div class="spot-pin-label">${spot.name}</div></div>`
+        : `<div class="spot-pin"></div>`
+      const icon = L.divIcon({ className: '', html, iconSize: [size, size], iconAnchor: [size / 2, size] })
+      if (spotMarkersRef.current.has(spot.id)) {
+        spotMarkersRef.current.get(spot.id)!.setLatLng([spot.lat, spot.lng]).setIcon(icon)
+      } else {
+        const marker = L.marker([spot.lat, spot.lng], { icon, zIndexOffset: 500 }).addTo(map)
+        spotMarkersRef.current.set(spot.id, marker)
+      }
+    })
+  }, [savedSpots, activeSpotId])
 
   // Click to add spot
   useEffect(() => {

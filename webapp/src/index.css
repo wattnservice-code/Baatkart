@@ -316,7 +316,10 @@ html, body, #root {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 16px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer; transition: background 0.15s;
 }
+.spot-panel-item:active { background: rgba(255,255,255,0.06); }
+.spot-panel-item-active { background: rgba(59,130,246,0.12); border-left: 3px solid #3b82f6; }
 .spot-panel-item:last-child { border-bottom: none; }
 .spot-panel-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .spot-panel-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -408,6 +411,47 @@ html, body, #root {
   box-shadow: 0 0 8px rgba(245,158,11,0.8);
 }
 
+/* ── Saved spot pin markers ── */
+.spot-pin {
+  width: 14px; height: 14px;
+  background: #f59e0b;
+  border: 2px solid white;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.spot-pin-active {
+  width: 22px; height: 22px;
+  background: #ef4444;
+  border: 2.5px solid white;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.35), 0 2px 6px rgba(0,0,0,0.5);
+  animation: spot-pulse 1.5s infinite;
+}
+@keyframes spot-pulse {
+  0%,100% { box-shadow: 0 0 0 3px rgba(239,68,68,0.35), 0 2px 6px rgba(0,0,0,0.4); }
+  50%      { box-shadow: 0 0 0 8px rgba(239,68,68,0), 0 2px 6px rgba(0,0,0,0.4); }
+}
+.spot-pin-label {
+  transform: rotate(45deg);
+  position: absolute;
+  bottom: 26px; left: 50%; translate: -50% 0;
+  background: rgba(15,23,42,0.92);
+  color: white;
+  padding: 3px 7px;
+  border-radius: 5px;
+  font-size: 12px; font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.spot-pin-label::after {
+  content: '';
+  position: absolute;
+  top: 100%; left: 50%; translate: -50% 0;
+  border: 5px solid transparent;
+  border-top-color: rgba(15,23,42,0.92);
+}
+
 /* ── MOB map marker ── */
 .mob-map-marker { position: relative; width: 40px; height: 40px; }
 .mob-map-pulse {
@@ -473,6 +517,8 @@ html, body, #root {
 }
 .day .spot-panel-header { border-bottom-color: rgba(0,0,0,0.08); }
 .day .spot-panel-item { border-bottom-color: rgba(0,0,0,0.06); }
+.day .spot-panel-item-active { background: rgba(59,130,246,0.08); }
+.day .spot-pin-label { background: rgba(15,23,42,0.88); }
 .day .spot-panel-name { color: #0f172a; }
 .day .spot-panel-coords { color: #64748b; }
 .day .spot-panel-delete { background: rgba(0,0,0,0.06); color: #64748b; }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Navigation, Trash2, RouteIcon, LocateFixed, Map } from 'lucide-react'
+import { X, Trash2, RouteIcon, LocateFixed, Map } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 
 interface Props {
@@ -14,6 +14,8 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
   const removeSpot    = useMapStore((s) => s.removeSpot)
   const setFlyTo      = useMapStore((s) => s.setFlyTo)
   const setNavPreview = useMapStore((s) => s.setNavPreview)
+  const activeSpotId  = useMapStore((s) => s.activeSpotId)
+  const setActiveSpot = useMapStore((s) => s.setActiveSpot)
 
   const [query, setQuery]       = useState('')
   const [confirmId, setConfirmId] = useState<string | null>(null)
@@ -23,7 +25,7 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
   )
   const confirmSpot = savedSpots.find((s) => s.id === confirmId)
 
-  const goTo     = (lat: number, lng: number) => { setFlyTo({ lat, lng }); onClose() }
+  const goTo     = (id: string, lat: number, lng: number) => { setActiveSpot(id); setFlyTo({ lat, lng }); onClose() }
   const navigate = (lat: number, lng: number, name: string) => { setNavPreview({ lat, lng, name }); onClose() }
 
   const handleAddGps = () => { onClose(); onAddGps?.() }
@@ -45,15 +47,16 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
             </div>
           )}
           {filtered.map((spot) => (
-            <div key={spot.id} className="spot-panel-item">
+            <div
+              key={spot.id}
+              className={`spot-panel-item ${activeSpotId === spot.id ? 'spot-panel-item-active' : ''}`}
+              onClick={() => goTo(spot.id, spot.lat, spot.lng)}
+            >
               <div className="spot-panel-info">
                 <span className="spot-panel-name">📍 {spot.name}</span>
                 <span className="spot-panel-coords">{spot.lat.toFixed(4)}°N {spot.lng.toFixed(4)}°E</span>
               </div>
-              <div className="spot-panel-actions">
-                <button className="spot-panel-btn spot-panel-goto" onClick={() => goTo(spot.lat, spot.lng)} title="Vis på kart">
-                  <Navigation size={15} />
-                </button>
+              <div className="spot-panel-actions" onClick={(e) => e.stopPropagation()}>
                 <button className="spot-panel-btn spot-panel-nav" onClick={() => navigate(spot.lat, spot.lng, spot.name)} title="Naviger hit">
                   <RouteIcon size={15} />
                 </button>

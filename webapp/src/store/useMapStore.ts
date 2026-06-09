@@ -59,6 +59,7 @@ interface MapStore {
   navTarget: { lat: number; lng: number; name: string } | null
   mapBounds: { north: number; south: number; east: number; west: number } | null
   tileSource: 'offline' | 'online' | 'mixed' | null
+  activeSpotId: string | null
 
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
@@ -90,6 +91,7 @@ interface MapStore {
   clearNav: () => void
   setMapBounds: (b: { north: number; south: number; east: number; west: number }) => void
   setTileSource: (source: 'offline' | 'online' | 'mixed') => void
+  setActiveSpot: (id: string | null) => void
 }
 
 function loadSpots(): SavedSpot[] {
@@ -157,6 +159,7 @@ export const useMapStore = create<MapStore>((set) => ({
   navTarget: null,
   mapBounds: null,
   tileSource: null,
+  activeSpotId: null,
 
   setPosition: (pos) =>
     set((state) => {
@@ -250,4 +253,5 @@ export const useMapStore = create<MapStore>((set) => ({
   clearNav: () => set({ navTarget: null, navPreview: null }),
   setMapBounds: (b) => set({ mapBounds: b }),
   setTileSource: (source) => set({ tileSource: source }),
+  setActiveSpot: (id) => set({ activeSpotId: id }),
 }))
