@@ -188,8 +188,15 @@ export default function MapControls() {
             {isOpen('kart') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
           {isOpen('kart') && (<>
-            <button className="menu-item" style={{ color: seamarkVisible ? '#60a5fa' : undefined }} onClick={() => toggleSeamark()}>
-              <Layers size={20} /><span>Sjømerke {seamarkVisible ? '(på)' : '(av)'}</span>
+            <button className="menu-item" style={{ color: compassEnabled ? '#60a5fa' : undefined }} onClick={() => { toggleCompass(); setMenuOpen(false) }}>
+              <Compass size={20} /><span>Kompass {compassEnabled ? '(på)' : '(av)'}</span>
+            </button>
+            <button className="menu-item" onClick={() => { toggleDarkMode(); setMenuOpen(false) }}>
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+              <span>{darkMode ? 'Dagmodus' : 'Nattmodus'}</span>
+            </button>
+            <button className="menu-item" onClick={() => cycleRingRadius()}>
+              <Circle size={20} /><span>Avstandsring: {formatRingLabel(customRingRadius)}</span>
             </button>
             <button className="menu-item" style={{ color: weatherVisible ? '#60a5fa' : undefined }} onClick={() => toggleWeather()}>
               <Wind size={20} /><span>Vær og vind {weatherVisible ? '(på)' : '(av)'}</span>
@@ -197,8 +204,8 @@ export default function MapControls() {
             <button className="menu-item" style={{ color: tideVisible ? '#60a5fa' : undefined }} onClick={() => toggleTide()}>
               <Waves size={20} /><span>Tidevann {tideVisible ? '(på)' : '(av)'}</span>
             </button>
-            <button className="menu-item" onClick={() => cycleRingRadius()}>
-              <Circle size={20} /><span>Avstandsring: {formatRingLabel(customRingRadius)}</span>
+            <button className="menu-item" style={{ color: seamarkVisible ? '#60a5fa' : undefined }} onClick={() => toggleSeamark()}>
+              <Layers size={20} /><span>Sjømerke {seamarkVisible ? '(på)' : '(av)'}</span>
             </button>
           </>)}
 
@@ -230,13 +237,6 @@ export default function MapControls() {
             </button>
             <button className="menu-item" onClick={() => cycleDistUnit()}>
               <Gauge size={20} /><span>Avstand: {distUnit === 'nm' ? 'nm → m' : distUnit === 'm' ? 'm → km' : 'km → nm'}</span>
-            </button>
-            <button className="menu-item" style={{ color: compassEnabled ? '#60a5fa' : undefined }} onClick={() => { toggleCompass(); setMenuOpen(false) }}>
-              <Compass size={20} /><span>Kompass {compassEnabled ? '(på)' : '(av)'}</span>
-            </button>
-            <button className="menu-item" onClick={() => { toggleDarkMode(); setMenuOpen(false) }}>
-              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-              <span>{darkMode ? 'Dagmodus' : 'Nattmodus'}</span>
             </button>
           </>)}
         </div>
