@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Copy, Check } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
 
@@ -36,6 +37,7 @@ export default function MobOverlay() {
   const setFlyTo = useMapStore((s) => s.setFlyTo)
   const setNavTarget  = useMapStore((s) => s.setNavTarget)
   const [elapsed, setElapsed] = useState('')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (!mobPoint) return
@@ -43,6 +45,15 @@ export default function MobOverlay() {
     setElapsed(formatElapsed(mobPoint.timestamp))
     return () => clearInterval(id)
   }, [mobPoint])
+
+  const copyMobPos = () => {
+    if (!mobPoint) return
+    const text = `MOB: ${mobPoint.lat.toFixed(5)}°N ${mobPoint.lng.toFixed(5)}°E`
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 3000)
+    })
+  }
 
   if (!mobPoint) return null
 
@@ -57,6 +68,18 @@ export default function MobOverlay() {
         {brg !== null && <span className="mob-stat">{Math.round(brg)}°</span>}
         <span className="mob-stat mob-elapsed">{elapsed}</span>
       </div>
+
+      {/* Coordinates for emergency use */}
+      <button className="mob-coords-copy" onClick={copyMobPos} title="Kopier posisjon til utklippstavle">
+        <span className="mob-coords-text">
+          {mobPoint.lat.toFixed(5)}°N&nbsp;&nbsp;{mobPoint.lng.toFixed(5)}°E
+        </span>
+        {copied
+          ? <><Check size={14} /> Kopiert!</>
+          : <><Copy size={14} /> Kopier</>
+        }
+      </button>
+
       <div className="mob-actions">
         <button className="mob-goto" onClick={() => setNavTarget({ lat: mobPoint.lat, lng: mobPoint.lng, name: 'MOB' })}>
           Naviger dit

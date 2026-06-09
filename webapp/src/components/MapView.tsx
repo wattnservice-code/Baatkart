@@ -129,6 +129,7 @@ export default function MapView() {
   const boatMarkerRef   = useRef<L.Marker | null>(null)
   const trackLineRef    = useRef<L.Polyline | null>(null)
   const courseLineRef   = useRef<L.Polyline | null>(null)
+  const compassLineRef  = useRef<L.Polyline | null>(null)
   const rangeRingRef    = useRef<L.Circle | null>(null)
   const ringLabelRef    = useRef<L.Marker | null>(null)
   const mobTrackLineRef   = useRef<L.Polyline | null>(null)
@@ -157,6 +158,8 @@ export default function MapView() {
   const navTarget        = useMapStore((s) => s.navTarget)
   const savedSpots       = useMapStore((s) => s.savedSpots)
   const activeSpotId     = useMapStore((s) => s.activeSpotId)
+  const compassEnabled   = useMapStore((s) => s.compassEnabled)
+  const compassHeading   = useMapStore((s) => s.compassHeading)
   const darkMode         = useMapStore((s) => s.darkMode)
   const seamarkVisible   = useMapStore((s) => s.seamarkVisible)
   const anchorPoint      = useMapStore((s) => s.anchorPoint)
@@ -257,12 +260,10 @@ export default function MapView() {
       map.setView(latlng, zoom, { animate: false })
     } else {
       boatMarkerRef.current.setLatLng(latlng)
-      const inner = boatMarkerRef.current.getElement()?.querySelector('div') as HTMLElement | null
-      if (inner) inner.style.transform = `rotate(${position.heading}deg)`
       if (followBoat) map.panTo(latlng, { animate: true, duration: 0.5 })
     }
 
-    // Course predictor line (2 min ahead, min 300m)
+    // GPS course predictor line — orange dashed (2 min ahead, min 300m)
     const courseLen = Math.max(300, Math.min(position.speed * 120, 3000))
     const courseEnd = destPoint(position.lat, position.lng, position.heading, courseLen)
     if (!courseLineRef.current) {
@@ -294,6 +295,37 @@ export default function MapView() {
       if (el) el.textContent = formatRingLabel(radius)
     }
   }, [position, followBoat, customRingRadius])
+
+  // Boat rotation — compass heading takes priority over GPS heading
+  useEffect(() => {
+    if (!boatMarkerRef.current) return
+    const isCompassActive = compassEnabled && compassHeading !== null && !isNaN(compassHeading)
+    const h = isCompassActive ? compassHeading! : (position?.heading ?? 0)
+    const inner = boatMarkerRef.current.getElement()?.querySelector('div') as HTMLElement | null
+    if (inner) inner.style.transform = `rotate(${h}deg)`
+  }, [position, compassEnabled, compassHeading])
+
+  // Compass heading line — solid cyan, fixed 800m length
+  useEffect(() => {
+    if (!mapRef.current || !position) {
+      compassLineRef.current?.remove(); compassLineRef.current = null
+      return
+    }
+    const isActive = compassEnabled && compassHeading !== null && !isNaN(compassHeading)
+    if (!isActive) {
+      compassLineRef.current?.remove(); compassLineRef.current = null
+      return
+    }
+    const latlng: L.LatLngExpression = [position.lat, position.lng]
+    const compassEnd = destPoint(position.lat, position.lng, compassHeading!, 800)
+    if (!compassLineRef.current) {
+      compassLineRef.current = L.polyline([latlng, compassEnd], {
+        color: '#38bdf8', weight: 3, opacity: 0.95,
+      }).addTo(mapRef.current)
+    } else {
+      compassLineRef.current.setLatLngs([latlng, compassEnd])
+    }
+  }, [position, compassEnabled, compassHeading])
 
   // Track line
   useEffect(() => {
