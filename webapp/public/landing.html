@@ -87,17 +87,24 @@
     /* ── Install ── */
     .install-section { padding: 48px 24px; background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
     .install-inner { max-width: 800px; margin: 0 auto; }
-    .device-tabs { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; }
+    .device-tabs { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
     .device-tab {
-      padding: 10px 20px; border-radius: 12px; font-size: 14px; font-weight: 600;
-      border: 1px solid var(--border); background: rgba(255,255,255,0.04);
-      color: var(--muted); cursor: pointer; transition: all 0.15s;
-      display: flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: 14px; font-size: 15px; font-weight: 600;
+      border: 2px solid var(--border); background: rgba(255,255,255,0.04);
+      color: var(--muted); cursor: pointer; transition: all 0.18s;
+      display: flex; align-items: center; gap: 10px; letter-spacing: -0.2px;
     }
-    .device-tab:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
-    .device-tab.active[data-tab="ios"] { background: rgba(200,200,200,0.12); border-color: #c5c5c5; color: #e2e2e2; }
-    .device-tab.active[data-tab="android"] { background: rgba(164,198,57,0.12); border-color: #a4c639; color: #a4c639; }
-    .install-panel { display: none; margin-top: 24px; }
+    .device-tab:hover { border-color: rgba(255,255,255,0.25); color: var(--text); background: rgba(255,255,255,0.07); }
+    .device-tab.active[data-tab="ios"] {
+      background: rgba(180,180,200,0.14); border-color: #c0c0d0; color: #e8e8f0;
+      box-shadow: 0 2px 12px rgba(200,200,220,0.15);
+    }
+    .device-tab.active[data-tab="android"] {
+      background: rgba(100,180,50,0.14); border-color: #7cb842; color: #a8d870;
+      box-shadow: 0 2px 12px rgba(100,180,50,0.2);
+    }
+    .install-panel { display: none; margin-top: 24px; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
     .install-panel.active { display: block; }
     .install-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
     .install-step { padding: 18px; background: rgba(255,255,255,0.04); border-radius: 12px; border: 1px solid var(--border); }
