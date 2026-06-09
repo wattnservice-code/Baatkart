@@ -42,6 +42,7 @@ export default function MobOverlay() {
   const setFlyTo      = useMapStore((s) => s.setFlyTo)
   const setNavTarget  = useMapStore((s) => s.setNavTarget)
   const currentWeather = useMapStore((s) => s.currentWeather)
+  const boatInfo       = useMapStore((s) => s.boatInfo)
   const [elapsed, setElapsed] = useState('')
   const [copied, setCopied] = useState(false)
 
@@ -58,14 +59,18 @@ export default function MobOverlay() {
       day: '2-digit', month: '2-digit', year: 'numeric',
       hour: '2-digit', minute: '2-digit', second: '2-digit',
     })
-    const lines = [
-      `MOB ${dt}`,
-      `Posisjon: ${mobPoint.lat.toFixed(5)}°N ${mobPoint.lng.toFixed(5)}°E`,
-    ]
+    const lines = [`MOB ${dt}`]
+    if (boatInfo.name) {
+      const boatLine = [`Båt: ${boatInfo.name}`, boatInfo.boatType, boatInfo.mmsi ? `MMSI: ${boatInfo.mmsi}` : ''].filter(Boolean).join('  ')
+      lines.push(boatLine)
+    }
+    lines.push(`Posisjon: ${mobPoint.lat.toFixed(5)}°N ${mobPoint.lng.toFixed(5)}°E`)
     if (currentWeather) {
       const dir = windDirLabel(currentWeather.windDir)
       lines.push(`Vær: ${currentWeather.windSpeed.toFixed(1)} m/s ${dir}, ${Math.round(currentWeather.temp)}°C`)
     }
+    if (boatInfo.phone) lines.push(`Kontakt: ${boatInfo.phone}`)
+    if (boatInfo.notes) lines.push(`Notat: ${boatInfo.notes}`)
     navigator.clipboard?.writeText(lines.join('\n')).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 3000)

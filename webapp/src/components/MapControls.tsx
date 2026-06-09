@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp } from 'lucide-react'
+import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import SpotListPanel from './SpotListPanel'
 import SearchBar from './SearchBar'
 import SpotDialog from './SpotDialog'
 import AnchorDialog from './AnchorDialog'
 import OfflinePanel from './OfflinePanel'
+import BoatInfoPanel from './BoatInfoPanel'
 
 function formatRingLabel(r: null | number): string {
   if (r === null) return 'Auto'
@@ -17,6 +18,7 @@ export default function MapControls() {
   const [spotListOpen, setSpotListOpen]   = useState(false)
   const [searchOpen, setSearchOpen]       = useState(false)
   const [offlineOpen, setOfflineOpen]     = useState(false)
+  const [boatInfoOpen, setBoatInfoOpen]   = useState(false)
   const [gpsSpot, setGpsSpot]             = useState<{ lat: number; lng: number } | null>(null)
   const [confirmTrack, setConfirmTrack]   = useState(false)
   const [anchorOpen, setAnchorOpen]       = useState(false)
@@ -221,6 +223,9 @@ export default function MapControls() {
             {isOpen('innstillinger') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
           {isOpen('innstillinger') && (<>
+            <button className="menu-item" onClick={() => { setBoatInfoOpen(true); setMenuOpen(false) }}>
+              <Ship size={20} /><span>Båtinfo</span>
+            </button>
             <button className="menu-item" style={{ color: seamarkVisible ? '#60a5fa' : undefined }} onClick={() => toggleSeamark()}>
               <Layers size={20} /><span>Sjømerke {seamarkVisible ? '(på)' : '(av)'}</span>
             </button>
@@ -235,6 +240,7 @@ export default function MapControls() {
       )}
 
       {offlineOpen && <OfflinePanel onClose={() => setOfflineOpen(false)} />}
+      {boatInfoOpen && <BoatInfoPanel onClose={() => setBoatInfoOpen(false)} />}
 
       {spotListOpen && (
         <SpotListPanel

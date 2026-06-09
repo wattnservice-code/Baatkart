@@ -31,6 +31,14 @@ export interface MobPoint {
 export type SpeedUnit = 'kn' | 'kmh'
 export type DistUnit = 'm' | 'km' | 'nm'
 
+export interface BoatInfo {
+  name: string
+  mmsi: string
+  phone: string
+  boatType: string
+  notes: string
+}
+
 const RING_CYCLE = [null, 200, 500, 1000, 2000, 5000] as const
 export type RingSize = typeof RING_CYCLE[number]
 
@@ -63,6 +71,7 @@ interface MapStore {
   compassHeading: number | null
   currentWeather: { windSpeed: number; windDir: number; temp: number } | null
   offlineOnly: boolean
+  boatInfo: BoatInfo
 
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
@@ -98,6 +107,7 @@ interface MapStore {
   setCompassHeading: (h: number) => void
   setCurrentWeather: (w: { windSpeed: number; windDir: number; temp: number } | null) => void
   toggleOfflineOnly: () => void
+  setBoatInfo: (info: Partial<BoatInfo>) => void
 }
 
 function loadSpots(): SavedSpot[] {
@@ -119,6 +129,12 @@ function loadMob(): MobPoint | null {
 }
 function saveMob(mob: MobPoint | null) {
   localStorage.setItem('mobPoint', JSON.stringify(mob))
+}
+
+const BOAT_INFO_KEY = 'baatkart-boatinfo'
+function loadBoatInfo(): BoatInfo {
+  try { return { name: '', mmsi: '', phone: '', boatType: '', notes: '', ...JSON.parse(localStorage.getItem(BOAT_INFO_KEY) ?? '{}') } }
+  catch { return { name: '', mmsi: '', phone: '', boatType: '', notes: '' } }
 }
 
 function loadBool(key: string, def: boolean): boolean {
@@ -169,6 +185,7 @@ export const useMapStore = create<MapStore>((set) => ({
   compassHeading: null,
   currentWeather: null,
   offlineOnly: loadBool('offlineOnly', false),
+  boatInfo: loadBoatInfo(),
 
   setPosition: (pos) =>
     set((state) => {
@@ -266,4 +283,9 @@ export const useMapStore = create<MapStore>((set) => ({
   setCompassHeading: (h) => set({ compassHeading: h }),
   setCurrentWeather: (w) => set({ currentWeather: w }),
   toggleOfflineOnly: () => set((s) => { const v = !s.offlineOnly; localStorage.setItem('offlineOnly', String(v)); return { offlineOnly: v } }),
+  setBoatInfo: (info) => set((s) => {
+    const updated = { ...s.boatInfo, ...info }
+    localStorage.setItem(BOAT_INFO_KEY, JSON.stringify(updated))
+    return { boatInfo: updated }
+  }),
 }))

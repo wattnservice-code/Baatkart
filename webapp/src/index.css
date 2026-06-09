@@ -777,6 +777,16 @@ html, body, #root {
 .day .offline-info { color: #64748b; }
 .day .offline-area-coords { color: #334155; }
 
+/* ── Boat info panel ── */
+.boat-info-form { padding: 8px 16px 4px; display: flex; flex-direction: column; gap: 10px; }
+.boat-info-field { display: flex; flex-direction: column; gap: 3px; }
+.boat-info-label { font-size: 12px; font-weight: 600; color: #94a3b8; }
+.boat-info-hint { font-size: 11px; color: #64748b; }
+.boat-info-preview { padding: 10px 16px; border-top: 1px solid rgba(255,255,255,0.07); }
+.boat-info-preview-text { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: #94a3b8; margin-top: 4px; }
+.day .boat-info-label { color: #64748b; }
+.day .boat-info-preview { border-color: rgba(0,0,0,0.08); }
+
 .offline-only-toggle {
   display: flex; align-items: center; gap: 8px;
   width: 100%; padding: 10px 16px;
