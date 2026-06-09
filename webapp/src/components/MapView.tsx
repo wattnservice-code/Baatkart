@@ -5,6 +5,7 @@ import { useMapStore } from '../store/useMapStore'
 import SpotDialog from './SpotDialog'
 import { getTile } from '../offline/tileDb'
 import { tileKey } from '../offline/tileCalc'
+import { setMapInstance } from '../mapInstance'
 
 // Track cache vs network tile loads and report to store (debounced)
 let _cacheHits = 0
@@ -187,7 +188,7 @@ export default function MapView() {
     seamarkTileRef.current = new OfflineTileLayer(SEAMARK_URL, {
       attribution: SEAMARK_ATTR, maxZoom: 19,
     }, 'seamark').addTo(map)
-    L.control.zoom({ position: 'topright' }).addTo(map)
+    setMapInstance(map)
     map.on('dragstart', () => setFollowBoat(false))
 
     const updateBounds = () => {
@@ -224,7 +225,7 @@ export default function MapView() {
     })
 
     mapRef.current = map
-    return () => { map.remove(); mapRef.current = null }
+    return () => { map.remove(); mapRef.current = null; setMapInstance(null) }
   }, [setFollowBoat])
 
   // Dark/day mode tile switch

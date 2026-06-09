@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship } from 'lucide-react'
+import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship, Plus, Minus } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
+import { getMapInstance } from '../mapInstance'
 import SpotListPanel from './SpotListPanel'
 import SearchBar from './SearchBar'
 import SpotDialog from './SpotDialog'
@@ -99,6 +100,12 @@ export default function MapControls() {
       </button>
 
       <div className="map-controls">
+        <button className="fab" onClick={() => getMapInstance()?.zoomIn()} title="Zoom inn">
+          <Plus size={22} />
+        </button>
+        <button className="fab" onClick={() => getMapInstance()?.zoomOut()} title="Zoom ut">
+          <Minus size={22} />
+        </button>
         <button className={`fab ${followBoat ? 'fab-active' : ''}`} onClick={() => setFollowBoat(true)} title="Sentrer kart">
           <Navigation size={22} />
         </button>
