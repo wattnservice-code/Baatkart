@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Båtkart – Navigasjon for norske farvann</title>
+  <meta name="description" content="Gratis navigasjonsapp for norske farvann. Sjøkart, tidevann, vær og GPS – fungerer offline." />
+  <meta property="og:title" content="Båtkart" />
+  <meta property="og:description" content="Navigasjonsapp for norske farvann" />
+  <meta name="theme-color" content="#0f172a" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f172a;
+      --surface:  #1e293b;
+      --border:   rgba(255,255,255,0.08);
+      --accent:   #3b82f6;
+      --accent2:  #06b6d4;
+      --text:     #f1f5f9;
+      --muted:    #94a3b8;
+      --danger:   #ef4444;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── Nav ── */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: rgba(15,23,42,0.92);
+      backdrop-filter: blur(12px); z-index: 10;
+    }
+    .nav-logo { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+    .nav-logo span { font-size: 22px; }
+    .btn-open-nav {
+      background: var(--accent); color: white; border: none;
+      border-radius: 10px; padding: 8px 18px; font-size: 14px; font-weight: 600;
+      cursor: pointer; text-decoration: none; display: inline-block;
+    }
+    .btn-open-nav:hover { background: #2563eb; }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 64px 24px 48px;
+      text-align: center;
+      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(59,130,246,0.12), transparent);
+    }
+    .hero-icon { font-size: 64px; margin-bottom: 16px; display: block; }
+    h1 { font-size: clamp(32px, 6vw, 56px); font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; }
+    h1 em { font-style: normal; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-sub { font-size: clamp(16px, 2.5vw, 20px); color: var(--muted); max-width: 480px; margin: 0 auto 36px; }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--accent); color: white; border: none;
+      border-radius: 14px; padding: 14px 32px; font-size: 16px; font-weight: 700;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 20px rgba(59,130,246,0.35);
+    }
+    .btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+    .btn-secondary {
+      background: var(--surface); color: var(--text); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 28px; font-size: 16px; font-weight: 600;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    }
+
+    /* ── Features ── */
+    .section { padding: 48px 24px; max-width: 960px; margin: 0 auto; }
+    .section-label { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .section h2 { font-size: clamp(22px, 4vw, 32px); font-weight: 700; margin-bottom: 32px; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .feature {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      padding: 20px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .feature-icon { font-size: 28px; }
+    .feature h3 { font-size: 15px; font-weight: 600; }
+    .feature p { font-size: 13px; color: var(--muted); }
+
+    /* ── Install ── */
+    .install-section { padding: 48px 24px; background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .install-inner { max-width: 960px; margin: 0 auto; }
+    .install-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 24px; }
+    .install-step { padding: 16px; background: rgba(255,255,255,0.04); border-radius: 12px; border: 1px solid var(--border); }
+    .install-step-num { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+    .install-step h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .install-step p { font-size: 13px; color: var(--muted); }
+    .platform-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.07); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+    .ios { color: #c5c5c5; }
+    .android { color: #a4c639; }
+
+    /* ── QR ── */
+    .qr-section { padding: 48px 24px; text-align: center; max-width: 960px; margin: 0 auto; }
+    .qr-wrap { display: inline-flex; flex-direction: column; align-items: center; gap: 16px; }
+    #qr-canvas { border-radius: 16px; background: white; padding: 16px; }
+    .qr-url { font-size: 13px; color: var(--muted); font-family: monospace; }
+
+    /* ── MOB info ── */
+    .mob-banner {
+      margin: 0 24px 0; max-width: 912px; margin: 0 auto;
+      background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 14px; padding: 16px 20px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .mob-banner-icon { font-size: 24px; flex-shrink: 0; }
+    .mob-banner h3 { font-size: 14px; font-weight: 700; color: #fca5a5; margin-bottom: 4px; }
+    .mob-banner p { font-size: 13px; color: #94a3b8; }
+
+    /* ── Footer ── */
+    footer {
+      padding: 32px 24px; text-align: center;
+      border-top: 1px solid var(--border); color: var(--muted); font-size: 13px;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    @media (max-width: 480px) {
+      .hero { padding: 48px 16px 36px; }
+      .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+      .hero-btns { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><span>⛵</span> Båtkart</div>
+  <a href="/" class="btn-open-nav">Åpne appen →</a>
+</nav>
+
+<section class="hero">
+  <span class="hero-icon">🗺️</span>
+  <h1>Navigasjon for<br/><em>norske farvann</em></h1>
+  <p class="hero-sub">Gratis sjøkart-app med GPS, tidevann, vær og offline-modus. Laget for nettbrett om bord.</p>
+  <div class="hero-btns">
+    <a href="/" class="btn-primary">⛵ Åpne Båtkart</a>
+    <a href="#installer" class="btn-secondary">📲 Installer som app</a>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-label">Funksjoner</div>
+  <h2>Alt du trenger på vannet</h2>
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">🗺️</div>
+      <h3>Kartverket sjøkart</h3>
+      <p>Offisielle norske sjøkart med dybder og sjømerker.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📍</div>
+      <h3>GPS og sporing</h3>
+      <p>Sanntids GPS, kurs, fart og sporlogging med replay.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🌊</div>
+      <h3>Tidevann</h3>
+      <p>Høyvann og lavvann fra Kartverket for din posisjon.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🌬️</div>
+      <h3>Vær og vind</h3>
+      <p>Vindretning og -styrke fra Meteorologisk institutt.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">⚓</div>
+      <h3>Ankeralarm</h3>
+      <p>Lydalarm med vibrasjon hvis båten drifter ut av radius.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📶</div>
+      <h3>Offline kart</h3>
+      <p>Last ned kartområder hjemmefra. Fungerer uten nett til havs.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🧭</div>
+      <h3>Kompass</h3>
+      <p>Kompassretning og GPS-kurs som separate linjer på kartet.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">⚠️</div>
+      <h3>MOB – Mann over bord</h3>
+      <p>Én-trykks nødknapp. Kopierer posisjon, tid og båtinfo til utklippstavlen.</p>
+    </div>
+  </div>
+</section>
+
+<div style="max-width: 912px; margin: 0 auto 32px; padding: 0 24px;">
+  <div class="mob-banner">
+    <div class="mob-banner-icon">⚠️</div>
+    <div>
+      <h3>MOB – Mann over bord</h3>
+      <p>Trykk MOB-knappen → appen låser posisjon, starter nedtelling og viser avstand. Kopiér nødmelding med båtnavn, MMSI, GPS-koordinater, tid og vær – klar til å sende til nødetater.</p>
+    </div>
+  </div>
+</div>
+
+<div class="install-section" id="installer">
+  <div class="install-inner">
+    <div class="section-label">Installasjon</div>
+    <h2 style="font-size: clamp(22px,4vw,32px); font-weight:700; margin-bottom:8px;">Installer som app på telefonen</h2>
+    <p style="color:var(--muted); margin-bottom: 24px; font-size:14px;">Båtkart er en PWA – ingen App Store nødvendig. Fungerer på iPhone og Android.</p>
+
+    <div class="install-steps">
+      <div class="install-step">
+        <div class="platform-badge ios">🍎 iPhone / iPad</div>
+        <div class="install-step-num">Steg 1</div>
+        <h4>Åpne i Safari</h4>
+        <p>Nettstedet <em>må</em> åpnes i Safari for at installasjon skal fungere på iOS.</p>
+      </div>
+      <div class="install-step">
+        <div class="platform-badge ios">🍎 iPhone / iPad</div>
+        <div class="install-step-num">Steg 2</div>
+        <h4>Del-knappen</h4>
+        <p>Trykk på <strong>□↑</strong> dele-ikonet nederst i Safari-linjen.</p>
+      </div>
+      <div class="install-step">
+        <div class="platform-badge ios">🍎 iPhone / iPad</div>
+        <div class="install-step-num">Steg 3</div>
+        <h4>Legg til på Hjem-skjerm</h4>
+        <p>Scroll ned og trykk «Legg til på Hjem-skjerm» → «Legg til».</p>
+      </div>
+      <div class="install-step">
+        <div class="platform-badge android">🤖 Android</div>
+        <div class="install-step-num">Steg 1–2</div>
+        <h4>Chrome-meny</h4>
+        <p>Trykk ⋮ øverst til høyre i Chrome → «Legg til på startskjermen» → «Installer».</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="qr-section">
+  <div class="section-label">Del appen</div>
+  <h2 style="margin-bottom:24px;">Skann for å åpne</h2>
+  <div class="qr-wrap">
+    <canvas id="qr-canvas"></canvas>
+    <div class="qr-url" id="qr-url-label"></div>
+  </div>
+</section>
+
+<footer>
+  <p>Båtkart er gratis og åpen kildekode. &nbsp;·&nbsp; <a href="/">Åpne appen</a></p>
+</footer>
+
+<!-- QR code — inline generator, no external API needed -->
+<script>
+(function() {
+  // Minimal QR code renderer using qrcode-generator from CDN
+  var s = document.createElement('script')
+  s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'
+  s.onload = function() {
+    var url = window.location.origin + '/'
+    document.getElementById('qr-url-label').textContent = url
+    try {
+      var qr = qrcode(0, 'M')
+      qr.addData(url)
+      qr.make()
+      var canvas = document.getElementById('qr-canvas')
+      var size = Math.min(window.innerWidth - 80, 220)
+      var cellSize = Math.floor(size / qr.getModuleCount())
+      canvas.width = canvas.height = cellSize * qr.getModuleCount()
+      var ctx = canvas.getContext('2d')
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.fillStyle = '#0f172a'
+      for (var r = 0; r < qr.getModuleCount(); r++) {
+        for (var c = 0; c < qr.getModuleCount(); c++) {
+          if (qr.isDark(r, c)) ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize)
+        }
+      }
+    } catch(e) {}
+  }
+  document.head.appendChild(s)
+})()
+</script>
+
+</body>
+</html>
