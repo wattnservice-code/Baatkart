@@ -129,7 +129,11 @@ export default function MapControls() {
         <button className={`fab ${addingSpot || spotListOpen ? 'fab-active' : ''}`} onClick={handlePinBtn} title="Steder">
           <MapPin size={22} />
         </button>
-        <button className={`fab ${menuOpen ? 'fab-active' : ''}`} onClick={() => setMenuOpen(!menuOpen)} title="Meny">
+        <button className={`fab ${menuOpen ? 'fab-active' : ''}`} onClick={() => {
+          const opening = !menuOpen
+          setMenuOpen(opening)
+          if (opening) { setSpotListOpen(false); setSearchOpen(false); setOfflineOpen(false) }
+        }} title="Meny">
           {menuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
