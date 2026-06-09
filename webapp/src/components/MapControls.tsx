@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship, Plus, Minus } from 'lucide-react'
+import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship, Plus, Minus, Flag, Eye } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import SpotListPanel from './SpotListPanel'
@@ -61,10 +61,17 @@ export default function MapControls() {
   const toggleSeamark    = useMapStore((s) => s.toggleSeamark)
   const toggleWeather    = useMapStore((s) => s.toggleWeather)
   const toggleTide       = useMapStore((s) => s.toggleTide)
-  const distUnit         = useMapStore((s) => s.distUnit)
-  const toggleSpeedUnit  = useMapStore((s) => s.toggleSpeedUnit)
-  const cycleDistUnit    = useMapStore((s) => s.cycleDistUnit)
-  const cycleRingRadius  = useMapStore((s) => s.cycleRingRadius)
+  const distUnit           = useMapStore((s) => s.distUnit)
+  const lookAhead          = useMapStore((s) => s.lookAhead)
+  const waypoints          = useMapStore((s) => s.waypoints)
+  const addingWaypoint     = useMapStore((s) => s.addingWaypoint)
+  const toggleSpeedUnit    = useMapStore((s) => s.toggleSpeedUnit)
+  const cycleDistUnit      = useMapStore((s) => s.cycleDistUnit)
+  const cycleRingRadius    = useMapStore((s) => s.cycleRingRadius)
+  const toggleLookAhead    = useMapStore((s) => s.toggleLookAhead)
+  const setAddingWaypoint  = useMapStore((s) => s.setAddingWaypoint)
+  const clearWaypoints     = useMapStore((s) => s.clearWaypoints)
+  const removeWaypoint     = useMapStore((s) => s.removeWaypoint)
 
   const handleMob = () => {
     if (mobPoint || !position) return
@@ -94,6 +101,12 @@ export default function MapControls() {
           <button onClick={() => setAddingSpot(false)}><X size={18} /></button>
         </div>
       )}
+      {addingWaypoint && (
+        <div className="map-banner" style={{ background: '#7c3aed' }}>
+          <span>Trykk på kartet for å legge til waypoint</span>
+          <button onClick={() => setAddingWaypoint(false)}><X size={18} /></button>
+        </div>
+      )}
 
       <button className={`mob-btn ${mobPoint ? 'mob-btn-active' : ''}`} onClick={handleMob} title="Mann over bord" disabled={!!mobPoint}>
         MOB
@@ -106,7 +119,11 @@ export default function MapControls() {
         <button className="fab" onClick={() => getMapInstance()?.zoomOut()} title="Zoom ut">
           <Minus size={22} />
         </button>
-        <button className={`fab ${followBoat ? 'fab-active' : ''}`} onClick={() => setFollowBoat(true)} title="Sentrer kart">
+        <button className={`fab ${followBoat ? 'fab-active' : ''}`} onClick={() => {
+          setFollowBoat(true)
+          const m = getMapInstance()
+          if (m && m.getZoom() < 14) m.setZoom(14)
+        }} title="Sentrer kart">
           <Navigation size={22} />
         </button>
         <button className={`fab ${addingSpot || spotListOpen ? 'fab-active' : ''}`} onClick={handlePinBtn} title="Steder">
@@ -205,6 +222,37 @@ export default function MapControls() {
             <button className="menu-item" style={{ color: tideVisible ? '#60a5fa' : undefined }} onClick={() => toggleTide()}>
               <Waves size={20} /><span>Tidevann {tideVisible ? '(på)' : '(av)'}</span>
             </button>
+            <button className="menu-item" style={{ color: lookAhead ? '#60a5fa' : undefined }} onClick={() => toggleLookAhead()}>
+              <Eye size={20} /><span>Fremovervisning {lookAhead ? '(på)' : '(av)'}</span>
+            </button>
+          </>)}
+
+          <div className="menu-divider" />
+          <button className="menu-section-toggle" onClick={() => toggleSec('waypoints', false)}>
+            <span>Waypoints {waypoints.length > 0 ? `(${waypoints.length})` : ''}</span>
+            {isOpen('waypoints', false) ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          </button>
+          {isOpen('waypoints', false) && (<>
+            <button className="menu-item" style={{ color: addingWaypoint ? '#a78bfa' : undefined }} onClick={() => { setAddingWaypoint(!addingWaypoint); setMenuOpen(false) }}>
+              <Flag size={20} /><span>{addingWaypoint ? 'Avbryt waypoint' : 'Legg til waypoint'}</span>
+            </button>
+            {waypoints.map((wp, i) => (
+              <div key={wp.id} className="menu-item" style={{ justifyContent: 'space-between' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className="waypoint-pin-inline">{i + 1}</span>
+                  {wp.name}
+                </span>
+                <button style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 4 }}
+                  onClick={() => removeWaypoint(wp.id)}>
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+            {waypoints.length > 0 && (
+              <button className="menu-item" style={{ color: '#f87171' }} onClick={() => clearWaypoints()}>
+                <Trash2 size={20} /><span>Slett alle waypoints</span>
+              </button>
+            )}
           </>)}
 
           <div className="menu-divider" />

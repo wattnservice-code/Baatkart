@@ -22,6 +22,13 @@ export interface SavedSpot {
   name: string
 }
 
+export interface Waypoint {
+  id: string
+  lat: number
+  lng: number
+  name: string
+}
+
 export interface MobPoint {
   lat: number
   lng: number
@@ -72,6 +79,9 @@ interface MapStore {
   currentWeather: { windSpeed: number; windDir: number; temp: number } | null
   offlineOnly: boolean
   boatInfo: BoatInfo
+  lookAhead: boolean
+  waypoints: Waypoint[]
+  addingWaypoint: boolean
 
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
@@ -108,6 +118,11 @@ interface MapStore {
   setCurrentWeather: (w: { windSpeed: number; windDir: number; temp: number } | null) => void
   toggleOfflineOnly: () => void
   setBoatInfo: (info: Partial<BoatInfo>) => void
+  toggleLookAhead: () => void
+  addWaypoint: (wp: Waypoint) => void
+  removeWaypoint: (id: string) => void
+  clearWaypoints: () => void
+  setAddingWaypoint: (v: boolean) => void
 }
 
 function loadSpots(): SavedSpot[] {
@@ -186,6 +201,9 @@ export const useMapStore = create<MapStore>((set) => ({
   currentWeather: null,
   offlineOnly: loadBool('offlineOnly', false),
   boatInfo: loadBoatInfo(),
+  lookAhead: loadBool('lookAhead', false),
+  waypoints: [],
+  addingWaypoint: false,
 
   setPosition: (pos) =>
     set((state) => {
@@ -283,6 +301,11 @@ export const useMapStore = create<MapStore>((set) => ({
   setCompassHeading: (h) => set({ compassHeading: h }),
   setCurrentWeather: (w) => set({ currentWeather: w }),
   toggleOfflineOnly: () => set((s) => { const v = !s.offlineOnly; localStorage.setItem('offlineOnly', String(v)); return { offlineOnly: v } }),
+  toggleLookAhead: () => set((s) => { const v = !s.lookAhead; localStorage.setItem('lookAhead', String(v)); return { lookAhead: v } }),
+  addWaypoint: (wp) => set((s) => ({ waypoints: [...s.waypoints, wp], addingWaypoint: false })),
+  removeWaypoint: (id) => set((s) => ({ waypoints: s.waypoints.filter((w) => w.id !== id) })),
+  clearWaypoints: () => set({ waypoints: [] }),
+  setAddingWaypoint: (v) => set({ addingWaypoint: v }),
   setBoatInfo: (info) => set((s) => {
     const updated = { ...s.boatInfo, ...info }
     localStorage.setItem(BOAT_INFO_KEY, JSON.stringify(updated))

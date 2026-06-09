@@ -3,6 +3,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useMapStore } from '../store/useMapStore'
 import SpotDialog from './SpotDialog'
+import WaypointDialog from './WaypointDialog'
 import { getTile } from '../offline/tileDb'
 import { tileKey } from '../offline/tileCalc'
 import { setMapInstance } from '../mapInstance'
@@ -149,7 +150,10 @@ export default function MapView() {
   const seamarkTileRef  = useRef<L.TileLayer | null>(null)
   const spotMarkersRef  = useRef<Map<string, L.Marker>>(new Map())
 
-  const [pendingSpot, setPendingSpot] = useState<{ lat: number; lng: number } | null>(null)
+  const [pendingSpot, setPendingSpot]       = useState<{ lat: number; lng: number } | null>(null)
+  const [pendingWaypoint, setPendingWaypoint] = useState<{ lat: number; lng: number } | null>(null)
+  const waypointLineRef = useRef<L.Polyline | null>(null)
+  const waypointMarkersRef = useRef<Map<string, L.Marker>>(new Map())
 
   const position         = useMapStore((s) => s.position)
   const track            = useMapStore((s) => s.track)
@@ -170,6 +174,10 @@ export default function MapView() {
   const anchorRadius     = useMapStore((s) => s.anchorRadius)
   const anchorAlarm      = useMapStore((s) => s.anchorAlarm)
   const customRingRadius = useMapStore((s) => s.customRingRadius)
+  const lookAhead        = useMapStore((s) => s.lookAhead)
+  const waypoints        = useMapStore((s) => s.waypoints)
+  const addingWaypoint   = useMapStore((s) => s.addingWaypoint)
+  const addWaypoint      = useMapStore((s) => s.addWaypoint)
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
   const setFlyTo         = useMapStore((s) => s.setFlyTo)
 
@@ -264,7 +272,15 @@ export default function MapView() {
       map.setView(latlng, zoom, { animate: false })
     } else {
       boatMarkerRef.current.setLatLng(latlng)
-      if (followBoat) map.panTo(latlng, { animate: true, duration: 0.5 })
+      if (followBoat) {
+        if (lookAhead && position.heading !== undefined) {
+          const aheadM = zoom >= 15 ? 150 : zoom >= 13 ? 400 : 900
+          const center = destPoint(position.lat, position.lng, position.heading, aheadM)
+          map.panTo(center, { animate: true, duration: 0.5 })
+        } else {
+          map.panTo(latlng, { animate: true, duration: 0.5 })
+        }
+      }
     }
 
     // GPS course predictor line — orange dashed (2 min ahead, min 300m)
@@ -509,20 +525,69 @@ export default function MapView() {
     })
   }, [savedSpots, activeSpotId])
 
-  // Click to add spot
+  // Waypoint markers + route line
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    const currentIds = new Set(waypoints.map((w) => w.id))
+    waypointMarkersRef.current.forEach((marker, id) => {
+      if (!currentIds.has(id)) { marker.remove(); waypointMarkersRef.current.delete(id) }
+    })
+
+    waypoints.forEach((wp, i) => {
+      const html = `<div class="waypoint-pin">${i + 1}</div>`
+      const icon = L.divIcon({ className: '', html, iconSize: [28, 28], iconAnchor: [14, 14] })
+      if (waypointMarkersRef.current.has(wp.id)) {
+        waypointMarkersRef.current.get(wp.id)!.setLatLng([wp.lat, wp.lng]).setIcon(icon)
+      } else {
+        const marker = L.marker([wp.lat, wp.lng], { icon, zIndexOffset: 600 }).addTo(map)
+        waypointMarkersRef.current.set(wp.id, marker)
+      }
+    })
+
+    const pts = waypoints.map((w) => [w.lat, w.lng] as L.LatLngExpression)
+    if (pts.length >= 2) {
+      if (!waypointLineRef.current) {
+        waypointLineRef.current = L.polyline(pts, { color: '#a78bfa', weight: 3, opacity: 0.9, dashArray: '10, 6' }).addTo(map)
+      } else {
+        waypointLineRef.current.setLatLngs(pts)
+      }
+    } else {
+      waypointLineRef.current?.remove()
+      waypointLineRef.current = null
+    }
+  }, [waypoints])
+
+  // Click to add spot or waypoint
   useEffect(() => {
     if (!mapRef.current) return
     const map = mapRef.current
-    const onClick = (e: L.LeafletMouseEvent) => { if (addingSpot) setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng }) }
+    const onClick = (e: L.LeafletMouseEvent) => {
+      if (addingWaypoint) setPendingWaypoint({ lat: e.latlng.lat, lng: e.latlng.lng })
+      else if (addingSpot) setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng })
+    }
     map.on('click', onClick)
-    map.getContainer().style.cursor = addingSpot ? 'crosshair' : ''
+    map.getContainer().style.cursor = (addingSpot || addingWaypoint) ? 'crosshair' : ''
     return () => { map.off('click', onClick) }
-  }, [addingSpot])
+  }, [addingSpot, addingWaypoint])
 
   return (
     <>
       <div ref={containerRef} className="w-full h-full" />
       {pendingSpot && <SpotDialog lat={pendingSpot.lat} lng={pendingSpot.lng} onClose={() => setPendingSpot(null)} />}
+      {pendingWaypoint && (
+        <WaypointDialog
+          lat={pendingWaypoint.lat}
+          lng={pendingWaypoint.lng}
+          index={waypoints.length + 1}
+          onSave={(name) => {
+            addWaypoint({ id: `wp-${Date.now()}`, lat: pendingWaypoint.lat, lng: pendingWaypoint.lng, name })
+            setPendingWaypoint(null)
+          }}
+          onClose={() => { setPendingWaypoint(null); useMapStore.getState().setAddingWaypoint(true) }}
+        />
+      )}
     </>
   )
 }
