@@ -152,10 +152,11 @@ export default function MapView() {
 
   const [pendingSpot, setPendingSpot]       = useState<{ lat: number; lng: number } | null>(null)
   const [pendingWaypoint, setPendingWaypoint] = useState<{ lat: number; lng: number } | null>(null)
-  const waypointLineRef = useRef<L.Polyline | null>(null)
+  const waypointLineRef    = useRef<L.Polyline | null>(null)
   const waypointMarkersRef = useRef<Map<string, L.Marker>>(new Map())
 
   const position         = useMapStore((s) => s.position)
+  const positionRef      = useRef(position)
   const track            = useMapStore((s) => s.track)
   const mobTrack         = useMapStore((s) => s.mobTrack)
   const mobPoint         = useMapStore((s) => s.mobPoint)
@@ -236,6 +237,17 @@ export default function MapView() {
     return () => { map.remove(); mapRef.current = null; setMapInstance(null) }
   }, [setFollowBoat])
 
+  // Keep position ref current + update route line first point
+  useEffect(() => {
+    positionRef.current = position
+    if (!waypointLineRef.current || !position) return
+    const pts = waypointLineRef.current.getLatLngs() as L.LatLng[]
+    if (pts.length > 0) {
+      pts[0] = L.latLng(position.lat, position.lng)
+      waypointLineRef.current.setLatLngs(pts)
+    }
+  }, [position])
+
   // Dark/day mode tile switch
   useEffect(() => {
     if (!baseTileRef.current || !kartvTileRef.current) return
@@ -262,7 +274,8 @@ export default function MapView() {
     const map = mapRef.current
     const latlng: L.LatLngExpression = [position.lat, position.lng]
     const zoom = map.getZoom()
-    const radius = customRingRadius ?? ringRadius(zoom)
+    const speedRadius = position.speed > 0.5 ? Math.max(100, Math.min(10000, position.speed * 120)) : ringRadius(zoom)
+    const radius = customRingRadius ?? speedRadius
 
     // Boat marker
     const size = boatSize(zoom)
@@ -531,11 +544,20 @@ export default function MapView() {
     const map = mapRef.current
     if (!map) return
 
-    // Build full route: [...waypoints, navTarget]
+    // Build full route: position → waypoints → navTarget
+    const pos = positionRef.current
     const routePts: L.LatLngExpression[] = [
+      ...(pos ? [[pos.lat, pos.lng] as L.LatLngExpression] : []),
       ...waypoints.map((w) => [w.lat, w.lng] as L.LatLngExpression),
       ...(navTarget ? [[navTarget.lat, navTarget.lng] as L.LatLngExpression] : []),
     ]
+
+    // Hide green nav line when waypoints exist — route shows the full path
+    if (waypoints.length > 0 && navLineRef.current) {
+      navLineRef.current.setStyle({ opacity: 0 })
+    } else if (navLineRef.current) {
+      navLineRef.current.setStyle({ opacity: 1 })
+    }
 
     // Route line
     if (routePts.length >= 2) {

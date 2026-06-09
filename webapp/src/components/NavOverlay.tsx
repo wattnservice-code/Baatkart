@@ -41,15 +41,27 @@ export default function NavOverlay() {
   const navTarget = useMapStore((s) => s.navTarget)
   const position  = useMapStore((s) => s.position)
   const distUnit  = useMapStore((s) => s.distUnit)
+  const waypoints = useMapStore((s) => s.waypoints)
   const clearNav  = useMapStore((s) => s.clearNav)
 
   if (!navTarget) return null
 
-  const dist = position ? haversineM(position.lat, position.lng, navTarget.lat, navTarget.lng) : null
+  // Total remaining route distance: position → remaining waypoints → navTarget
+  const routePoints = position
+    ? [{ lat: position.lat, lng: position.lng }, ...waypoints, { lat: navTarget.lat, lng: navTarget.lng }]
+    : [...waypoints, { lat: navTarget.lat, lng: navTarget.lng }]
+
+  const totalDist = routePoints.length < 2 ? null : routePoints.reduce((sum, pt, i) => {
+    if (i === 0) return 0
+    return sum + haversineM(routePoints[i - 1].lat, routePoints[i - 1].lng, pt.lat, pt.lng)
+  }, 0)
+
+  const directDist = position ? haversineM(position.lat, position.lng, navTarget.lat, navTarget.lng) : null
+  const dist = totalDist ?? directDist
   const brg  = position ? bearingDeg(position.lat, position.lng, navTarget.lat, navTarget.lng) : null
   const dir  = brg !== null ? DIRS[Math.round(brg / 45) % 8] : null
   const eta  = (dist !== null && position) ? formatETA(dist, position.speed) : '---'
-  const arrived = dist !== null && dist < 30
+  const arrived = directDist !== null && directDist < 30
 
   return (
     <div className={`nav-overlay ${arrived ? 'nav-arrived' : ''}`}>
