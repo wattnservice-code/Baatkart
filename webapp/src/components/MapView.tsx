@@ -286,7 +286,7 @@ export default function MapView() {
     } else {
       boatMarkerRef.current.setLatLng(latlng)
       if (followBoat) {
-        const autoLookAhead = position.speed > 1.0 && position.heading !== undefined
+        const autoLookAhead = position.speed > 2.06 && position.heading !== undefined
         if ((lookAhead || autoLookAhead)) {
           const b = map.getBounds()
           const viewHeightM = haversineM(b.getSouth(), b.getCenter().lng, b.getNorth(), b.getCenter().lng)
