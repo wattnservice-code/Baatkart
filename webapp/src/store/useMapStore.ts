@@ -71,7 +71,7 @@ interface MapStore {
   customRingRadius: RingSize
   flyTo: { lat: number; lng: number } | null
   searchPin: { lat: number; lng: number; name: string } | null
-  spotMenu: { lat: number; lng: number; name: string } | null
+  spotMenu: { lat: number; lng: number; name: string; id?: string } | null
   navPreview: { lat: number; lng: number; name: string } | null
   navTarget: { lat: number; lng: number; name: string } | null
   mapBounds: { north: number; south: number; east: number; west: number } | null
@@ -110,7 +110,7 @@ interface MapStore {
   cycleRingRadius: () => void
   setFlyTo: (pos: { lat: number; lng: number } | null) => void
   setSearchPin: (pin: { lat: number; lng: number; name: string } | null) => void
-  setSpotMenu: (spot: { lat: number; lng: number; name: string } | null) => void
+  setSpotMenu: (spot: { lat: number; lng: number; name: string; id?: string } | null) => void
   setNavPreview: (target: { lat: number; lng: number; name: string }) => void
   confirmNav: () => void
   clearNavPreview: () => void

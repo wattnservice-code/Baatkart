@@ -635,7 +635,7 @@ export default function MapView() {
         marker.on('click', () => {
           const s = useMapStore.getState()
           s.setActiveSpot(spot.id)
-          s.setSpotMenu({ lat: spot.lat, lng: spot.lng, name: spot.name })
+          s.setSpotMenu({ lat: spot.lat, lng: spot.lng, name: spot.name, id: spot.id })
         })
         spotMarkersRef.current.set(spot.id, marker)
       }

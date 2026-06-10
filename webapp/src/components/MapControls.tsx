@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, MapPin, X, Play, Square, Trash2, Layers, Compass, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, Ship, Plus, Minus, Flag, Globe, Zap, Settings } from 'lucide-react'
+import { Navigation, MapPin, X, Play, Square, Trash2, Layers, Compass, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, Ship, Plus, Minus, Flag, Globe, Zap, Settings, Map, Bookmark } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
-import { openGoogleEarth } from '../googleEarth'
+import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
 import { useMapStore } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import SpotListPanel from './SpotListPanel'
@@ -100,6 +100,8 @@ export default function MapControls() {
   const spotMenu           = useMapStore((s) => s.spotMenu)
   const setSpotMenu        = useMapStore((s) => s.setSpotMenu)
   const setNavPreview      = useMapStore((s) => s.setNavPreview)
+  const setSearchPin       = useMapStore((s) => s.setSearchPin)
+  const removeSpot         = useMapStore((s) => s.removeSpot)
 
   const handleCompassToggle = async () => {
     if (!compassEnabled) {
@@ -355,12 +357,48 @@ export default function MapControls() {
             }}>
               <Navigation size={18} /> Naviger hit
             </button>
+
             {isOnline && (
-              <button className="spot-action-btn spot-action-earth" onClick={() => {
-                openGoogleEarth(spotMenu.lat, spotMenu.lng)
+              <div className="spot-action-row">
+                <button className="spot-action-btn spot-action-maps" onClick={() => {
+                  openGoogleMaps(spotMenu.lat, spotMenu.lng)
+                  setSpotMenu(null)
+                }}>
+                  <Map size={18} /> Google Maps
+                </button>
+                <button className="spot-action-btn spot-action-earth" onClick={() => {
+                  openGoogleEarth(spotMenu.lat, spotMenu.lng)
+                  setSpotMenu(null)
+                }}>
+                  <Globe size={18} /> Google Earth
+                </button>
+              </div>
+            )}
+
+            {!spotMenu.id && (
+              <div className="spot-action-row">
+                <button className="spot-action-btn spot-action-save" onClick={() => {
+                  setGpsSpot({ lat: spotMenu.lat, lng: spotMenu.lng })
+                  setSearchPin(null)
+                  setSpotMenu(null)
+                }}>
+                  <Bookmark size={18} /> Lagre sted
+                </button>
+                <button className="spot-action-btn spot-action-remove" onClick={() => {
+                  setSearchPin(null)
+                  setSpotMenu(null)
+                }}>
+                  <Trash2 size={18} /> Fjern markering
+                </button>
+              </div>
+            )}
+
+            {spotMenu.id && (
+              <button className="spot-action-btn spot-action-remove" onClick={() => {
+                removeSpot(spotMenu.id!)
                 setSpotMenu(null)
               }}>
-                <Globe size={18} /> Google Earth
+                <Trash2 size={18} /> Slett lagret sted
               </button>
             )}
           </div>
