@@ -735,6 +735,14 @@ export default function MapView() {
     const onClick = (e: L.LeafletMouseEvent) => {
       if (addingWaypoint) setPendingWaypoint({ lat: e.latlng.lat, lng: e.latlng.lng })
       else if (addingSpot) setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng })
+      else {
+        // Tap anywhere: drop a pin at that point and open the action card
+        const lat = e.latlng.lat, lng = e.latlng.lng
+        const name = `${lat.toFixed(4)}°N ${lng.toFixed(4)}°Ø`
+        const s = useMapStore.getState()
+        s.setSearchPin({ lat, lng, name })
+        s.setSpotMenu({ lat, lng, name })
+      }
     }
     map.on('click', onClick)
     map.getContainer().style.cursor = (addingSpot || addingWaypoint) ? 'crosshair' : ''
