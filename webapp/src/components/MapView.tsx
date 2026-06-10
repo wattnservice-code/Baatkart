@@ -157,6 +157,7 @@ export default function MapView() {
   const navMarkerRef      = useRef<L.Marker | null>(null)
   const previewLineRef    = useRef<L.Polyline | null>(null)
   const previewMarkerRef  = useRef<L.Marker | null>(null)
+  const searchPinRef      = useRef<L.Marker | null>(null)
   const baseTileRef     = useRef<L.TileLayer | null>(null)
   const kartvTileRef    = useRef<L.TileLayer | null>(null)
   const seamarkTileRef  = useRef<L.TileLayer | null>(null)
@@ -179,6 +180,7 @@ export default function MapView() {
   const followBoat       = useMapStore((s) => s.followBoat)
   const addingSpot       = useMapStore((s) => s.addingSpot)
   const flyTo            = useMapStore((s) => s.flyTo)
+  const searchPin        = useMapStore((s) => s.searchPin)
   const navPreview       = useMapStore((s) => s.navPreview)
   const navTarget        = useMapStore((s) => s.navTarget)
   const savedSpots       = useMapStore((s) => s.savedSpots)
@@ -287,6 +289,24 @@ export default function MapView() {
     mapRef.current.flyTo([flyTo.lat, flyTo.lng], Math.max(mapRef.current.getZoom(), 14), { animate: true, duration: 1 })
     setFlyTo(null)
   }, [flyTo, setFlyTo])
+
+  // Search result pin — teardrop marker with name label. Tap to dismiss.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    if (!searchPin) {
+      searchPinRef.current?.remove(); searchPinRef.current = null
+      return
+    }
+    const html = `<div class="search-pin"></div><div class="search-pin-label">${searchPin.name}</div>`
+    const icon = L.divIcon({ className: '', html, iconSize: [20, 20], iconAnchor: [10, 20] })
+    if (!searchPinRef.current) {
+      searchPinRef.current = L.marker([searchPin.lat, searchPin.lng], { icon, zIndexOffset: 600 }).addTo(map)
+      searchPinRef.current.on('click', () => useMapStore.getState().setSearchPin(null))
+    } else {
+      searchPinRef.current.setLatLng([searchPin.lat, searchPin.lng]).setIcon(icon)
+    }
+  }, [searchPin])
 
   // Boat position + course line + range ring + ring label
   useEffect(() => {

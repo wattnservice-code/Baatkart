@@ -70,6 +70,7 @@ interface MapStore {
   distUnit: DistUnit
   customRingRadius: RingSize
   flyTo: { lat: number; lng: number } | null
+  searchPin: { lat: number; lng: number; name: string } | null
   navPreview: { lat: number; lng: number; name: string } | null
   navTarget: { lat: number; lng: number; name: string } | null
   mapBounds: { north: number; south: number; east: number; west: number } | null
@@ -107,6 +108,7 @@ interface MapStore {
   cycleDistUnit: () => void
   cycleRingRadius: () => void
   setFlyTo: (pos: { lat: number; lng: number } | null) => void
+  setSearchPin: (pin: { lat: number; lng: number; name: string } | null) => void
   setNavPreview: (target: { lat: number; lng: number; name: string }) => void
   confirmNav: () => void
   clearNavPreview: () => void
@@ -196,6 +198,7 @@ export const useMapStore = create<MapStore>((set) => ({
   distUnit: loadDistUnit(),
   customRingRadius: loadRingRadius(),
   flyTo: null,
+  searchPin: null,
   navPreview: null,
   navTarget: null,
   mapBounds: null,
@@ -295,6 +298,7 @@ export const useMapStore = create<MapStore>((set) => ({
   setAnchorRadius: (r) => set({ anchorRadius: r, anchorAlarm: false }),
 
   setFlyTo: (pos) => set({ flyTo: pos, followBoat: false }),
+  setSearchPin: (pin) => set({ searchPin: pin }),
   setNavPreview: (target) => set({ navPreview: target, navTarget: null, followBoat: false }),
   confirmNav: () => set((s) => ({ navTarget: s.navPreview, navPreview: null })),
   clearNavPreview: () => set({ navPreview: null }),

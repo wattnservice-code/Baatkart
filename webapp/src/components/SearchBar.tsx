@@ -22,6 +22,7 @@ export default function SearchBar({ onClose }: Props) {
 
   const setNavPreview = useMapStore((s) => s.setNavPreview)
   const setFlyTo      = useMapStore((s) => s.setFlyTo)
+  const setSearchPin  = useMapStore((s) => s.setSearchPin)
   const addSpot       = useMapStore((s) => s.addSpot)
   const savedSpots    = useMapStore((s) => s.savedSpots)
   const addWaypoint   = useMapStore((s) => s.addWaypoint)
@@ -50,7 +51,7 @@ export default function SearchBar({ onClose }: Props) {
     const lng = parseFloat(r.lon)
     const name = r.display_name.split(',')[0]
     if (nav) setNavPreview({ lat, lng, name })
-    else setFlyTo({ lat, lng })
+    else { setSearchPin({ lat, lng, name }); setFlyTo({ lat, lng }) }
     onClose()
   }
 
