@@ -292,23 +292,9 @@ export default function MapView() {
     const map = mapRef.current
     const latlng: L.LatLngExpression = [position.lat, position.lng]
     const zoom = map.getZoom()
+    const mpp = (156543 * Math.cos(position.lat * Math.PI / 180)) / Math.pow(2, zoom)
     const speedRadius = position.speed > 0.5 ? Math.max(100, Math.min(10000, position.speed * 120)) : ringRadius(zoom)
     const radius = customRingRadius ?? speedRadius
-
-    // Auto-zoom so the full ring is always visible.
-    // meters-per-pixel at zoom z ≈ 156543 * cos(lat) / 2^z
-    // Ring diameter = 2*radius must fit within 80% of the smaller screen side.
-    if (followBoat) {
-      const size = map.getSize()
-      const screenR = Math.min(size.x, size.y) * 0.4   // 80% diameter → 40% each side
-      const mpp = (156543 * Math.cos(position.lat * Math.PI / 180)) / Math.pow(2, zoom)
-      const ringPx = radius / mpp
-      if (ringPx > screenR) {
-        // Ring doesn't fit — zoom out to the level that makes it fit
-        const neededZoom = Math.floor(zoom - Math.log2(ringPx / screenR))
-        map.setZoom(Math.max(neededZoom, 5), { animate: true })
-      }
-    }
 
     // Boat marker
     const size = boatSize(zoom)
@@ -327,7 +313,7 @@ export default function MapView() {
           const topLL = map.containerPointToLatLng([size.x / 2, 0])
           const botLL = map.containerPointToLatLng([size.x / 2, size.y])
           const viewHeightM = haversineM(topLL.lat, topLL.lng, botLL.lat, botLL.lng)
-          const center = destPoint(position.lat, position.lng, position.heading, viewHeightM * 0.35)
+          const center = destPoint(position.lat, position.lng, position.heading, viewHeightM * 0.42)
           map.panTo(center, { animate: true, duration: 0.5 })
         } else {
           map.panTo(latlng, { animate: true, duration: 0.5 })
@@ -335,8 +321,9 @@ export default function MapView() {
       }
     }
 
-    // GPS course predictor line — orange dashed (2 min ahead, min 300m)
-    const courseLen = Math.max(300, Math.min(position.speed * 120, 3000))
+    // GPS course predictor — zoom-adaptive length (min 40% screen height, up to 5 min ahead or 100% screen height)
+    const screenH = map.getSize().y
+    const courseLen = Math.max(mpp * screenH * 0.4, Math.min(position.speed * 300, mpp * screenH))
     const courseEnd = destPoint(position.lat, position.lng, position.heading, courseLen)
     if (!courseLineRef.current) {
       courseLineRef.current = L.polyline([latlng, courseEnd], { color: '#fb923c', weight: 3, opacity: 0.9, dashArray: '8, 6' }).addTo(map)
@@ -391,7 +378,10 @@ export default function MapView() {
       return
     }
     const latlng: L.LatLngExpression = [position.lat, position.lng]
-    const compassEnd = destPoint(position.lat, position.lng, compassHeading!, 800)
+    const map = mapRef.current
+    const compassMpp = (156543 * Math.cos(position.lat * Math.PI / 180)) / Math.pow(2, map.getZoom())
+    const compassLen = compassMpp * map.getSize().y * 0.55
+    const compassEnd = destPoint(position.lat, position.lng, compassHeading!, compassLen)
     if (!compassLineRef.current) {
       compassLineRef.current = L.polyline([latlng, compassEnd], {
         color: '#38bdf8', weight: 3, opacity: 0.95,
