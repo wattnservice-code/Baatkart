@@ -280,16 +280,14 @@ export default function MapControls() {
             <button className="menu-item" style={{ color: tideVisible ? '#60a5fa' : undefined }} onClick={() => toggleTide()}>
               <Waves size={20} /><span>Tidevann {tideVisible ? '(på)' : '(av)'}</span>
             </button>
-            {isOnline && (
-              <button className="menu-item" style={{ color: '#34d399' }} onClick={() => {
-                const c = position ?? getMapInstance()?.getCenter() ?? { lat: 59.9, lng: 10.7 }
-                const url = `https://earth.google.com/web/@${c.lat},${c.lng},0a,500d,35y,0h,0t,0r`
-                window.open(url, '_blank', 'noopener')
-                setMenuOpen(false)
-              }}>
-                <Globe size={20} /><span>Vis i Google Earth</span>
-              </button>
-            )}
+            <button className="menu-item" style={{ color: '#34d399' }} onClick={() => {
+              const c = position ?? getMapInstance()?.getCenter() ?? { lat: 59.9, lng: 10.7 }
+              const url = `https://earth.google.com/web/@${c.lat},${c.lng},0a,500d,35y,0h,0t,0r`
+              window.open(url, '_blank', 'noopener')
+              setMenuOpen(false)
+            }}>
+              <Globe size={20} /><span>Vis i Google Earth</span>
+            </button>
           </>)}
 
           <div className="menu-divider" />
