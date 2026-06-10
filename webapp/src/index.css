@@ -228,7 +228,8 @@ html, body, #root {
 /* ── MOB button ── */
 .mob-btn {
   position: absolute;
-  top: 12px; left: 12px;
+  top: max(16px, calc(env(safe-area-inset-top) + 8px));
+  left: max(12px, calc(env(safe-area-inset-left) + 8px));
   z-index: 400;
   width: 56px; height: 56px;
   border-radius: 50%;

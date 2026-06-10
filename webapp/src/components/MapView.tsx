@@ -200,7 +200,7 @@ export default function MapView() {
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
     const map = L.map(containerRef.current, {
-      center: [59.9, 10.7], zoom: 15, zoomControl: false,
+      center: [59.9, 10.7], zoom: 13, zoomControl: false,
       rotate: true, rotateControl: false, touchRotate: false, shiftKeyRotate: false, bearing: 0,
     })
 
@@ -294,12 +294,27 @@ export default function MapView() {
     const speedRadius = position.speed > 0.5 ? Math.max(100, Math.min(10000, position.speed * 120)) : ringRadius(zoom)
     const radius = customRingRadius ?? speedRadius
 
+    // Auto-zoom so the full ring is always visible.
+    // meters-per-pixel at zoom z ≈ 156543 * cos(lat) / 2^z
+    // Ring diameter = 2*radius must fit within 80% of the smaller screen side.
+    if (followBoat) {
+      const size = map.getSize()
+      const screenR = Math.min(size.x, size.y) * 0.4   // 80% diameter → 40% each side
+      const mpp = (156543 * Math.cos(position.lat * Math.PI / 180)) / Math.pow(2, zoom)
+      const ringPx = radius / mpp
+      if (ringPx > screenR) {
+        // Ring doesn't fit — zoom out to the level that makes it fit
+        const neededZoom = Math.floor(zoom - Math.log2(ringPx / screenR))
+        map.setZoom(Math.max(neededZoom, 5), { animate: true })
+      }
+    }
+
     // Boat marker
     const size = boatSize(zoom)
     if (!boatMarkerRef.current) {
       const icon = L.divIcon({ className: '', html: boatSvg(position.heading, size), iconSize: [size, size], iconAnchor: [size / 2, size / 2] })
       boatMarkerRef.current = L.marker(latlng, { icon, zIndexOffset: 1000 }).addTo(map)
-      map.setView(latlng, Math.max(zoom, 15), { animate: false })
+      map.setView(latlng, Math.max(zoom, 13), { animate: false })
     } else {
       boatMarkerRef.current.setLatLng(latlng)
       if (followBoat) {
