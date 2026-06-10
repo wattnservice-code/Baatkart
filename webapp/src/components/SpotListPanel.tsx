@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { X, Trash2, RouteIcon, LocateFixed, Map, Flag } from 'lucide-react'
+import { X, Trash2, RouteIcon, LocateFixed, Map, Flag, Globe } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
+import { useOnline } from '../hooks/useOnline'
 
 interface Props {
   onClose: () => void
@@ -18,6 +19,8 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
   const setActiveSpot = useMapStore((s) => s.setActiveSpot)
   const addWaypoint   = useMapStore((s) => s.addWaypoint)
   const waypoints     = useMapStore((s) => s.waypoints)
+
+  const isOnline = useOnline()
 
   const [query, setQuery]       = useState('')
   const [confirmId, setConfirmId] = useState<string | null>(null)
@@ -73,6 +76,13 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
                 >
                   <Flag size={15} color="white" />
                 </button>
+                {isOnline && (
+                  <button className="spot-panel-btn" style={{ background: '#065f46' }}
+                    onClick={() => window.open(`https://earth.google.com/web/@${spot.lat},${spot.lng},0a,500d,35y,0h,0t,0r`, '_blank', 'noopener')}
+                    title="Vis i Google Earth">
+                    <Globe size={15} color="#34d399" />
+                  </button>
+                )}
                 <button className="spot-panel-btn spot-panel-delete" onClick={() => setConfirmId(spot.id)} title="Slett">
                   <Trash2 size={15} />
                 </button>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship, Plus, Minus, Flag } from 'lucide-react'
+import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship, Plus, Minus, Flag, Globe } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
+import { useOnline } from '../hooks/useOnline'
 import { useMapStore } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import SpotListPanel from './SpotListPanel'
@@ -59,6 +60,7 @@ export default function MapControls() {
     return next
   })
 
+  const isOnline         = useOnline()
   const headingUp        = useMapStore((s) => s.headingUp)
   const toggleHeadingUp  = useMapStore((s) => s.toggleHeadingUp)
   const compassHeading   = useMapStore((s) => s.compassHeading)
@@ -278,6 +280,15 @@ export default function MapControls() {
             <button className="menu-item" style={{ color: tideVisible ? '#60a5fa' : undefined }} onClick={() => toggleTide()}>
               <Waves size={20} /><span>Tidevann {tideVisible ? '(på)' : '(av)'}</span>
             </button>
+            {isOnline && position && (
+              <button className="menu-item" style={{ color: '#34d399' }} onClick={() => {
+                const url = `https://earth.google.com/web/@${position.lat},${position.lng},0a,500d,35y,0h,0t,0r`
+                window.open(url, '_blank', 'noopener')
+                setMenuOpen(false)
+              }}>
+                <Globe size={20} /><span>Vis i Google Earth</span>
+              </button>
+            )}
           </>)}
 
           <div className="menu-divider" />
