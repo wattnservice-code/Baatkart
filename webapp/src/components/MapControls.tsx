@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship, Plus, Minus, Flag, Globe } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
+import { openGoogleEarth } from '../googleEarth'
 import { useMapStore } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import SpotListPanel from './SpotListPanel'
@@ -282,8 +283,7 @@ export default function MapControls() {
             {isOnline && (
               <button className="menu-item" style={{ color: '#34d399' }} onClick={() => {
                 const c = position ?? getMapInstance()?.getCenter() ?? { lat: 59.9, lng: 10.7 }
-                const url = `https://earth.google.com/web/@${c.lat},${c.lng},0a,500d,35y,0h,0t,0r`
-                window.open(url, '_blank', 'noopener')
+                openGoogleEarth(c.lat, c.lng)
                 setMenuOpen(false)
               }}>
                 <Globe size={20} /><span>Vis i Google Earth</span>

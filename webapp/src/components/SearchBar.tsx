@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
-import { Search, X, Navigation, MapPin, Bookmark, BookmarkCheck, Flag } from 'lucide-react'
+import { Search, X, Navigation, MapPin, Bookmark, BookmarkCheck, Flag, Globe } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
+import { openGoogleEarth } from '../googleEarth'
 
 interface NominatimResult {
   place_id: number
@@ -96,6 +97,10 @@ export default function SearchBar({ onClose }: Props) {
               <div className="search-result-btns">
                 <button title="Vis på kart" onClick={() => selectResult(r, false)}>
                   <MapPin size={15} />
+                </button>
+                <button title="Vis i Google Earth (3D)" style={{ background: '#065f46' }}
+                  onClick={() => openGoogleEarth(parseFloat(r.lat), parseFloat(r.lon))}>
+                  <Globe size={15} color="#34d399" />
                 </button>
                 <button
                   title={isSaved(r) ? 'Lagret' : 'Lagre sted'}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Trash2, RouteIcon, LocateFixed, Map, Flag, Globe } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { useOnline } from '../hooks/useOnline'
+import { openGoogleEarth } from '../googleEarth'
 
 interface Props {
   onClose: () => void
@@ -78,7 +79,7 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
                 </button>
                 {isOnline && (
                   <button className="spot-panel-btn" style={{ background: '#065f46' }}
-                    onClick={() => window.open(`https://earth.google.com/web/@${spot.lat},${spot.lng},0a,500d,35y,0h,0t,0r`, '_blank', 'noopener')}
+                    onClick={() => openGoogleEarth(spot.lat, spot.lng)}
                     title="Vis i Google Earth">
                     <Globe size={15} color="#34d399" />
                   </button>
