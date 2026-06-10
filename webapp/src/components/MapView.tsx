@@ -3,6 +3,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import '../leafletRotateSetup'
 import { useMapStore } from '../store/useMapStore'
+import { setCurrentBearing } from '../currentBearing'
 import SpotDialog from './SpotDialog'
 import WaypointDialog from './WaypointDialog'
 import { getTile } from '../offline/tileDb'
@@ -436,6 +437,7 @@ export default function MapView() {
       }
       if (Math.abs(shortestAngle(appliedBearingRef.current, bearingRef.current)) >= 0.4) {
         appliedBearingRef.current = bearingRef.current
+        setCurrentBearing(bearingRef.current)
         try { map.setBearing(-bearingRef.current) } catch { /* plugin not ready */ }
       }
       rafRef.current = requestAnimationFrame(loop)

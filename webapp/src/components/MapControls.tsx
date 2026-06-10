@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Navigation, MapPin, Menu, X, Play, Square, Trash2, Layers, Compass, List, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, ChevronDown, ChevronUp, Ship, Plus, Minus, Flag } from 'lucide-react'
+import { getCurrentBearing } from '../currentBearing'
 import { useMapStore } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import SpotListPanel from './SpotListPanel'
@@ -14,10 +15,24 @@ function formatRingLabel(r: null | number): string {
   return r >= 1000 ? `${r / 1000} km` : `${r} m`
 }
 
-function CompassRose({ heading, headingUp }: { heading: number; headingUp: boolean }) {
-  const rotation = headingUp ? -heading : 0
+function CompassRose({ headingUp }: { headingUp: boolean }) {
+  const elRef  = useRef<HTMLDivElement>(null)
+  const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    const el = elRef.current
+    if (!el) return
+    const loop = () => {
+      // Rotate the N indicator opposite to the map so it always points to true north
+      el.style.transform = headingUp ? `rotate(${-getCurrentBearing()}deg)` : ''
+      rafRef.current = requestAnimationFrame(loop)
+    }
+    rafRef.current = requestAnimationFrame(loop)
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+  }, [headingUp])
+
   return (
-    <div className="compass-rose" style={{ transform: `rotate(${rotation}deg)` }}>
+    <div ref={elRef} className="compass-rose">
       <span className="compass-n">N</span>
       <div className="compass-needle" />
     </div>
@@ -161,10 +176,7 @@ export default function MapControls() {
           onClick={toggleHeadingUp}
           title={headingUp ? 'Kursretning opp – bytt til Nord opp' : 'Nord opp – bytt til Kursretning opp'}
         >
-          <CompassRose
-            heading={compassEnabled && compassHeading !== null ? compassHeading : (position?.heading ?? 0)}
-            headingUp={headingUp}
-          />
+          <CompassRose headingUp={headingUp} />
         </button>
         <button className={`fab ${addingSpot || spotListOpen ? 'fab-active' : ''}`} onClick={handlePinBtn} title="Steder">
           <MapPin size={22} />
