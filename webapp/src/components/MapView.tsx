@@ -85,6 +85,14 @@ function formatRingLabel(m: number): string {
   return m >= 1000 ? `${m / 1000} km` : `${m} m`
 }
 
+// Shortest signed angular delta from `from` to `to`, in [-180, 180]
+function shortestAngle(from: number, to: number): number {
+  let d = (to - from) % 360
+  if (d > 180) d -= 360
+  if (d < -180) d += 360
+  return d
+}
+
 function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000
   const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180
@@ -154,6 +162,9 @@ export default function MapView() {
   const [pendingWaypoint, setPendingWaypoint] = useState<{ lat: number; lng: number } | null>(null)
   const waypointLineRef    = useRef<L.Polyline | null>(null)
   const waypointMarkersRef = useRef<Map<string, L.Marker>>(new Map())
+  const bearingRef         = useRef(0)   // currently displayed bearing (deg)
+  const targetBearingRef   = useRef(0)   // desired bearing (deg)
+  const rafRef             = useRef<number | null>(null)
 
   const position         = useMapStore((s) => s.position)
   const positionRef      = useRef(position)
@@ -291,7 +302,9 @@ export default function MapView() {
         if ((lookAhead || autoLookAhead)) {
           const b = map.getBounds()
           const viewHeightM = haversineM(b.getSouth(), b.getCenter().lng, b.getNorth(), b.getCenter().lng)
-          const center = destPoint(position.lat, position.lng, position.heading, viewHeightM * 0.35)
+          // Container is 142% of the visible area, so getBounds is ~1.42× the
+          // visible height. Divide back out so the boat sits ~35% below center.
+          const center = destPoint(position.lat, position.lng, position.heading, viewHeightM * (0.35 / 1.42))
           map.panTo(center, { animate: true, duration: 0.5 })
         } else {
           map.panTo(latlng, { animate: true, duration: 0.5 })
@@ -363,21 +376,55 @@ export default function MapView() {
     }
   }, [position, compassEnabled, compassHeading])
 
-  // Heading-up map rotation via CSS transform on container
+  // Update the *target* bearing (cheap, no DOM). Gated by speed so a stationary
+  // boat doesn't spin on noisy GPS heading. Compass (if on) is stable at rest.
   useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
+    if (!headingUp) return
+    const isCompassActive = compassEnabled && compassHeading !== null && !isNaN(compassHeading)
+    if (isCompassActive) {
+      targetBearingRef.current = compassHeading!
+    } else if (position && position.speed > 0.5 && position.heading !== undefined) {
+      targetBearingRef.current = position.heading
+    }
+    // else: keep previous target — hold heading when slow/stopped
+  }, [headingUp, position, compassHeading, compassEnabled])
+
+  // Smoothly animate the map rotation toward the target bearing via rAF.
+  // Eases ~12% per frame → buttery, frame-rate-independent of GPS updates.
+  useEffect(() => {
+    const inner = containerRef.current
+    if (!inner) return
+
     if (!headingUp) {
-      el.style.transition = 'transform 0.4s ease'
-      el.style.transform = ''
+      // Ease back to north, then clear transform
+      const toZero = () => {
+        const diff = shortestAngle(bearingRef.current, 0)
+        if (Math.abs(diff) < 0.4) {
+          bearingRef.current = 0
+          inner.style.transform = ''
+          rafRef.current = null
+          return
+        }
+        bearingRef.current += diff * 0.15
+        inner.style.transform = `rotate(${-bearingRef.current}deg)`
+        rafRef.current = requestAnimationFrame(toZero)
+      }
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(toZero)
       return
     }
-    if (!followBoat) return
-    const isCompassActive = compassEnabled && compassHeading !== null && !isNaN(compassHeading)
-    const h = isCompassActive ? compassHeading! : (position?.heading ?? 0)
-    el.style.transition = isCompassActive ? 'transform 0.12s linear' : 'transform 0.6s ease'
-    el.style.transform = `rotate(${-h}deg) scale(1.42)`
-  }, [headingUp, followBoat, position?.heading, compassHeading, compassEnabled])
+
+    const loop = () => {
+      const diff = shortestAngle(bearingRef.current, targetBearingRef.current)
+      bearingRef.current += diff * 0.12
+      inner.style.transform = `rotate(${-bearingRef.current}deg)`
+      rafRef.current = requestAnimationFrame(loop)
+    }
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(loop)
+
+    return () => { if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null } }
+  }, [headingUp])
 
   // Track line
   useEffect(() => {
@@ -658,8 +705,17 @@ export default function MapView() {
 
   return (
     <>
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-        <div ref={containerRef} className="w-full h-full" style={{ transformOrigin: 'center center' }} />
+      <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+        <div
+          ref={containerRef}
+          style={{
+            position: 'absolute',
+            top: '-21%', left: '-21%',
+            width: '142%', height: '142%',
+            transformOrigin: 'center center',
+            willChange: 'transform',
+          }}
+        />
       </div>
       {pendingSpot && <SpotDialog lat={pendingSpot.lat} lng={pendingSpot.lng} onClose={() => setPendingSpot(null)} />}
       {pendingWaypoint && (
