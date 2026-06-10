@@ -582,8 +582,10 @@ html, body, #root {
 }
 .spot-action-dist {
   font-size: 13px; font-weight: 600; color: #38bdf8;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   margin: -4px 0 12px;
 }
+.spot-action-eta { color: #94d82d; font-weight: 500; }
 .spot-action-btns { display: flex; flex-direction: column; gap: 10px; }
 .spot-action-row { display: flex; gap: 10px; }
 .spot-action-btn {

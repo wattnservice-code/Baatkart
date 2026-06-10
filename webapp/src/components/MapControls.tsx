@@ -26,6 +26,16 @@ function distanceM(aLat: number, aLng: number, bLat: number, bLng: number): numb
   return 2 * R * Math.asin(Math.sqrt(x))
 }
 
+// Returns formatted ETA string or null if speed is too low to be meaningful
+function formatEta(distM: number, speedMs: number): string | null {
+  if (speedMs < 0.5) return null  // ~1 knot threshold; below this = stationary
+  const secs = distM / speedMs
+  const h = Math.floor(secs / 3600)
+  const m = Math.round((secs % 3600) / 60)
+  if (h === 0) return `${m} min`
+  return `${h} t ${m} min`
+}
+
 function CompassRose({ headingUp }: { headingUp: boolean }) {
   const elRef  = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number | null>(null)
@@ -366,11 +376,18 @@ export default function MapControls() {
             <span className="spot-action-name">📍 {spotMenu.name}</span>
             <button className="spot-action-close" onClick={closeSpotMenu}><X size={18} /></button>
           </div>
-          {position && (
-            <div className="spot-action-dist">
-              📏 {formatDist(distanceM(position.lat, position.lng, spotMenu.lat, spotMenu.lng), distUnit)} herfra
-            </div>
-          )}
+          {position && (() => {
+            const dist = distanceM(position.lat, position.lng, spotMenu.lat, spotMenu.lng)
+            const eta  = formatEta(dist, position.speed ?? 0)
+            return (
+              <>
+                <div className="spot-action-dist">
+                  📏 {formatDist(dist, distUnit)} herfra
+                  {eta && <span className="spot-action-eta">· ⏱ {eta}</span>}
+                </div>
+              </>
+            )
+          })()}
           <div className="spot-action-btns">
             <button className="spot-action-btn spot-action-nav" onClick={() => {
               setNavPreview({ lat: spotMenu.lat, lng: spotMenu.lng, name: spotMenu.name })
