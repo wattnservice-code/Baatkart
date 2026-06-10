@@ -436,7 +436,7 @@ export default function MapView() {
       }
       if (Math.abs(shortestAngle(appliedBearingRef.current, bearingRef.current)) >= 0.4) {
         appliedBearingRef.current = bearingRef.current
-        try { map.setBearing(bearingRef.current) } catch { /* plugin not ready */ }
+        try { map.setBearing(-bearingRef.current) } catch { /* plugin not ready */ }
       }
       rafRef.current = requestAnimationFrame(loop)
     }
