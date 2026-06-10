@@ -8,6 +8,7 @@ import NavPreviewBar from './components/NavPreviewBar'
 import AnchorOverlay from './components/AnchorOverlay'
 import WeatherOverlay from './components/WeatherOverlay'
 import TideOverlay from './components/TideOverlay'
+import AISOverlay from './components/AISOverlay'
 import { useGPS } from './hooks/useGPS'
 import { useCompass } from './hooks/useCompass'
 import { useWakeLock } from './hooks/useWakeLock'
@@ -39,6 +40,7 @@ export default function App() {
           <WeatherOverlay />
           <TideOverlay />
         </div>
+        <AISOverlay />
         <MobOverlay />
         <AnchorOverlay />
         <NavPreviewBar />

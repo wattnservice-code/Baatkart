@@ -102,11 +102,13 @@ export default function MapControls() {
   const clearAnchor      = useMapStore((s) => s.clearAnchor)
   const weatherVisible   = useMapStore((s) => s.weatherVisible)
   const tideVisible      = useMapStore((s) => s.tideVisible)
+  const aisVisible       = useMapStore((s) => s.aisVisible)
   const toggleCompass    = useMapStore((s) => s.toggleCompass)
   const toggleDarkMode   = useMapStore((s) => s.toggleDarkMode)
   const toggleSeamark    = useMapStore((s) => s.toggleSeamark)
   const toggleWeather    = useMapStore((s) => s.toggleWeather)
   const toggleTide       = useMapStore((s) => s.toggleTide)
+  const toggleAis        = useMapStore((s) => s.toggleAis)
   const distUnit           = useMapStore((s) => s.distUnit)
   const waypoints          = useMapStore((s) => s.waypoints)
   const addingWaypoint     = useMapStore((s) => s.addingWaypoint)
@@ -343,6 +345,9 @@ export default function MapControls() {
           </button>
           <button className="menu-item" style={{ color: tideVisible ? '#60a5fa' : undefined }} onClick={() => toggleTide()}>
             <Waves size={20} /><span>Tidevann {tideVisible ? '(på)' : '(av)'}</span>
+          </button>
+          <button className="menu-item" style={{ color: aisVisible ? '#60a5fa' : undefined }} onClick={() => toggleAis()}>
+            <Ship size={20} /><span>AIS skipstrafikk {aisVisible ? '(på)' : '(av)'}</span>
           </button>
 
           <div className="menu-divider" />

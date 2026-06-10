@@ -66,6 +66,7 @@ interface MapStore {
   seamarkVisible: boolean
   weatherVisible: boolean
   tideVisible: boolean
+  aisVisible: boolean
   speedUnit: SpeedUnit
   distUnit: DistUnit
   customRingRadius: RingSize
@@ -105,6 +106,7 @@ interface MapStore {
   toggleSeamark: () => void
   toggleWeather: () => void
   toggleTide: () => void
+  toggleAis: () => void
   toggleSpeedUnit: () => void
   cycleDistUnit: () => void
   cycleRingRadius: () => void
@@ -171,6 +173,7 @@ function loadDistUnit(): DistUnit { return (localStorage.getItem('distUnit') as 
 function loadSeamark(): boolean { return loadBool('seamarkVisible', false) }
 function loadWeather(): boolean { return loadBool('weatherVisible', false) }
 function loadTide(): boolean { return loadBool('tideVisible', false) }
+function loadAis(): boolean { return loadBool('aisVisible', false) }
 function loadCompass(): boolean { return loadBool('compassEnabled', false) }
 function loadRingRadius(): RingSize {
   const v = localStorage.getItem('ringRadius')
@@ -196,6 +199,7 @@ export const useMapStore = create<MapStore>((set) => ({
   seamarkVisible: loadSeamark(),
   weatherVisible: loadWeather(),
   tideVisible: loadTide(),
+  aisVisible: loadAis(),
   speedUnit: loadSpeedUnit(),
   distUnit: loadDistUnit(),
   customRingRadius: loadRingRadius(),
@@ -273,6 +277,7 @@ export const useMapStore = create<MapStore>((set) => ({
   toggleSeamark: () => set((s) => { const v = !s.seamarkVisible; localStorage.setItem('seamarkVisible', String(v)); return { seamarkVisible: v } }),
   toggleWeather: () => set((s) => { const v = !s.weatherVisible; localStorage.setItem('weatherVisible', String(v)); return { weatherVisible: v } }),
   toggleTide: () => set((s) => { const v = !s.tideVisible; localStorage.setItem('tideVisible', String(v)); return { tideVisible: v } }),
+  toggleAis: () => set((s) => { const v = !s.aisVisible; localStorage.setItem('aisVisible', String(v)); return { aisVisible: v } }),
   toggleDarkMode: () => set((s) => {
     const next = !s.darkMode
     localStorage.setItem('darkMode', String(next))
