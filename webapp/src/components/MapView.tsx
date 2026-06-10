@@ -1,7 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import 'leaflet-rotate'
 import { useMapStore } from '../store/useMapStore'
+
+declare module 'leaflet' {
+  interface Map {
+    rotateTo(bearing: number, options?: { animate?: boolean; duration?: number; easeLinearity?: number }): this
+    setBearing(bearing: number): this
+    getBearing(): number
+  }
+  interface MapOptions {
+    rotate?: boolean
+    touchRotate?: boolean
+    rotateControl?: boolean
+    bearing?: number
+  }
+}
 import SpotDialog from './SpotDialog'
 import WaypointDialog from './WaypointDialog'
 import { getTile } from '../offline/tileDb'
@@ -176,6 +191,7 @@ export default function MapView() {
   const anchorAlarm      = useMapStore((s) => s.anchorAlarm)
   const customRingRadius = useMapStore((s) => s.customRingRadius)
   const lookAhead        = useMapStore((s) => s.lookAhead)
+  const headingUp        = useMapStore((s) => s.headingUp)
   const waypoints        = useMapStore((s) => s.waypoints)
   const addingWaypoint   = useMapStore((s) => s.addingWaypoint)
   const addWaypoint        = useMapStore((s) => s.addWaypoint)
@@ -185,7 +201,7 @@ export default function MapView() {
   // Init map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
-    const map = L.map(containerRef.current, { center: [59.9, 10.7], zoom: 15, zoomControl: false })
+    const map = L.map(containerRef.current, { center: [59.9, 10.7], zoom: 15, zoomControl: false, rotate: true, touchRotate: false, rotateControl: false, bearing: 0 })
 
     const isDark = useMapStore.getState().darkMode
     baseTileRef.current = L.tileLayer(isDark ? DARK_URL : OSM_URL, {
@@ -361,6 +377,24 @@ export default function MapView() {
       compassLineRef.current.setLatLngs([latlng, compassEnd])
     }
   }, [position, compassEnabled, compassHeading])
+
+  // Heading-up map rotation
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    if (!headingUp) {
+      map.rotateTo(0, { animate: true, duration: 0.4 })
+      return
+    }
+    if (!followBoat) return
+    const isCompassActive = compassEnabled && compassHeading !== null && !isNaN(compassHeading)
+    const h = isCompassActive ? compassHeading! : (position?.heading ?? 0)
+    if (isCompassActive) {
+      map.setBearing(h)
+    } else {
+      map.rotateTo(h, { animate: true, duration: 0.6 })
+    }
+  }, [headingUp, followBoat, position?.heading, compassHeading, compassEnabled])
 
   // Track line
   useEffect(() => {

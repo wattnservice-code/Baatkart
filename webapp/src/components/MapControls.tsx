@@ -14,6 +14,16 @@ function formatRingLabel(r: null | number): string {
   return r >= 1000 ? `${r / 1000} km` : `${r} m`
 }
 
+function CompassRose({ heading, headingUp }: { heading: number; headingUp: boolean }) {
+  const rotation = headingUp ? -heading : 0
+  return (
+    <div className="compass-rose" style={{ transform: `rotate(${rotation}deg)` }}>
+      <span className="compass-n">N</span>
+      <div className="compass-needle" />
+    </div>
+  )
+}
+
 export default function MapControls() {
   const [menuOpen, setMenuOpen]           = useState(false)
   const [spotListOpen, setSpotListOpen]   = useState(false)
@@ -34,6 +44,9 @@ export default function MapControls() {
     return next
   })
 
+  const headingUp        = useMapStore((s) => s.headingUp)
+  const toggleHeadingUp  = useMapStore((s) => s.toggleHeadingUp)
+  const compassHeading   = useMapStore((s) => s.compassHeading)
   const followBoat       = useMapStore((s) => s.followBoat)
   const addingSpot       = useMapStore((s) => s.addingSpot)
   const isTracking       = useMapStore((s) => s.isTracking)
@@ -123,6 +136,16 @@ export default function MapControls() {
           if (m && m.getZoom() < 14) m.setZoom(14)
         }} title="Sentrer kart">
           <Navigation size={22} />
+        </button>
+        <button
+          className={`fab compass-fab ${headingUp ? 'fab-active' : ''}`}
+          onClick={toggleHeadingUp}
+          title={headingUp ? 'Kursretning opp – bytt til Nord opp' : 'Nord opp – bytt til Kursretning opp'}
+        >
+          <CompassRose
+            heading={compassEnabled && compassHeading !== null ? compassHeading : (position?.heading ?? 0)}
+            headingUp={headingUp}
+          />
         </button>
         <button className={`fab ${addingSpot || spotListOpen ? 'fab-active' : ''}`} onClick={handlePinBtn} title="Steder">
           <MapPin size={22} />

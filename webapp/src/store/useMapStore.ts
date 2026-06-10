@@ -80,6 +80,7 @@ interface MapStore {
   offlineOnly: boolean
   boatInfo: BoatInfo
   lookAhead: boolean
+  headingUp: boolean
   waypoints: Waypoint[]
   addingWaypoint: boolean
 
@@ -119,6 +120,7 @@ interface MapStore {
   toggleOfflineOnly: () => void
   setBoatInfo: (info: Partial<BoatInfo>) => void
   toggleLookAhead: () => void
+  toggleHeadingUp: () => void
   addWaypoint: (wp: Waypoint) => void
   insertWaypointAt: (wp: Waypoint, index: number) => void
   removeWaypoint: (id: string) => void
@@ -204,6 +206,7 @@ export const useMapStore = create<MapStore>((set) => ({
   offlineOnly: loadBool('offlineOnly', false),
   boatInfo: loadBoatInfo(),
   lookAhead: loadBool('lookAhead', false),
+  headingUp: loadBool('headingUp', false),
   waypoints: [],
   addingWaypoint: false,
 
@@ -304,6 +307,7 @@ export const useMapStore = create<MapStore>((set) => ({
   setCurrentWeather: (w) => set({ currentWeather: w }),
   toggleOfflineOnly: () => set((s) => { const v = !s.offlineOnly; localStorage.setItem('offlineOnly', String(v)); return { offlineOnly: v } }),
   toggleLookAhead: () => set((s) => { const v = !s.lookAhead; localStorage.setItem('lookAhead', String(v)); return { lookAhead: v } }),
+  toggleHeadingUp: () => set((s) => { const v = !s.headingUp; localStorage.setItem('headingUp', String(v)); return { headingUp: v } }),
   addWaypoint: (wp) => set((s) => ({ waypoints: [...s.waypoints, wp], addingWaypoint: false })),
   insertWaypointAt: (wp, index) => set((s) => {
     const wps = [...s.waypoints]; wps.splice(index, 0, wp); return { waypoints: wps }
