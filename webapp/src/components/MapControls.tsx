@@ -84,6 +84,25 @@ export default function MapControls() {
   const clearWaypoints     = useMapStore((s) => s.clearWaypoints)
   const removeWaypoint     = useMapStore((s) => s.removeWaypoint)
 
+  const handleCompassToggle = async () => {
+    if (!compassEnabled) {
+      // iOS requires requestPermission() from a synchronous user-gesture context.
+      // Calling it here (directly in onClick) satisfies that requirement, so the
+      // dialog only appears once per session instead of on every app restart.
+      const DevOr = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
+      if (typeof DevOr.requestPermission === 'function') {
+        try {
+          const perm = await DevOr.requestPermission()
+          if (perm !== 'granted') return
+        } catch {
+          return
+        }
+      }
+    }
+    toggleCompass()
+    setMenuOpen(false)
+  }
+
   const handleMob = () => {
     if (mobPoint || !position) return
     navigator.vibrate?.([200, 100, 200, 100, 400])
@@ -231,7 +250,7 @@ export default function MapControls() {
             {isOpen('kart') ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
           {isOpen('kart') && (<>
-            <button className="menu-item" style={{ color: compassEnabled ? '#60a5fa' : undefined }} onClick={() => { toggleCompass(); setMenuOpen(false) }}>
+            <button className="menu-item" style={{ color: compassEnabled ? '#60a5fa' : undefined }} onClick={handleCompassToggle}>
               <Compass size={20} /><span>Kompass {compassEnabled ? '(på)' : '(av)'}</span>
             </button>
             <button className="menu-item" onClick={() => { toggleDarkMode(); setMenuOpen(false) }}>

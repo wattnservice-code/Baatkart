@@ -10,11 +10,13 @@ import WeatherOverlay from './components/WeatherOverlay'
 import TideOverlay from './components/TideOverlay'
 import { useGPS } from './hooks/useGPS'
 import { useCompass } from './hooks/useCompass'
+import { useWakeLock } from './hooks/useWakeLock'
 import { useMapStore } from './store/useMapStore'
 import { unlockAudio } from './audio'
 
 export default function App() {
   useGPS()
+  useWakeLock()
   const compassEnabled = useMapStore((s) => s.compassEnabled)
   const darkMode = useMapStore((s) => s.darkMode)
   useCompass(compassEnabled)

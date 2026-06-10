@@ -31,17 +31,10 @@ export function useCompass(enabled: boolean) {
       setCompassHeading(smoothedRef.current)
     }
 
-    const listen = async () => {
-      const DevOr = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
-      if (typeof DevOr.requestPermission === 'function') {
-        const perm = await DevOr.requestPermission()
-        if (perm !== 'granted') return
-      }
-      window.addEventListener('deviceorientationabsolute', handler as EventListener, true)
-      window.addEventListener('deviceorientation', handler as EventListener, true)
-    }
-
-    listen()
+    // Permission must already have been granted by the UI button (user gesture).
+    // Just attach listeners here — no requestPermission call needed.
+    window.addEventListener('deviceorientationabsolute', handler as EventListener, true)
+    window.addEventListener('deviceorientation', handler as EventListener, true)
     return () => {
       window.removeEventListener('deviceorientationabsolute', handler as EventListener, true)
       window.removeEventListener('deviceorientation', handler as EventListener, true)
