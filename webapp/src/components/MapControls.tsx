@@ -3,6 +3,7 @@ import { Navigation, MapPin, X, Play, Square, Trash2, Layers, Compass, Sun, Moon
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
+import { formatDist } from './NavOverlay'
 import { useMapStore } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import SpotListPanel from './SpotListPanel'
@@ -15,6 +16,14 @@ import BoatInfoPanel from './BoatInfoPanel'
 function formatRingLabel(r: null | number): string {
   if (r === null) return 'Auto'
   return r >= 1000 ? `${r / 1000} km` : `${r} m`
+}
+
+function distanceM(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371000
+  const φ1 = (aLat * Math.PI) / 180, φ2 = (bLat * Math.PI) / 180
+  const dφ = ((bLat - aLat) * Math.PI) / 180, dλ = ((bLng - aLng) * Math.PI) / 180
+  const x = Math.sin(dφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(dλ / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(x))
 }
 
 function CompassRose({ headingUp }: { headingUp: boolean }) {
@@ -119,6 +128,13 @@ export default function MapControls() {
       }
     }
     toggleCompass()
+  }
+
+  // Close the card. For a dropped/search pin (no saved id) also remove the
+  // blue pin from the map; for a saved spot just close (keep its yellow pin).
+  const closeSpotMenu = () => {
+    if (spotMenu && !spotMenu.id) setSearchPin(null)
+    setSpotMenu(null)
   }
 
   const handleMob = () => {
@@ -348,8 +364,13 @@ export default function MapControls() {
         <div className="spot-action-card">
           <div className="spot-action-head">
             <span className="spot-action-name">📍 {spotMenu.name}</span>
-            <button className="spot-action-close" onClick={() => setSpotMenu(null)}><X size={18} /></button>
+            <button className="spot-action-close" onClick={closeSpotMenu}><X size={18} /></button>
           </div>
+          {position && (
+            <div className="spot-action-dist">
+              📏 {formatDist(distanceM(position.lat, position.lng, spotMenu.lat, spotMenu.lng), distUnit)} herfra
+            </div>
+          )}
           <div className="spot-action-btns">
             <button className="spot-action-btn spot-action-nav" onClick={() => {
               setNavPreview({ lat: spotMenu.lat, lng: spotMenu.lng, name: spotMenu.name })
@@ -375,25 +396,15 @@ export default function MapControls() {
               </div>
             )}
 
-            {!spotMenu.id && (
-              <div className="spot-action-row">
-                <button className="spot-action-btn spot-action-save" onClick={() => {
-                  setGpsSpot({ lat: spotMenu.lat, lng: spotMenu.lng })
-                  setSearchPin(null)
-                  setSpotMenu(null)
-                }}>
-                  <Bookmark size={18} /> Lagre sted
-                </button>
-                <button className="spot-action-btn spot-action-remove" onClick={() => {
-                  setSearchPin(null)
-                  setSpotMenu(null)
-                }}>
-                  <Trash2 size={18} /> Fjern markering
-                </button>
-              </div>
-            )}
-
-            {spotMenu.id && (
+            {!spotMenu.id ? (
+              <button className="spot-action-btn spot-action-save" onClick={() => {
+                setGpsSpot({ lat: spotMenu.lat, lng: spotMenu.lng })
+                setSearchPin(null)
+                setSpotMenu(null)
+              }}>
+                <Bookmark size={18} /> Lagre sted
+              </button>
+            ) : (
               <button className="spot-action-btn spot-action-remove" onClick={() => {
                 removeSpot(spotMenu.id!)
                 setSpotMenu(null)

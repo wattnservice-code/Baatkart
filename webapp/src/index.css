@@ -580,6 +580,10 @@ html, body, #root {
   background: none; border: none; color: #94a3b8;
   cursor: pointer; padding: 4px; flex-shrink: 0;
 }
+.spot-action-dist {
+  font-size: 13px; font-weight: 600; color: #38bdf8;
+  margin: -4px 0 12px;
+}
 .spot-action-btns { display: flex; flex-direction: column; gap: 10px; }
 .spot-action-row { display: flex; gap: 10px; }
 .spot-action-btn {
