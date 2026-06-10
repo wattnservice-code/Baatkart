@@ -1,22 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import 'leaflet-rotate'
 import { useMapStore } from '../store/useMapStore'
-
-declare module 'leaflet' {
-  interface Map {
-    rotateTo(bearing: number, options?: { animate?: boolean; duration?: number; easeLinearity?: number }): this
-    setBearing(bearing: number): this
-    getBearing(): number
-  }
-  interface MapOptions {
-    rotate?: boolean
-    touchRotate?: boolean
-    rotateControl?: boolean
-    bearing?: number
-  }
-}
 import SpotDialog from './SpotDialog'
 import WaypointDialog from './WaypointDialog'
 import { getTile } from '../offline/tileDb'
@@ -201,7 +186,7 @@ export default function MapView() {
   // Init map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
-    const map = L.map(containerRef.current, { center: [59.9, 10.7], zoom: 15, zoomControl: false, rotate: true, touchRotate: false, rotateControl: false, bearing: 0 })
+    const map = L.map(containerRef.current, { center: [59.9, 10.7], zoom: 15, zoomControl: false })
 
     const isDark = useMapStore.getState().darkMode
     baseTileRef.current = L.tileLayer(isDark ? DARK_URL : OSM_URL, {
@@ -378,22 +363,20 @@ export default function MapView() {
     }
   }, [position, compassEnabled, compassHeading])
 
-  // Heading-up map rotation
+  // Heading-up map rotation via CSS transform on container
   useEffect(() => {
-    const map = mapRef.current
-    if (!map) return
+    const el = containerRef.current
+    if (!el) return
     if (!headingUp) {
-      map.rotateTo(0, { animate: true, duration: 0.4 })
+      el.style.transition = 'transform 0.4s ease'
+      el.style.transform = ''
       return
     }
     if (!followBoat) return
     const isCompassActive = compassEnabled && compassHeading !== null && !isNaN(compassHeading)
     const h = isCompassActive ? compassHeading! : (position?.heading ?? 0)
-    if (isCompassActive) {
-      map.setBearing(h)
-    } else {
-      map.rotateTo(h, { animate: true, duration: 0.6 })
-    }
+    el.style.transition = isCompassActive ? 'transform 0.12s linear' : 'transform 0.6s ease'
+    el.style.transform = `rotate(${-h}deg) scale(1.42)`
   }, [headingUp, followBoat, position?.heading, compassHeading, compassEnabled])
 
   // Track line
@@ -675,7 +658,9 @@ export default function MapView() {
 
   return (
     <>
-      <div ref={containerRef} className="w-full h-full" />
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        <div ref={containerRef} className="w-full h-full" style={{ transformOrigin: 'center center' }} />
+      </div>
       {pendingSpot && <SpotDialog lat={pendingSpot.lat} lng={pendingSpot.lng} onClose={() => setPendingSpot(null)} />}
       {pendingWaypoint && (
         <WaypointDialog
