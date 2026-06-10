@@ -77,7 +77,9 @@ function boatSize(zoom: number): number {
 }
 
 function ringRadius(zoom: number): number {
+  if (zoom >= 16) return 50
   if (zoom >= 15) return 100
+  if (zoom >= 14) return 200
   if (zoom >= 13) return 500
   if (zoom >= 11) return 1000
   return 5000
@@ -301,7 +303,7 @@ export default function MapView() {
     if (!boatMarkerRef.current) {
       const icon = L.divIcon({ className: '', html: boatSvg(position.heading, size), iconSize: [size, size], iconAnchor: [size / 2, size / 2] })
       boatMarkerRef.current = L.marker(latlng, { icon, zIndexOffset: 1000 }).addTo(map)
-      map.setView(latlng, Math.max(zoom, 13), { animate: false })
+      map.setView(latlng, Math.max(zoom, 14), { animate: false })
     } else {
       boatMarkerRef.current.setLatLng(latlng)
       if (followBoat) {
