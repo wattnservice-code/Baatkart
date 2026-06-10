@@ -97,6 +97,9 @@ export default function MapControls() {
   const setAddingWaypoint  = useMapStore((s) => s.setAddingWaypoint)
   const clearWaypoints     = useMapStore((s) => s.clearWaypoints)
   const removeWaypoint     = useMapStore((s) => s.removeWaypoint)
+  const spotMenu           = useMapStore((s) => s.spotMenu)
+  const setSpotMenu        = useMapStore((s) => s.setSpotMenu)
+  const setNavPreview      = useMapStore((s) => s.setNavPreview)
 
   const handleCompassToggle = async () => {
     if (!compassEnabled) {
@@ -338,6 +341,31 @@ export default function MapControls() {
       {searchOpen && <SearchBar onClose={() => setSearchOpen(false)} />}
       {gpsSpot && <SpotDialog lat={gpsSpot.lat} lng={gpsSpot.lng} onClose={() => setGpsSpot(null)} />}
       {anchorOpen && <AnchorDialog onClose={() => setAnchorOpen(false)} />}
+
+      {spotMenu && (
+        <div className="spot-action-card">
+          <div className="spot-action-head">
+            <span className="spot-action-name">📍 {spotMenu.name}</span>
+            <button className="spot-action-close" onClick={() => setSpotMenu(null)}><X size={18} /></button>
+          </div>
+          <div className="spot-action-btns">
+            <button className="spot-action-btn spot-action-nav" onClick={() => {
+              setNavPreview({ lat: spotMenu.lat, lng: spotMenu.lng, name: spotMenu.name })
+              setSpotMenu(null)
+            }}>
+              <Navigation size={18} /> Naviger hit
+            </button>
+            {isOnline && (
+              <button className="spot-action-btn spot-action-earth" onClick={() => {
+                openGoogleEarth(spotMenu.lat, spotMenu.lng)
+                setSpotMenu(null)
+              }}>
+                <Globe size={18} /> Google Earth
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {confirmTrack && (
         <div className="dialog-overlay" onClick={() => setConfirmTrack(false)}>

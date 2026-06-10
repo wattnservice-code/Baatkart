@@ -302,7 +302,10 @@ export default function MapView() {
     const icon = L.divIcon({ className: '', html, iconSize: [20, 20], iconAnchor: [10, 20] })
     if (!searchPinRef.current) {
       searchPinRef.current = L.marker([searchPin.lat, searchPin.lng], { icon, zIndexOffset: 600 }).addTo(map)
-      searchPinRef.current.on('click', () => useMapStore.getState().setSearchPin(null))
+      searchPinRef.current.on('click', () => {
+        const sp = useMapStore.getState().searchPin
+        if (sp) useMapStore.getState().setSpotMenu({ lat: sp.lat, lng: sp.lng, name: sp.name })
+      })
     } else {
       searchPinRef.current.setLatLng([searchPin.lat, searchPin.lng]).setIcon(icon)
     }
@@ -630,8 +633,9 @@ export default function MapView() {
       } else {
         const marker = L.marker([spot.lat, spot.lng], { icon, zIndexOffset: 500 }).addTo(map)
         marker.on('click', () => {
-          useMapStore.getState().setActiveSpot(spot.id)
-          map.flyTo([spot.lat, spot.lng], Math.max(map.getZoom(), 14), { animate: true, duration: 0.8 })
+          const s = useMapStore.getState()
+          s.setActiveSpot(spot.id)
+          s.setSpotMenu({ lat: spot.lat, lng: spot.lng, name: spot.name })
         })
         spotMarkersRef.current.set(spot.id, marker)
       }
