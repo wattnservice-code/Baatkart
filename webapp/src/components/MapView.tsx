@@ -348,8 +348,8 @@ export default function MapView() {
     // Range ring
     if (!rangeRingRef.current) {
       rangeRingRef.current = L.circle(latlng, {
-        radius, color: '#94a3b8', weight: 1.5, opacity: 0.6,
-        fill: true, fillColor: '#94a3b8', fillOpacity: 0.04,
+        radius, color: '#3b82f6', weight: 2, opacity: 0.8,
+        fill: true, fillColor: '#3b82f6', fillOpacity: 0.05,
       }).addTo(map)
     } else {
       rangeRingRef.current.setLatLng(latlng).setRadius(radius)
