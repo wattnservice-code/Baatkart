@@ -40,11 +40,12 @@ export function useAIS() {
   const aisKey      = useMapStore((s) => s.aisKey)
   const mapBounds   = useMapStore((s) => s.mapBounds)
 
-  const wsRef       = useRef<WebSocket | null>(null)
-  const markersRef  = useRef<Map<number, L.Marker>>(new Map())
-  const layerRef    = useRef<L.LayerGroup | null>(null)
-  const boundsRef   = useRef(mapBounds)
-  const subTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wsRef         = useRef<WebSocket | null>(null)
+  const markersRef    = useRef<Map<number, L.Marker>>(new Map())
+  const layerRef      = useRef<L.LayerGroup | null>(null)
+  const boundsRef     = useRef(mapBounds)
+  const subTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const reconnectRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Keep bounds ref current without triggering re-subscription immediately
   useEffect(() => { boundsRef.current = mapBounds }, [mapBounds])
@@ -75,7 +76,8 @@ export function useAIS() {
 
   useEffect(() => {
     if (!aisVisible || !aisKey) {
-      wsRef.current?.close()
+      if (reconnectRef.current) { clearTimeout(reconnectRef.current); reconnectRef.current = null }
+      wsRef.current?.close(1000)
       wsRef.current = null
       layerRef.current?.clearLayers()
       markersRef.current.clear()
@@ -84,99 +86,105 @@ export function useAIS() {
     }
 
     const setAisStatus = useMapStore.getState().setAisStatus
-    setAisStatus({ state: 'connecting', count: 0, message: 'Kobler til…' })
+    let cancelled = false       // set on cleanup so a closing socket doesn't reconnect
+    let attempt = 0             // reconnect attempt counter (for backoff)
 
     const map = getMapInstance()
     if (!layerRef.current) {
       layerRef.current = L.layerGroup().addTo(map!)
     }
 
-    const ws = new WebSocket('wss://stream.aisstream.io/v0/stream')
-    // aisstream sends each report as a binary frame. Force ArrayBuffer so we can
-    // decode it synchronously — the default 'blob' makes e.data a Blob, and
-    // JSON.parse(String(blob)) === JSON.parse('[object Blob]') silently fails.
-    ws.binaryType = 'arraybuffer'
-    wsRef.current = ws
+    const connect = () => {
+      if (cancelled) return
+      setAisStatus({ state: 'connecting', count: markersRef.current.size, message: attempt === 0 ? 'Kobler til…' : 'Kobler til på nytt…' })
 
-    ws.onopen = () => {
-      sendSubscription()
-      setAisStatus({ state: 'connecting', count: markersRef.current.size, message: 'Venter på fartøy…' })
-    }
+      const ws = new WebSocket('wss://stream.aisstream.io/v0/stream')
+      // aisstream sends each report as a binary frame. Force ArrayBuffer so we can
+      // decode it synchronously — the default 'blob' makes e.data a Blob, and
+      // JSON.parse(String(blob)) === JSON.parse('[object Blob]') silently fails.
+      ws.binaryType = 'arraybuffer'
+      wsRef.current = ws
 
-    ws.onmessage = (e: MessageEvent) => {
-      try {
-        const raw = typeof e.data === 'string'
-          ? e.data
-          : new TextDecoder().decode(e.data as ArrayBuffer)
-        const msg = JSON.parse(raw)
+      ws.onopen = () => {
+        sendSubscription()
+        setAisStatus({ state: 'connecting', count: markersRef.current.size, message: 'Venter på fartøy…' })
+      }
 
-        // aisstream surfaces auth/subscription problems as an `error` field
-        if (msg.error || msg.Error) {
-          setAisStatus({ state: 'error', count: markersRef.current.size, message: String(msg.error || msg.Error) })
-          return
-        }
+      ws.onmessage = (e: MessageEvent) => {
+        try {
+          const raw = typeof e.data === 'string'
+            ? e.data
+            : new TextDecoder().decode(e.data as ArrayBuffer)
+          const msg = JSON.parse(raw)
 
-        if (msg.MessageType !== 'PositionReport') return
+          // aisstream surfaces auth/subscription problems as an `error` field
+          if (msg.error || msg.Error) {
+            setAisStatus({ state: 'error', count: markersRef.current.size, message: String(msg.error || msg.Error) })
+            return
+          }
 
-        const meta = msg.MetaData
-        const rep  = msg.Message?.PositionReport
-        if (!meta || !rep) return
+          if (msg.MessageType !== 'PositionReport') return
 
-        const mmsi = meta.MMSI as number
-        const lat  = meta.latitude as number
-        const lng  = meta.longitude as number
-        if (!lat || !lng) return
+          const meta = msg.MetaData
+          const rep  = msg.Message?.PositionReport
+          if (!meta || !rep) return
 
-        const vessel: AISVessel = {
-          mmsi,
-          lat, lng,
-          heading: (rep.TrueHeading !== 511 ? rep.TrueHeading : rep.Cog) as number,
-          sog: (rep.Sog ?? 0) as number,
-          name: (meta.ShipName as string ?? '').trim() || `MMSI ${mmsi}`,
-        }
+          const mmsi = meta.MMSI as number
+          const lat  = meta.latitude as number
+          const lng  = meta.longitude as number
+          if (!lat || !lng) return
 
-        const existing = markersRef.current.get(mmsi)
-        if (existing) {
-          existing.setLatLng([lat, lng])
-          existing.setIcon(vesselIcon(vessel))
-          existing.getPopup()?.setContent(popupContent(vessel))
-        } else {
-          if (!layerRef.current) return
-          const marker = L.marker([lat, lng], { icon: vesselIcon(vessel), zIndexOffset: 200 })
-          marker.bindPopup(popupContent(vessel), { maxWidth: 200 })
-          marker.addTo(layerRef.current)
-          markersRef.current.set(mmsi, marker)
-        }
-        setAisStatus({ state: 'live', count: markersRef.current.size, message: '' })
-      } catch { /* ignore malformed messages */ }
-    }
+          attempt = 0   // healthy data — reset backoff
 
-    ws.onerror = () => {
-      setAisStatus({ state: 'error', count: markersRef.current.size, message: 'Tilkoblingsfeil' })
-    }
-    ws.onclose = (ev) => {
-      // 1000 = normal close (we toggled off).
-      // 1006 = aisstream drops the socket with no error frame when the API key
-      // is invalid / not yet active. Confirmed by testing with a fake key.
-      if (ev.code === 1006) {
-        setAisStatus({ state: 'error', count: markersRef.current.size, message: 'Nøkkel avvist – sjekk at den er riktig og aktivert på aisstream.io' })
-      } else if (ev.code !== 1000) {
-        setAisStatus({ state: 'error', count: markersRef.current.size, message: `Frakoblet (${ev.code})` })
+          const vessel: AISVessel = {
+            mmsi,
+            lat, lng,
+            heading: (rep.TrueHeading !== 511 ? rep.TrueHeading : rep.Cog) as number,
+            sog: (rep.Sog ?? 0) as number,
+            name: (meta.ShipName as string ?? '').trim() || `MMSI ${mmsi}`,
+          }
+
+          const existing = markersRef.current.get(mmsi)
+          if (existing) {
+            existing.setLatLng([lat, lng])
+            existing.setIcon(vesselIcon(vessel))
+            existing.getPopup()?.setContent(popupContent(vessel))
+          } else {
+            if (!layerRef.current) return
+            const marker = L.marker([lat, lng], { icon: vesselIcon(vessel), zIndexOffset: 200 })
+            marker.bindPopup(popupContent(vessel), { maxWidth: 200 })
+            marker.addTo(layerRef.current)
+            markersRef.current.set(mmsi, marker)
+          }
+          setAisStatus({ state: 'live', count: markersRef.current.size, message: '' })
+        } catch { /* ignore malformed messages */ }
+      }
+
+      ws.onerror = () => { /* close handler decides what to do next */ }
+
+      ws.onclose = (ev) => {
+        if (cancelled || ev.code === 1000) return   // intentional shutdown
+
+        // Unexpected close. The most common cause is aisstream's single-connection
+        // limit per key (a stale socket from a previous page/deploy still lingers).
+        // Retry with backoff — within a few seconds the old socket drops and the
+        // reconnect succeeds, so we never get stuck on a false "key rejected".
+        attempt += 1
+        const delayMs = Math.min(3000 * attempt, 20000)
+        const secs = Math.round(delayMs / 1000)
+        setAisStatus({ state: 'connecting', count: markersRef.current.size, message: `Frakoblet – nytt forsøk om ${secs}s…` })
+        reconnectRef.current = setTimeout(connect, delayMs)
       }
     }
 
-    // Prune vessels older than 15 min every minute
-    const pruneInterval = setInterval(() => {
-      // aisstream gives live data — if a vessel stops sending, remove after 15 min
-      // We track via marker timestamp via a WeakMap alternative: just keep markers alive
-      // (aisstream removes vessels from the feed when they go silent)
-    }, 60000)
+    connect()
 
     return () => {
-      ws.close()
-      wsRef.current = null
-      clearInterval(pruneInterval)
+      cancelled = true
+      if (reconnectRef.current) { clearTimeout(reconnectRef.current); reconnectRef.current = null }
       if (subTimerRef.current) clearTimeout(subTimerRef.current)
+      wsRef.current?.close(1000)
+      wsRef.current = null
       layerRef.current?.clearLayers()
       markersRef.current.clear()
     }
