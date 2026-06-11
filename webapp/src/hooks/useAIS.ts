@@ -139,8 +139,12 @@ export function useAIS() {
       setAisStatus({ state: 'error', count: markersRef.current.size, message: 'Tilkoblingsfeil' })
     }
     ws.onclose = (ev) => {
-      // 1000 = normal close (we toggled off). Anything else = unexpected.
-      if (ev.code !== 1000) {
+      // 1000 = normal close (we toggled off).
+      // 1006 = aisstream drops the socket with no error frame when the API key
+      // is invalid / not yet active. Confirmed by testing with a fake key.
+      if (ev.code === 1006) {
+        setAisStatus({ state: 'error', count: markersRef.current.size, message: 'Nøkkel avvist – sjekk at den er riktig og aktivert på aisstream.io' })
+      } else if (ev.code !== 1000) {
         setAisStatus({ state: 'error', count: markersRef.current.size, message: `Frakoblet (${ev.code})` })
       }
     }
