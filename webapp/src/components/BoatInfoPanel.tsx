@@ -30,13 +30,11 @@ export default function BoatInfoPanel({ onClose }: Props) {
 
   return (
     <div className="offline-panel">
-      <div className="spot-panel-header">
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Ship size={16} /> Båtinfo
-        </span>
-        <button onClick={onClose}><X size={18} /></button>
+      <div className="settings-head">
+        <span className="settings-title"><Ship size={18} /> Båtinfo</span>
+        <button className="settings-close" onClick={onClose}><X size={20} /></button>
       </div>
-
+      <div className="settings-body">
       <div className="boat-info-form">
         {FIELDS.map((f) => (
           <div key={f.key} className="boat-info-field">
@@ -76,6 +74,7 @@ export default function BoatInfoPanel({ onClose }: Props) {
           </div>
         </div>
       )}
+      </div>{/* settings-body */}
     </div>
   )
 }

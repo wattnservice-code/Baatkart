@@ -139,10 +139,11 @@ export default function OfflinePanel({ onClose }: Props) {
 
   return (
     <div className="offline-panel">
-      <div className="spot-panel-header">
-        <span>Offline kart</span>
-        <button onClick={onClose}><X size={18} /></button>
+      <div className="settings-head">
+        <span className="settings-title">Kart uten nett</span>
+        <button className="settings-close" onClick={onClose}><X size={20} /></button>
       </div>
+      <div className="settings-body">
 
       {/* Offline-only toggle */}
       <button
@@ -241,6 +242,7 @@ export default function OfflinePanel({ onClose }: Props) {
         <span>{storedCount} tiles totalt</span>
         <span>{storageMB} MB brukt</span>
       </div>
+      </div>{/* settings-body */}
     </div>
   )
 }

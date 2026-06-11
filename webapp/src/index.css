@@ -548,6 +548,13 @@ html, body, #root {
   border-top-color: rgba(8,47,73,0.95);
 }
 
+/* ── Spot action card backdrop (tap outside to dismiss) ── */
+.spot-action-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 599;
+}
+
 /* ── Spot action card (tap a pin) ── */
 .spot-action-card {
   position: absolute;
@@ -628,6 +635,61 @@ html, body, #root {
 
 /* ── Nav ETA stat ── */
 .nav-eta { color: #86efac; font-size: 14px !important; }
+
+/* ── Track follow overlay (XTE) ── */
+.track-follow-overlay {
+  position: absolute;
+  top: max(12px, calc(env(safe-area-inset-top) + 8px));
+  left: 50%; transform: translateX(-50%);
+  background: rgba(15,23,42,0.92);
+  border: 1px solid #a855f7;
+  border-radius: 12px;
+  padding: 8px 14px 10px;
+  z-index: 800;
+  min-width: 210px; max-width: 300px;
+  text-align: center;
+  backdrop-filter: blur(6px);
+}
+.track-follow-name { font-size: 12px; font-weight: 700; color: #c084fc; margin-bottom: 4px; }
+.track-follow-stats { display: flex; gap: 12px; justify-content: center; align-items: baseline; margin-bottom: 8px; }
+.track-follow-xte { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.track-follow-dist { font-size: 13px; color: #94a3b8; }
+.track-follow-stop {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  color: #94a3b8; border-radius: 8px;
+  padding: 4px 12px; font-size: 12px; cursor: pointer;
+}
+.track-follow-stop:hover { color: #f87171; }
+.day .track-follow-overlay { background: rgba(248,250,252,0.97); border-color: #a855f7; color: #0f172a; }
+.day .track-follow-name { color: #7c3aed; }
+.day .track-follow-dist { color: #64748b; }
+.day .track-follow-stop { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); color: #64748b; }
+
+/* ── Saved track rows (in SettingsPanel) ── */
+.saved-track-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.saved-track-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.saved-track-name { font-size: 14px; font-weight: 600; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.saved-track-meta { font-size: 11px; color: #64748b; }
+.saved-track-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.saved-track-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.saved-track-follow { background: rgba(168,85,247,0.15); color: #c084fc; border-color: #a855f7; }
+.saved-track-follow:hover { background: rgba(168,85,247,0.25); }
+.saved-track-stop { background: rgba(248,113,113,0.15); color: #f87171; border-color: #ef4444; }
+.saved-track-del { background: transparent; color: #64748b; padding: 5px 8px; }
+.saved-track-del:hover { color: #f87171; }
+.day .saved-track-row { border-bottom-color: rgba(0,0,0,0.06); }
+.day .saved-track-name { color: #0f172a; }
+.day .saved-track-btn { border-color: rgba(0,0,0,0.12); background: rgba(0,0,0,0.03); }
+.day .saved-track-follow { background: rgba(168,85,247,0.1); border-color: #a855f7; color: #7c3aed; }
+.day .saved-track-del { color: #94a3b8; }
 
 /* ── Day mode overrides ── */
 .day .status-bar {
@@ -877,15 +939,13 @@ html, body, #root {
 /* ── Offline panel ── */
 .offline-panel {
   position: absolute;
-  right: 68px; bottom: 24px;
-  z-index: 401;
-  background: rgba(15,23,42,0.97);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 14px;
+  inset: 0;
+  z-index: 470;
+  background: rgba(15,23,42,0.98);
+  backdrop-filter: blur(10px);
   color: white;
-  width: 300px;
   display: flex; flex-direction: column;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  animation: sheet-rise 0.2s ease;
   overflow: hidden;
 }
 .offline-info {

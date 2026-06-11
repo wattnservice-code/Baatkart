@@ -5,6 +5,7 @@ import BottomNav from './components/BottomNav'
 import MapControls from './components/MapControls'
 import MobOverlay from './components/MobOverlay'
 import NavOverlay from './components/NavOverlay'
+import TrackFollowOverlay from './components/TrackFollowOverlay'
 import NavPreviewBar from './components/NavPreviewBar'
 import WeatherOverlay from './components/WeatherOverlay'
 import TideOverlay from './components/TideOverlay'
@@ -41,6 +42,7 @@ export default function App() {
         </div>
         <MobOverlay />
         <NavPreviewBar />
+        <TrackFollowOverlay />
         <NavOverlay />
       </div>
       <StatusBar />

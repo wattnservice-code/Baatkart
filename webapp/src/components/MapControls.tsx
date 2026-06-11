@@ -10,6 +10,7 @@ import SpotListPanel from './SpotListPanel'
 import SearchBar from './SearchBar'
 import SpotDialog from './SpotDialog'
 import SettingsPanel from './SettingsPanel'
+import SaveTrackDialog from './SaveTrackDialog'
 
 function distanceM(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const R = 6371000
@@ -54,7 +55,8 @@ function CompassRose({ headingUp }: { headingUp: boolean }) {
 }
 
 export default function MapControls() {
-  const [gpsSpot, setGpsSpot] = useState<{ lat: number; lng: number } | null>(null)
+  const [gpsSpot, setGpsSpot]           = useState<{ lat: number; lng: number } | null>(null)
+  const [showSaveTrack, setShowSaveTrack] = useState(false)
 
   const isOnline         = useOnline()
   const headingUp        = useMapStore((s) => s.headingUp)
@@ -77,6 +79,7 @@ export default function MapControls() {
   const setNavPreview    = useMapStore((s) => s.setNavPreview)
   const setSearchPin     = useMapStore((s) => s.setSearchPin)
   const removeSpot       = useMapStore((s) => s.removeSpot)
+  const track            = useMapStore((s) => s.track)
 
   // Close the card. For a dropped/search pin (no saved id) also remove the
   // blue pin from the map; for a saved spot just close (keep its yellow pin).
@@ -130,7 +133,14 @@ export default function MapControls() {
         </button>
         <button
           className={`fab ${isTracking ? 'fab-rec' : ''}`}
-          onClick={() => isTracking ? stopTracking() : startTracking()}
+          onClick={() => {
+            if (isTracking) {
+              stopTracking()
+              if (track.length > 0) setShowSaveTrack(true)
+            } else {
+              startTracking()
+            }
+          }}
           title={isTracking ? 'Stopp sporing' : 'Start sporing'}
         >
           {isTracking ? <Square size={20} /> : <Circle size={22} />}
@@ -147,9 +157,11 @@ export default function MapControls() {
       {activePanel === 'search' && <SearchBar onClose={() => setActivePanel(null)} />}
       {activePanel === 'meg' && <SettingsPanel onClose={() => setActivePanel(null)} />}
       {gpsSpot && <SpotDialog lat={gpsSpot.lat} lng={gpsSpot.lng} onClose={() => setGpsSpot(null)} />}
+      {showSaveTrack && <SaveTrackDialog onClose={() => setShowSaveTrack(false)} />}
 
+      {spotMenu && <div className="spot-action-backdrop" onClick={closeSpotMenu} />}
       {spotMenu && (
-        <div className="spot-action-card">
+        <div className="spot-action-card" onClick={(e) => e.stopPropagation()}>
           <div className="spot-action-head">
             <span className="spot-action-name">📍 {spotMenu.name}</span>
             <button className="spot-action-close" onClick={closeSpotMenu}><X size={18} /></button>

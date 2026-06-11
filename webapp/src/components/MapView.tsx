@@ -163,7 +163,8 @@ export default function MapView() {
   const baseTileRef     = useRef<L.TileLayer | null>(null)
   const kartvTileRef    = useRef<L.TileLayer | null>(null)
   const seamarkTileRef  = useRef<L.TileLayer | null>(null)
-  const spotMarkersRef  = useRef<Map<string, L.Marker>>(new Map())
+  const spotMarkersRef      = useRef<Map<string, L.Marker>>(new Map())
+  const followTrackLineRef  = useRef<L.Polyline | null>(null)
 
   const [pendingSpot, setPendingSpot]       = useState<{ lat: number; lng: number } | null>(null)
   const bearingRef         = useRef(0)   // currently displayed map bearing (deg)
@@ -189,6 +190,7 @@ export default function MapView() {
   const darkMode         = useMapStore((s) => s.darkMode)
   const seamarkVisible   = useMapStore((s) => s.seamarkVisible)
   const customRingRadius = useMapStore((s) => s.customRingRadius)
+  const followingTrack   = useMapStore((s) => s.followingTrack)
   const lookAhead        = useMapStore((s) => s.lookAhead)
   const headingUp        = useMapStore((s) => s.headingUp)
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
@@ -461,6 +463,18 @@ export default function MapView() {
     }
   }, [track])
 
+  // Followed saved track (purple dashed)
+  useEffect(() => {
+    if (!mapRef.current) return
+    if (followTrackLineRef.current) { followTrackLineRef.current.remove(); followTrackLineRef.current = null }
+    if (!followingTrack || followingTrack.points.length < 2) return
+    followTrackLineRef.current = L.polyline(
+      followingTrack.points.map((p) => [p.lat, p.lng] as L.LatLngExpression),
+      { color: '#a855f7', weight: 4, opacity: 0.85, dashArray: '10 7' }
+    ).addTo(mapRef.current)
+    return () => { followTrackLineRef.current?.remove(); followTrackLineRef.current = null }
+  }, [followingTrack])
+
   // MOB rescue track (red)
   useEffect(() => {
     if (!mapRef.current) return
@@ -603,15 +617,13 @@ export default function MapView() {
     if (!mapRef.current) return
     const map = mapRef.current
     const onClick = (e: L.LeafletMouseEvent) => {
-      if (addingSpot) setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng })
-      else {
-        // Tap anywhere: drop a pin at that point and open the action card
-        const lat = e.latlng.lat, lng = e.latlng.lng
-        const name = `${lat.toFixed(4)}°N ${lng.toFixed(4)}°Ø`
-        const s = useMapStore.getState()
-        s.setSearchPin({ lat, lng, name })
-        s.setSpotMenu({ lat, lng, name })
-      }
+      if (addingSpot) { setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng }); return }
+      const s = useMapStore.getState()
+      if (s.spotMenu) return  // backdrop handles dismiss; ignore Leaflet clicks while card is open
+      const lat = e.latlng.lat, lng = e.latlng.lng
+      const name = `${lat.toFixed(4)}°N ${lng.toFixed(4)}°Ø`
+      s.setSearchPin({ lat, lng, name })
+      s.setSpotMenu({ lat, lng, name })
     }
     map.on('click', onClick)
     map.getContainer().style.cursor = addingSpot ? 'crosshair' : ''

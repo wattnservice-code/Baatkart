@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { X, Ship, Sun, Moon, Layers, Circle, Compass, Wind, Waves, Gauge, WifiOff, Globe, Trash2, User } from 'lucide-react'
+import { X, Ship, Sun, Moon, Layers, Circle, Compass, Wind, Waves, Gauge, WifiOff, Globe, Trash2, User, Play } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
+import { formatDist } from './NavOverlay'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth } from '../googleEarth'
 import { getMapInstance } from '../mapInstance'
@@ -20,9 +21,10 @@ const subhead: React.CSSProperties = {
 interface Props { onClose: () => void }
 
 export default function SettingsPanel({ onClose }: Props) {
-  const [offlineOpen, setOfflineOpen]   = useState(false)
-  const [boatInfoOpen, setBoatInfoOpen] = useState(false)
-  const [confirmTrack, setConfirmTrack] = useState(false)
+  const [offlineOpen, setOfflineOpen]     = useState(false)
+  const [boatInfoOpen, setBoatInfoOpen]   = useState(false)
+  const [confirmTrack, setConfirmTrack]   = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const isOnline       = useOnline()
   const position       = useMapStore((s) => s.position)
@@ -43,7 +45,12 @@ export default function SettingsPanel({ onClose }: Props) {
   const toggleTide     = useMapStore((s) => s.toggleTide)
   const toggleSpeedUnit = useMapStore((s) => s.toggleSpeedUnit)
   const cycleDistUnit  = useMapStore((s) => s.cycleDistUnit)
-  const cycleRingRadius = useMapStore((s) => s.cycleRingRadius)
+  const cycleRingRadius      = useMapStore((s) => s.cycleRingRadius)
+  const savedTracks          = useMapStore((s) => s.savedTracks)
+  const followingTrack       = useMapStore((s) => s.followingTrack)
+  const deleteSavedTrack     = useMapStore((s) => s.deleteSavedTrack)
+  const startFollowingTrack  = useMapStore((s) => s.startFollowingTrack)
+  const stopFollowingTrack   = useMapStore((s) => s.stopFollowingTrack)
 
   const handleCompassToggle = async () => {
     if (!compassEnabled) {
@@ -115,7 +122,7 @@ export default function SettingsPanel({ onClose }: Props) {
           <div className="menu-divider" />
           <div style={subhead}>Kart og 3D</div>
           <button className="menu-item" onClick={() => setOfflineOpen(true)}>
-            <WifiOff size={20} /><span>Last ned kart offline</span>
+            <WifiOff size={20} /><span>Kart uten nett</span>
           </button>
           {isOnline && (
             <button className="menu-item" style={{ color: '#34d399' }} onClick={showEarth}>
@@ -126,10 +133,41 @@ export default function SettingsPanel({ onClose }: Props) {
           {track.length > 0 && (
             <>
               <div className="menu-divider" />
-              <div style={subhead}>Spor</div>
+              <div style={subhead}>Aktivt spor</div>
               <button className="menu-item" style={{ color: '#f87171' }} onClick={() => setConfirmTrack(true)}>
-                <Trash2 size={20} /><span>Slett spor ({track.length} pkt)</span>
+                <Trash2 size={20} /><span>Slett aktivt spor ({track.length} pkt)</span>
               </button>
+            </>
+          )}
+
+          {savedTracks.length > 0 && (
+            <>
+              <div className="menu-divider" />
+              <div style={subhead}>Lagrede turer ({savedTracks.length})</div>
+              {savedTracks.map((t) => (
+                <div key={t.id} className="saved-track-row">
+                  <div className="saved-track-info">
+                    <span className="saved-track-name">{t.name}</span>
+                    <span className="saved-track-meta">
+                      {formatDist(t.distanceM, distUnit)} · {new Date(t.date).toLocaleDateString('no-NO')}
+                    </span>
+                  </div>
+                  <div className="saved-track-btns">
+                    {followingTrack?.id === t.id ? (
+                      <button className="saved-track-btn saved-track-stop" onClick={() => { stopFollowingTrack(); onClose() }}>
+                        Stopp
+                      </button>
+                    ) : (
+                      <button className="saved-track-btn saved-track-follow" onClick={() => { startFollowingTrack(t); onClose() }}>
+                        <Play size={14} /> Følg
+                      </button>
+                    )}
+                    <button className="saved-track-btn saved-track-del" onClick={() => setConfirmDeleteId(t.id)}>
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </>
           )}
         </div>
@@ -137,6 +175,23 @@ export default function SettingsPanel({ onClose }: Props) {
 
       {offlineOpen && <OfflinePanel onClose={() => setOfflineOpen(false)} />}
       {boatInfoOpen && <BoatInfoPanel onClose={() => setBoatInfoOpen(false)} />}
+
+      {confirmDeleteId && (
+        <div className="dialog-overlay" onClick={() => setConfirmDeleteId(null)}>
+          <div className="dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="dialog-header">Slett tur</div>
+            <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 16 }}>
+              Slette «{savedTracks.find((t) => t.id === confirmDeleteId)?.name}»?
+            </p>
+            <div className="dialog-actions">
+              <button className="btn-secondary" onClick={() => setConfirmDeleteId(null)}>Avbryt</button>
+              <button className="btn-primary" style={{ background: '#dc2626' }} onClick={() => { deleteSavedTrack(confirmDeleteId); setConfirmDeleteId(null) }}>
+                <Trash2 size={15} /> Slett
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirmTrack && (
         <div className="dialog-overlay" onClick={() => setConfirmTrack(false)}>

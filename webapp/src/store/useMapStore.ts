@@ -39,6 +39,22 @@ export interface BoatInfo {
   notes: string
 }
 
+export interface SavedTrack {
+  id: string
+  name: string
+  date: string
+  points: { lat: number; lng: number }[]
+  distanceM: number
+}
+
+function _haversineM(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000
+  const φ1 = (lat1 * Math.PI) / 180, φ2 = (lat2 * Math.PI) / 180
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180, Δλ = ((lng2 - lng1) * Math.PI) / 180
+  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
 const RING_CYCLE = [null, 200, 500, 1000, 2000, 5000] as const
 export type RingSize = typeof RING_CYCLE[number]
 
@@ -74,6 +90,8 @@ interface MapStore {
   boatInfo: BoatInfo
   lookAhead: boolean
   headingUp: boolean
+  savedTracks: SavedTrack[]
+  followingTrack: SavedTrack | null
 
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
@@ -112,6 +130,10 @@ interface MapStore {
   setBoatInfo: (info: Partial<BoatInfo>) => void
   toggleLookAhead: () => void
   toggleHeadingUp: () => void
+  saveCurrentTrack: (name: string) => void
+  deleteSavedTrack: (id: string) => void
+  startFollowingTrack: (track: SavedTrack) => void
+  stopFollowingTrack: () => void
 }
 
 function loadSpots(): SavedSpot[] {
@@ -139,6 +161,13 @@ const BOAT_INFO_KEY = 'baatkart-boatinfo'
 function loadBoatInfo(): BoatInfo {
   try { return { name: '', mmsi: '', phone: '', boatType: '', notes: '', ...JSON.parse(localStorage.getItem(BOAT_INFO_KEY) ?? '{}') } }
   catch { return { name: '', mmsi: '', phone: '', boatType: '', notes: '' } }
+}
+
+function loadSavedTracks(): SavedTrack[] {
+  try { return JSON.parse(localStorage.getItem('savedTracks') || '[]') } catch { return [] }
+}
+function persistSavedTracks(tracks: SavedTrack[]) {
+  localStorage.setItem('savedTracks', JSON.stringify(tracks))
 }
 
 function loadBool(key: string, def: boolean): boolean {
@@ -192,6 +221,8 @@ export const useMapStore = create<MapStore>((set) => ({
   boatInfo: loadBoatInfo(),
   lookAhead: loadBool('lookAhead', false),
   headingUp: loadBool('headingUp', false),
+  savedTracks: loadSavedTracks(),
+  followingTrack: null,
 
   setPosition: (pos) =>
     set((state) => {
@@ -281,6 +312,27 @@ export const useMapStore = create<MapStore>((set) => ({
   toggleOfflineOnly: () => set((s) => { const v = !s.offlineOnly; localStorage.setItem('offlineOnly', String(v)); return { offlineOnly: v } }),
   toggleLookAhead: () => set((s) => { const v = !s.lookAhead; localStorage.setItem('lookAhead', String(v)); return { lookAhead: v } }),
   toggleHeadingUp: () => set((s) => { const v = !s.headingUp; localStorage.setItem('headingUp', String(v)); return { headingUp: v } }),
+
+  saveCurrentTrack: (name) => set((s) => {
+    if (s.track.length < 2) return {}
+    const pts = s.track.map((p) => ({ lat: p.lat, lng: p.lng }))
+    const dist = pts.reduce((acc, pt, i) => {
+      if (i === 0) return 0
+      return acc + _haversineM(pts[i - 1].lat, pts[i - 1].lng, pt.lat, pt.lng)
+    }, 0)
+    const saved: SavedTrack = { id: Date.now().toString(), name, date: new Date().toISOString(), points: pts, distanceM: dist }
+    const tracks = [...s.savedTracks, saved]
+    persistSavedTracks(tracks)
+    return { savedTracks: tracks }
+  }),
+  deleteSavedTrack: (id) => set((s) => {
+    const tracks = s.savedTracks.filter((t) => t.id !== id)
+    persistSavedTracks(tracks)
+    return { savedTracks: tracks, followingTrack: s.followingTrack?.id === id ? null : s.followingTrack }
+  }),
+  startFollowingTrack: (track) => set({ followingTrack: track }),
+  stopFollowingTrack: () => set({ followingTrack: null }),
+
   setBoatInfo: (info) => set((s) => {
     const updated = { ...s.boatInfo, ...info }
     localStorage.setItem(BOAT_INFO_KEY, JSON.stringify(updated))
