@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Ship, Sun, Moon, Layers, Circle, Compass, Wind, Waves, Gauge, WifiOff, Globe, Trash2, User, Play } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
@@ -24,6 +24,7 @@ export default function SettingsPanel({ onClose }: Props) {
   const [offlineOpen, setOfflineOpen]     = useState(false)
   const [boatInfoOpen, setBoatInfoOpen]   = useState(false)
   const [aisKeyInput, setAisKeyInput]     = useState('')
+  useEffect(() => { setAisKeyInput(aisKey) }, [aisKey])
   const [confirmTrack, setConfirmTrack]   = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
@@ -123,7 +124,7 @@ export default function SettingsPanel({ onClose }: Props) {
               <input
                 type="text"
                 placeholder="Lim inn API-nøkkel"
-                value={aisKeyInput || aisKey}
+                value={aisKeyInput}
                 onChange={(e) => setAisKeyInput(e.target.value)}
                 style={{
                   flex: 1, padding: '8px 10px', borderRadius: 8,
@@ -132,7 +133,7 @@ export default function SettingsPanel({ onClose }: Props) {
                 }}
               />
               <button
-                onClick={() => { setAisKey(aisKeyInput || aisKey); setAisKeyInput('') }}
+                onClick={() => setAisKey(aisKeyInput.trim())}
                 style={{
                   padding: '8px 14px', borderRadius: 8, border: 'none',
                   background: '#2563eb', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
@@ -140,8 +141,23 @@ export default function SettingsPanel({ onClose }: Props) {
               >
                 Lagre
               </button>
+              {aisKey && (
+                <button
+                  onClick={() => { setAisKey(''); setAisKeyInput('') }}
+                  style={{
+                    padding: '8px 10px', borderRadius: 8, border: 'none',
+                    background: '#7f1d1d', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                  }}
+                  title="Slett nøkkel"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </div>
-            {aisKey && <div style={{ fontSize: 11, color: '#4ade80' }}>✓ Nøkkel lagret — bruk Ship-knappen på kartet</div>}
+            {aisKey
+              ? <div style={{ fontSize: 11, color: '#4ade80' }}>✓ Nøkkel lagret — bruk Ship-knappen på kartet</div>
+              : <div style={{ fontSize: 11, color: '#64748b' }}>Ingen nøkkel — AIS ikke tilgjengelig</div>
+            }
           </div>
 
           <div className="menu-divider" />
