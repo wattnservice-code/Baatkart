@@ -26,6 +26,7 @@ function wxEmoji(code: string): string {
 
 export default function WeatherOverlay() {
   const weatherVisible     = useMapStore((s) => s.weatherVisible)
+  const toggleWeather      = useMapStore((s) => s.toggleWeather)
   const position           = useMapStore((s) => s.position)
   const setCurrentWeather  = useMapStore((s) => s.setCurrentWeather)
   const [wx, setWx]        = useState<WxData | null>(null)
@@ -65,7 +66,7 @@ export default function WeatherOverlay() {
   const ms = wx ? wx.windSpeed.toFixed(1) : null
 
   return (
-    <div className="info-panel">
+    <div className="info-panel" onClick={toggleWeather} title="Trykk for å lukke" style={{ cursor: 'pointer' }}>
       {err === 'no-gps' ? (
         <span className="info-error">Ingen GPS-posisjon</span>
       ) : err === 'api' ? (

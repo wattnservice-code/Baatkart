@@ -14,6 +14,7 @@ interface TideData {
 
 export default function TideOverlay() {
   const tideVisible     = useMapStore((s) => s.tideVisible)
+  const toggleTide      = useMapStore((s) => s.toggleTide)
   const position        = useMapStore((s) => s.position)
   const [tide, setTide] = useState<TideData | null>(null)
   const [err, setErr]   = useState<string | null>(null)
@@ -70,7 +71,7 @@ export default function TideOverlay() {
     d.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div className="info-panel">
+    <div className="info-panel" onClick={toggleTide} title="Trykk for å lukke" style={{ cursor: 'pointer' }}>
       {err === 'no-gps' ? (
         <span className="info-error">Ingen GPS-posisjon</span>
       ) : err === 'api' ? (

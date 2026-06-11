@@ -634,7 +634,7 @@ export default function MapView() {
       const s = useMapStore.getState()
       if (s.spotMenu) return  // backdrop handles dismiss; ignore Leaflet clicks while card is open
       const lat = e.latlng.lat, lng = e.latlng.lng
-      const name = `${lat.toFixed(4)}°N ${lng.toFixed(4)}°Ø`
+      const name = 'Valgt punkt'
       s.setSearchPin({ lat, lng, name })
       s.setSpotMenu({ lat, lng, name })
     }

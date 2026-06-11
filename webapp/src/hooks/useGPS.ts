@@ -9,6 +9,7 @@ export function useGPS() {
   const setPosition = useMapStore((s) => s.setPosition)
   const smoothed = useRef<{ lat: number; lng: number } | null>(null)
   const smoothedSpeed = useRef<number>(0)
+  const lastHeading = useRef<number>(0)
   const lastPos = useRef<{ lat: number; lng: number; timestamp: number } | null>(null)
 
   useEffect(() => {
@@ -32,25 +33,25 @@ export function useGPS() {
           }
         }
 
-        // Heading from device if available, otherwise calculate from movement
-        let heading = pos.coords.heading ?? 0
-        if ((pos.coords.heading === null || pos.coords.heading === undefined) && lastPos.current) {
-          const dlat = lat - lastPos.current.lat
-          const dlng = lng - lastPos.current.lng
-          const dist = Math.sqrt(dlat * dlat + dlng * dlng)
-          // Only update heading if moved enough to be meaningful
-          if (dist > 0.00005) {
-            heading = (Math.atan2(dlng, dlat) * 180) / Math.PI
-            if (heading < 0) heading += 360
-          } else if (lastPos.current) {
-            heading = 0
-          }
-        }
-
         // EMA smoothing on speed, then threshold to kill GPS noise
         const rawSpeed = speed ?? 0
         smoothedSpeed.current = SPEED_ALPHA * rawSpeed + (1 - SPEED_ALPHA) * smoothedSpeed.current
         const filteredSpeed = smoothedSpeed.current < MIN_SPEED ? 0 : smoothedSpeed.current
+
+        // Only update heading when moving — freeze arrow when stationary
+        if (filteredSpeed > 0) {
+          if (pos.coords.heading != null && !isNaN(pos.coords.heading)) {
+            lastHeading.current = pos.coords.heading
+          } else if (lastPos.current) {
+            const dlat = lat - lastPos.current.lat
+            const dlng = lng - lastPos.current.lng
+            if (Math.sqrt(dlat * dlat + dlng * dlng) > 0.00005) {
+              let h = (Math.atan2(dlng, dlat) * 180) / Math.PI
+              if (h < 0) h += 360
+              lastHeading.current = h
+            }
+          }
+        }
 
         lastPos.current = { lat, lng, timestamp }
 
@@ -58,7 +59,7 @@ export function useGPS() {
           lat: smoothed.current.lat,
           lng: smoothed.current.lng,
           speed: filteredSpeed,
-          heading,
+          heading: lastHeading.current,
           accuracy,
           timestamp,
         })

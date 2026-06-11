@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, X, Plus, Minus, LocateFixed, Circle, Square, Globe, Map, Bookmark, Trash2 } from 'lucide-react'
+import { Navigation, X, Plus, Minus, LocateFixed, Circle, Square, Globe, Map, Bookmark, Trash2, Sun, Moon } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -73,6 +73,10 @@ export default function MapControls() {
   const startTracking    = useMapStore((s) => s.startTracking)
   const stopTracking     = useMapStore((s) => s.stopTracking)
   const setMob           = useMapStore((s) => s.setMob)
+  const darkMode         = useMapStore((s) => s.darkMode)
+  const toggleDarkMode   = useMapStore((s) => s.toggleDarkMode)
+  const speedUnit        = useMapStore((s) => s.speedUnit)
+  const toggleSpeedUnit  = useMapStore((s) => s.toggleSpeedUnit)
   const distUnit         = useMapStore((s) => s.distUnit)
   const activePanel      = useMapStore((s) => s.activePanel)
   const setActivePanel   = useMapStore((s) => s.setActivePanel)
@@ -124,11 +128,32 @@ export default function MapControls() {
         </div>
       )}
 
+      {/* Speed badge — top-left, grows at ≥ 3 kn */}
+      {position && position.speed >= 0.5 && (() => {
+        const spd = speedUnit === 'kn' ? position.speed * 1.94384 : position.speed * 3.6
+        const unit = speedUnit === 'kn' ? 'kn' : 'km/t'
+        const fast = position.speed * 1.94384 >= 3
+        return (
+          <button className={`speed-badge ${fast ? 'speed-badge-fast' : 'speed-badge-slow'}`} onClick={toggleSpeedUnit} title="Trykk for å bytte enhet">
+            <span className="speed-badge-val">{spd.toFixed(1)}</span>
+            <span className="speed-badge-unit">{unit}</span>
+          </button>
+        )
+      })()}
+
       <button className={`mob-btn ${mobPoint ? 'mob-btn-active' : ''}`} onClick={handleMob} title="Mann over bord" disabled={!!mobPoint}>
         MOB
       </button>
 
       <div className="map-controls">
+        <button
+          className={`fab ${!darkMode ? 'fab-active' : ''}`}
+          onClick={toggleDarkMode}
+          title={darkMode ? 'Bytt til dagmodus' : 'Bytt til nattmodus'}
+        >
+          {darkMode ? <Sun size={22} /> : <Moon size={22} />}
+        </button>
+        <div className="fab-divider" />
         <button className="fab" onClick={() => getMapInstance()?.zoomIn()} title="Zoom inn">
           <Plus size={22} />
         </button>
@@ -188,9 +213,9 @@ export default function MapControls() {
             const dist = distanceM(position.lat, position.lng, spotMenu.lat, spotMenu.lng)
             const eta  = formatEta(dist, position.speed ?? 0)
             return (
-              <div className="spot-action-dist">
-                📏 {formatDist(dist, distUnit)} herfra
-                {eta && <span className="spot-action-eta">· ⏱ {eta}</span>}
+              <div className="spot-action-dist-block">
+                <span className="spot-action-dist-val">{formatDist(dist, distUnit)}</span>
+                {eta && <span className="spot-action-eta-val">⏱ {eta}</span>}
               </div>
             )
           })()}
