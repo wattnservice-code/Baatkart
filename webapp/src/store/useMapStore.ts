@@ -51,6 +51,7 @@ interface MapStore {
   mobTrack: TrackPoint[]
   followBoat: boolean
   addingSpot: boolean
+  activePanel: 'search' | 'spots' | 'meg' | null
   compassEnabled: boolean
   darkMode: boolean
   seamarkVisible: boolean
@@ -85,6 +86,7 @@ interface MapStore {
   clearMob: () => void
   setFollowBoat: (v: boolean) => void
   setAddingSpot: (v: boolean) => void
+  setActivePanel: (p: 'search' | 'spots' | 'meg' | null) => void
   toggleCompass: () => void
   toggleDarkMode: () => void
   toggleSeamark: () => void
@@ -167,6 +169,7 @@ export const useMapStore = create<MapStore>((set) => ({
   mobTrack: [],
   followBoat: true,
   addingSpot: false,
+  activePanel: null,
   compassEnabled: loadCompass(),
   darkMode: loadDarkMode(),
   seamarkVisible: loadSeamark(),
@@ -234,6 +237,7 @@ export const useMapStore = create<MapStore>((set) => ({
 
   setFollowBoat: (v) => set({ followBoat: v }),
   setAddingSpot: (v) => set({ addingSpot: v }),
+  setActivePanel: (p) => set({ activePanel: p }),
   toggleCompass: () => set((s) => { const v = !s.compassEnabled; localStorage.setItem('compassEnabled', String(v)); return { compassEnabled: v } }),
   toggleSeamark: () => set((s) => { const v = !s.seamarkVisible; localStorage.setItem('seamarkVisible', String(v)); return { seamarkVisible: v } }),
   toggleWeather: () => set((s) => { const v = !s.weatherVisible; localStorage.setItem('weatherVisible', String(v)); return { weatherVisible: v } }),

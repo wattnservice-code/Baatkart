@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import MapView from './components/MapView'
 import StatusBar from './components/StatusBar'
+import BottomNav from './components/BottomNav'
 import MapControls from './components/MapControls'
 import MobOverlay from './components/MobOverlay'
 import NavOverlay from './components/NavOverlay'
@@ -43,6 +44,7 @@ export default function App() {
         <NavOverlay />
       </div>
       <StatusBar />
+      <BottomNav />
     </div>
   )
 }

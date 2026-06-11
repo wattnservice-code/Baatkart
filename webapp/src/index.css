@@ -33,7 +33,6 @@ html, body, #root {
   align-items: center;
   gap: 12px;
   padding: 8px 16px;
-  padding-bottom: max(8px, env(safe-area-inset-bottom));
   font-size: 13px;
 }
 
@@ -1064,3 +1063,73 @@ html, body, #root {
     max-height: calc(100% - 24px);
   }
 }
+
+/* ── Bottom navigation bar ── */
+.bottom-nav {
+  flex-shrink: 0;
+  display: flex;
+  background: #0b1220;
+  border-top: 1px solid rgba(255,255,255,0.10);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 500;
+}
+.bottom-nav-item {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px;
+  padding: 8px 4px 7px;
+  background: none; border: none; cursor: pointer;
+  color: #64748b;
+  font-size: 11px; font-weight: 600;
+  transition: color 0.15s;
+}
+.bottom-nav-item span { line-height: 1; }
+.bottom-nav-item-active { color: #38bdf8; }
+.bottom-nav-item:active { background: rgba(255,255,255,0.05); }
+
+.day .bottom-nav { background: #f8fafc; border-top-color: rgba(0,0,0,0.10); }
+.day .bottom-nav-item { color: #94a3b8; }
+.day .bottom-nav-item-active { color: #2563eb; }
+
+/* ── REC (tracking) FAB ── */
+.fab-rec {
+  background: #dc2626;
+  border-color: #fca5a5;
+  color: white;
+  animation: rec-pulse 1.6s infinite;
+}
+.day .fab-rec { background: #dc2626; border-color: #fca5a5; color: white; }
+@keyframes rec-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.5); }
+  50%      { box-shadow: 0 0 0 7px rgba(220,38,38,0); }
+}
+
+/* ── Settings sheet ("Meg") ── */
+.settings-sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 460;
+  background: rgba(15,23,42,0.98);
+  backdrop-filter: blur(10px);
+  color: white;
+  display: flex; flex-direction: column;
+  animation: sheet-rise 0.2s ease;
+}
+@keyframes sheet-rise {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.settings-head {
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px;
+  padding-top: max(16px, calc(env(safe-area-inset-top) + 8px));
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+.settings-title { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; }
+.settings-close { background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; }
+.settings-body { flex: 1; overflow-y: auto; padding-bottom: 24px; }
+
+.day .settings-sheet { background: rgba(248,250,252,0.99); color: #0f172a; }
+.day .settings-head { border-bottom-color: rgba(0,0,0,0.08); }
+.day .settings-close { color: #64748b; }
