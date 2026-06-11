@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { X, Download, Trash2, Map, WifiOff } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
-import { saveTile, countTiles, clearAllTiles, estimateStorageMB, deleteTiles } from '../offline/tileDb'
+import { saveTile, countTiles, clearAllTiles, estimateStorageMB, deleteTiles, hasTile } from '../offline/tileDb'
 import { tilesForBounds, estimateCount, tileUrl, tileKey, type Bounds } from '../offline/tileCalc'
 
 interface OfflineArea {
@@ -38,6 +38,7 @@ export default function OfflinePanel({ onClose }: Props) {
   const [status, setStatus]               = useState<Status>('idle')
   const [progress, setProgress]           = useState(0)
   const [total, setTotal]                 = useState(0)
+  const [skipped, setSkipped]             = useState(0)
   const [storedCount, setStoredCount]     = useState(0)
   const [storageMB, setStorageMB]         = useState(0)
   const [error, setError]                 = useState<string | null>(null)
@@ -67,6 +68,8 @@ export default function OfflinePanel({ onClose }: Props) {
     setError(null)
 
     let done = 0
+    let skippedCount = 0
+    setSkipped(0)
     const allTasks: (() => Promise<void>)[] = []
 
     for (const { z, x, y } of tiles) {
@@ -75,8 +78,13 @@ export default function OfflinePanel({ onClose }: Props) {
         const url = tileUrl(z, x, y, layer)
         allTasks.push(async () => {
           try {
-            const res = await fetch(url, { mode: 'cors' })
-            if (res.ok) await saveTile(key, await res.blob())
+            if (await hasTile(key)) {
+              skippedCount++
+              setSkipped(skippedCount)
+            } else {
+              const res = await fetch(url, { mode: 'cors' })
+              if (res.ok) await saveTile(key, await res.blob())
+            }
           } catch { /* skip */ }
           done++
           setProgress(done)
@@ -220,11 +228,15 @@ export default function OfflinePanel({ onClose }: Props) {
           <div className="offline-progress-bar">
             <div className="offline-progress-fill" style={{ width: `${pct}%` }} />
           </div>
-          <span>{progress} / {total} ({pct}%)</span>
+          <span>{progress} / {total} ({pct}%){skipped > 0 && ` · ${skipped} allerede lastet`}</span>
         </div>
       )}
 
-      {status === 'done' && <div className="offline-done">✓ Nedlasting fullført</div>}
+      {status === 'done' && (
+        <div className="offline-done">
+          ✓ Ferdig{skipped > 0 ? ` · ${skipped} tiles hoppes over (allerede lagret)` : ''}
+        </div>
+      )}
       {error && <div className="offline-error">{error}</div>}
 
       <div className="offline-actions">
