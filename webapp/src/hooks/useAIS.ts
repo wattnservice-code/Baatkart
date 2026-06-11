@@ -49,11 +49,18 @@ export function useAIS() {
 
   const sendSubscription = useCallback(() => {
     const ws = wsRef.current
-    const b  = boundsRef.current
-    if (!ws || ws.readyState !== WebSocket.OPEN || !b || !aisKey) return
+    if (!ws || ws.readyState !== WebSocket.OPEN || !aisKey) return
+    // aisstream closes the socket (code 1006) if no subscription arrives within
+    // 3 s of connecting. If the map bounds aren't ready yet, fall back to a
+    // wide box around Norway so we always subscribe in time.
+    const b = boundsRef.current
+    const box = b
+      ? [[b.south, b.west], [b.north, b.east]]
+      : [[57, 4], [72, 32]]
     ws.send(JSON.stringify({
       APIKey: aisKey,
-      BoundingBoxes: [[[b.south, b.west], [b.north, b.east]]],
+      BoundingBoxes: [box],
+      FilterMessageTypes: ['PositionReport'],
     }))
   }, [aisKey])
 
