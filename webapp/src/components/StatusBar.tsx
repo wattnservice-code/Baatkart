@@ -19,17 +19,22 @@ export default function StatusBar() {
   const speedUnit         = useMapStore((s) => s.speedUnit)
   const offlineOnly       = useMapStore((s) => s.offlineOnly)
   const toggleOfflineOnly = useMapStore((s) => s.toggleOfflineOnly)
+  const setOfflineOnly    = useMapStore((s) => s.setOfflineOnly)
 
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const on = () => setIsOnline(true)
-    const off = () => setIsOnline(false)
+    const off = () => {
+      setIsOnline(false)
+      // Auto-enable offline map mode when connectivity is lost
+      setOfflineOnly(true)
+    }
     window.addEventListener('online', on)
     window.addEventListener('offline', off)
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off) }
-  }, [])
+  }, [setOfflineOnly])
 
   const copyCoords = () => {
     if (!position) return
