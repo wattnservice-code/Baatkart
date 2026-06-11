@@ -24,7 +24,6 @@ export default function SettingsPanel({ onClose }: Props) {
   const [offlineOpen, setOfflineOpen]     = useState(false)
   const [boatInfoOpen, setBoatInfoOpen]   = useState(false)
   const [aisKeyInput, setAisKeyInput]     = useState('')
-  useEffect(() => { setAisKeyInput(aisKey) }, [aisKey])
   const [confirmTrack, setConfirmTrack]   = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
@@ -50,6 +49,7 @@ export default function SettingsPanel({ onClose }: Props) {
   const cycleRingRadius      = useMapStore((s) => s.cycleRingRadius)
   const aisKey               = useMapStore((s) => s.aisKey)
   const setAisKey            = useMapStore((s) => s.setAisKey)
+  useEffect(() => { setAisKeyInput(aisKey) }, [aisKey])
   const savedTracks          = useMapStore((s) => s.savedTracks)
   const followingTrack       = useMapStore((s) => s.followingTrack)
   const deleteSavedTrack     = useMapStore((s) => s.deleteSavedTrack)
