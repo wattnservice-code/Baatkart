@@ -18,19 +18,21 @@ function vesselColor(sog: number): string {
   return '#4ade80'                   // moving — green
 }
 
+const ICON_SIZE = 26
+
 function vesselIcon(vessel: AISVessel): L.DivIcon {
   const hdg = vessel.heading > 0 && vessel.heading < 360 ? vessel.heading : 0
   const color = vesselColor(vessel.sog)
   const html = `<div style="
-    width:12px;height:12px;
+    width:${ICON_SIZE}px;height:${ICON_SIZE}px;
     transform:rotate(${hdg}deg);
-    filter:drop-shadow(0 1px 3px rgba(0,0,0,0.7));
+    filter:drop-shadow(0 1px 4px rgba(0,0,0,0.85));
   ">
-    <svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="6,1 11,11 6,8 1,11" fill="${color}" stroke="#0f172a" stroke-width="1" stroke-linejoin="round"/>
+    <svg width="${ICON_SIZE}" height="${ICON_SIZE}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="12,2 21,22 12,17 3,22" fill="${color}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
     </svg>
   </div>`
-  return L.divIcon({ className: '', html, iconSize: [12, 12], iconAnchor: [6, 6] })
+  return L.divIcon({ className: '', html, iconSize: [ICON_SIZE, ICON_SIZE], iconAnchor: [ICON_SIZE / 2, ICON_SIZE / 2] })
 }
 
 export function useAIS() {
