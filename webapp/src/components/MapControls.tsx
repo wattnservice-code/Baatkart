@@ -30,7 +30,7 @@ function formatEta(distM: number, speedMs: number): string | null {
   return `${h} t ${m} min`
 }
 
-function CompassBtn({ compassEnabled, headingUp }: { compassEnabled: boolean; headingUp: boolean }) {
+function CompassBtn({ active }: { active: boolean }) {
   const elRef  = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number | null>(null)
 
@@ -38,21 +38,19 @@ function CompassBtn({ compassEnabled, headingUp }: { compassEnabled: boolean; he
     const el = elRef.current
     if (!el) return
     const loop = () => {
-      // In heading-up mode rotate N to always point true north
-      el.style.transform = (compassEnabled && headingUp) ? `rotate(${-getCurrentBearing()}deg)` : ''
+      // Rotate N to always point true north when kurs-opp is active
+      el.style.transform = active ? `rotate(${-getCurrentBearing()}deg)` : ''
       rafRef.current = requestAnimationFrame(loop)
     }
     rafRef.current = requestAnimationFrame(loop)
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
-  }, [compassEnabled, headingUp])
+  }, [active])
 
   return (
-    <div ref={elRef} className={`cmps-rose ${!compassEnabled ? 'cmps-off' : ''}`}>
+    <div ref={elRef} className={`cmps-rose ${!active ? 'cmps-off' : ''}`}>
       <span className="cmps-n">N</span>
       <div className="cmps-needle" />
-      {compassEnabled && (
-        <span className="cmps-label">{headingUp ? 'KRS' : 'NORD'}</span>
-      )}
+      {active && <span className="cmps-label">KRS</span>}
     </div>
   )
 }
@@ -98,7 +96,7 @@ export default function MapControls() {
   const useGpsPos = () => { if (position) setGpsSpot({ lat: position.lat, lng: position.lng }) }
   const useMapPos = () => { setAddingSpot(true) }
 
-  // 3-state cycle: OFF → heading-up (compass on) → north-up (compass on) → OFF
+  // 2-state toggle: OFF ↔ kurs-opp (compass on + heading-up)
   const handleCompassBtn = async () => {
     if (!compassEnabled) {
       const DevOr = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
@@ -107,9 +105,9 @@ export default function MapControls() {
       }
       toggleCompass()
       if (!headingUp) toggleHeadingUp()
-    } else if (headingUp) {
-      toggleHeadingUp()
     } else {
+      // Turn everything off
+      if (headingUp) toggleHeadingUp()
       toggleCompass()
     }
   }
@@ -159,11 +157,11 @@ export default function MapControls() {
           <LocateFixed size={22} />
         </button>
         <button
-          className={`fab compass-fab ${compassEnabled && headingUp ? 'cmps-btn-krs' : compassEnabled ? 'cmps-btn-nord' : ''}`}
+          className={`fab compass-fab ${compassEnabled ? 'cmps-btn-krs' : ''}`}
           onClick={handleCompassBtn}
-          title={!compassEnabled ? 'Kompass av – trykk for kurs opp' : headingUp ? 'Kurs opp – trykk for Nord opp' : 'Nord opp – trykk for å slå av'}
+          title={compassEnabled ? 'Kurs opp aktiv – trykk for å slå av' : 'Trykk for kurs opp'}
         >
-          <CompassBtn compassEnabled={compassEnabled} headingUp={headingUp} />
+          <CompassBtn active={compassEnabled} />
         </button>
         <button
           className={`fab ${isTracking ? 'fab-rec' : ''}`}
