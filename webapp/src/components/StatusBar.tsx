@@ -14,10 +14,11 @@ function headingLabel(deg: number): string {
 }
 
 export default function StatusBar() {
-  const position   = useMapStore((s) => s.position)
-  const isTracking = useMapStore((s) => s.isTracking)
-  const speedUnit  = useMapStore((s) => s.speedUnit)
-  const tileSource = useMapStore((s) => s.tileSource)
+  const position          = useMapStore((s) => s.position)
+  const isTracking        = useMapStore((s) => s.isTracking)
+  const speedUnit         = useMapStore((s) => s.speedUnit)
+  const offlineOnly       = useMapStore((s) => s.offlineOnly)
+  const toggleOfflineOnly = useMapStore((s) => s.toggleOfflineOnly)
 
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [copied, setCopied] = useState(false)
@@ -73,19 +74,15 @@ export default function StatusBar() {
 
       <div className="status-divider" />
 
-      {/* Network status */}
-      <div className={`status-net ${isOnline ? 'status-net-on' : 'status-net-off'}`} title={isOnline ? 'Internett tilkoblet' : 'Ingen internett'}>
-        {isOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
-      </div>
-
-      {(tileSource === 'offline' || tileSource === 'mixed') && (
-        <>
-          <div className="status-divider" />
-          <div className={`status-tile-source status-tile-${tileSource}`}>
-            {tileSource === 'offline' ? 'Offline kart' : 'Blandet'}
-          </div>
-        </>
-      )}
+      {/* Network status — tap to toggle offline-only map mode */}
+      <button
+        className={`status-net status-net-btn ${offlineOnly ? 'status-net-offline-only' : isOnline ? 'status-net-on' : 'status-net-off'}`}
+        onClick={toggleOfflineOnly}
+        title={offlineOnly ? 'Offline-modus PÅ – trykk for å skru av' : 'Trykk for å bruke kun nedlastet kart'}
+      >
+        {offlineOnly || !isOnline ? <WifiOff size={14} /> : <Wifi size={14} />}
+        {offlineOnly && <span className="status-offline-label">Offline</span>}
+      </button>
 
       {isTracking && (
         <>

@@ -47,9 +47,13 @@ html, body, #root {
 .status-tile-offline { color: #4ade80; }
 .status-tile-mixed   { color: #fbbf24; }
 .status-tile-online  { color: #94a3b8; }
-.status-net { display: flex; align-items: center; }
+.status-net { display: flex; align-items: center; gap: 3px; }
+.status-net-btn { background: none; border: none; padding: 0 4px; cursor: pointer; border-radius: 4px; color: inherit; }
+.status-net-btn:active { opacity: 0.7; }
 .status-net-on  { color: #4ade80; }
 .status-net-off { color: #f87171; animation: blink 1.5s infinite; }
+.status-net-offline-only { color: #f59e0b; }
+.status-offline-label { font-size: 10px; font-weight: 700; color: #f59e0b; letter-spacing: 0.3px; }
 .status-coords-btn {
   display: flex; align-items: center; gap: 0;
   background: none; border: none; color: inherit; cursor: pointer; padding: 0;
@@ -706,7 +710,8 @@ html, body, #root {
 .day .saved-track-name { color: #0f172a; }
 .day .saved-track-btn { border-color: rgba(0,0,0,0.12); background: rgba(0,0,0,0.03); }
 .day .saved-track-follow { background: rgba(168,85,247,0.1); border-color: #a855f7; color: #7c3aed; }
-.day .saved-track-del { color: #94a3b8; }
+.day .saved-track-del { color: #64748b; }
+.day .settings-title { color: #0f172a; }
 
 /* ── Day mode overrides ── */
 .day .status-bar {
@@ -719,6 +724,12 @@ html, body, #root {
 .day .status-tracking { color: #dc2626; }
 .day .status-tile-offline { color: #16a34a; }
 .day .status-tile-online  { color: #475569; }
+.day .status-net-on  { color: #16a34a; }
+.day .status-net-off { color: #dc2626; }
+.day .status-net-offline-only { color: #d97706; }
+.day .status-offline-label { color: #d97706; }
+.day .status-unit { color: #475569; }
+.day .status-tile-mixed { color: #d97706; }
 
 .day .fab {
   background: rgba(248,250,252,0.97);
@@ -733,9 +744,9 @@ html, body, #root {
   border-color: rgba(0,0,0,0.10);
   color: #0f172a;
 }
-.day .menu-title { color: #94a3b8; }
-.day .menu-section { color: #94a3b8; }
-.day .menu-section-toggle { color: #94a3b8; }
+.day .menu-title { color: #64748b; }
+.day .menu-section { color: #64748b; }
+.day .menu-section-toggle { color: #64748b; }
 .day .menu-item { color: #0f172a; }
 .day .menu-divider { background: rgba(0,0,0,0.08); }
 
@@ -762,6 +773,12 @@ html, body, #root {
   color: #0f172a;
 }
 .day .nav-name { color: #16a34a; }
+.day .nav-stat { color: #0f172a; }
+.day .nav-arrived-text { color: #16a34a; }
+.day .nav-stop { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.12); color: #64748b; }
+.day .nav-preview-bar { background: rgba(248,250,252,0.97); border-color: #3b82f6; color: #0f172a; }
+.day .nav-preview-name { color: #1d4ed8; }
+.day .nav-preview-dist { color: #0f172a; }
 
 /* ── Spot mode popup ── */
 .spot-mode-popup {
@@ -908,9 +925,24 @@ html, body, #root {
   border-color: rgba(0,0,0,0.12);
 }
 .day .search-input { color: #0f172a; }
+.day .search-input::placeholder { color: #94a3b8; }
+.day .search-icon-left { color: #64748b; }
+.day .search-close-btn { color: #64748b; }
+.day .search-spinner { color: #64748b; }
 .day .search-result-name { color: #1e293b; }
 .day .search-results { border-top-color: rgba(0,0,0,0.08); }
 .day .search-result-item { border-bottom-color: rgba(0,0,0,0.06); }
+
+/* ── Spot action card — day mode ── */
+.day .spot-action-card {
+  background: rgba(255,255,255,0.98);
+  border-color: rgba(0,0,0,0.12);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+}
+.day .spot-action-name  { color: #0f172a; }
+.day .spot-action-close { color: #64748b; }
+.day .spot-action-dist  { color: #0369a1; }
+.day .spot-action-eta   { color: #4d7c0f; }
 
 /* ── Left info panels (weather + tide) ── */
 .map-left-panels {
@@ -950,8 +982,15 @@ html, body, #root {
   background: rgba(248,250,252,0.92);
   border-color: rgba(0,0,0,0.12);
 }
-.day .wx-val { color: #0f172a; }
-.day .tide-time { color: #334155; }
+.day .wx-val   { color: #0f172a; }
+.day .wx-arrow { color: #2563eb; }
+.day .wx-sub   { color: #475569; }
+.day .wx-temp  { color: #475569; }
+.day .wx-symbol { color: #0f172a; }
+.day .info-error, .day .info-loading { color: #64748b; }
+.day .tide-time    { color: #334155; }
+.day .tide-station { color: #475569; }
+.day .tide-level   { color: #64748b; }
 
 /* ── Offline panel ── */
 .offline-panel {
@@ -1011,6 +1050,14 @@ html, body, #root {
 .day .offline-panel { background: rgba(248,250,252,0.98); border-color: rgba(0,0,0,0.10); color: #0f172a; }
 .day .offline-info { color: #64748b; }
 .day .offline-area-coords { color: #334155; }
+.day .offline-area-label { color: #64748b; }
+.day .offline-zoom-btn { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); color: #475569; }
+.day .offline-zoom-btn span { color: #64748b; }
+.day .offline-zoom-active { background: rgba(37,99,235,0.12) !important; border-color: #3b82f6 !important; color: #1d4ed8 !important; }
+.day .offline-estimate { color: #64748b; }
+.day .offline-section-label { color: #64748b; }
+.day .offline-area-row-name { color: #0f172a; }
+.day .offline-area-row-meta { color: #64748b; }
 
 /* ── Boat info panel ── */
 .boat-info-form { padding: 8px 16px 4px; display: flex; flex-direction: column; gap: 10px; }
@@ -1020,7 +1067,9 @@ html, body, #root {
 .boat-info-preview { padding: 10px 16px; border-top: 1px solid rgba(255,255,255,0.07); }
 .boat-info-preview-text { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: #94a3b8; margin-top: 4px; }
 .day .boat-info-label { color: #64748b; }
+.day .boat-info-hint { color: #64748b; }
 .day .boat-info-preview { border-color: rgba(0,0,0,0.08); }
+.day .boat-info-preview-text { color: #475569; }
 
 .offline-only-toggle {
   display: flex; align-items: center; gap: 8px;
