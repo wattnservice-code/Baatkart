@@ -162,6 +162,7 @@ export default function MapView() {
   const mobTrackLineRef   = useRef<L.Polyline | null>(null)
   const mobMarkerRef      = useRef<L.Marker | null>(null)
   const navLineRef        = useRef<L.Polyline | null>(null)
+  const navCasingRef      = useRef<L.Polyline | null>(null)
   const navMarkerRef      = useRef<L.Marker | null>(null)
   const previewLineRef    = useRef<L.Polyline | null>(null)
   const previewMarkerRef  = useRef<L.Marker | null>(null)
@@ -509,6 +510,7 @@ export default function MapView() {
     if (!mapRef.current) return
     if (!navTarget) {
       navLineRef.current?.remove(); navLineRef.current = null
+      navCasingRef.current?.remove(); navCasingRef.current = null
       navMarkerRef.current?.remove(); navMarkerRef.current = null
       return
     }
@@ -521,8 +523,12 @@ export default function MapView() {
     }
     const from: L.LatLngExpression = position ? [position.lat, position.lng] : targetLL
     if (!navLineRef.current) {
-      navLineRef.current = L.polyline([from, targetLL], { color: '#4ade80', weight: 4, opacity: 1, dashArray: '14, 8' }).addTo(mapRef.current)
+      // White casing underneath so the route stays visible on any chart shade
+      // (light land, dark water) in both day and night — chartplotter best practice.
+      navCasingRef.current = L.polyline([from, targetLL], { color: '#ffffff', weight: 8, opacity: 0.55 }).addTo(mapRef.current)
+      navLineRef.current   = L.polyline([from, targetLL], { color: '#16a34a', weight: 4, opacity: 1, dashArray: '14, 8' }).addTo(mapRef.current)
     } else {
+      navCasingRef.current?.setLatLngs([from, targetLL])
       navLineRef.current.setLatLngs([from, targetLL])
     }
     if (position) {
@@ -541,7 +547,9 @@ export default function MapView() {
 
   useEffect(() => {
     if (!navLineRef.current || !navTarget || !position) return
-    navLineRef.current.setLatLngs([[position.lat, position.lng], [navTarget.lat, navTarget.lng]])
+    const seg: L.LatLngExpression[] = [[position.lat, position.lng], [navTarget.lat, navTarget.lng]]
+    navCasingRef.current?.setLatLngs(seg)
+    navLineRef.current.setLatLngs(seg)
   }, [position, navTarget])
 
   // Nav preview line (blue dashed, no overlay)

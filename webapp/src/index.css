@@ -1405,6 +1405,18 @@ html, body, #root {
   .map-controls { gap: 4px; bottom: 14px; }
 }
 
+/* Landscape phones are short: 8 FABs at full size run off the top of the
+   screen. Shrink them (and the divider gap) so the whole column always fits. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .fab { width: 42px; height: 42px; }
+  .map-controls { gap: 5px; padding: 6px; }
+  .fab-divider { margin: 1px 6px; }
+}
+@media (orientation: landscape) and (max-height: 430px) {
+  .fab { width: 37px; height: 37px; }
+  .map-controls { gap: 4px; padding: 5px; bottom: 6px; }
+}
+
 /* ── REC (tracking) FAB ── */
 .fab-rec {
   background: #dc2626;
