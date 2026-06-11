@@ -232,9 +232,9 @@ html, body, #root {
 /* ── MOB button ── */
 .mob-btn {
   position: absolute;
-  top: max(16px, calc(env(safe-area-inset-top) + 8px));
-  left: max(12px, calc(env(safe-area-inset-left) + 8px));
-  z-index: 400;
+  top: max(14px, calc(env(safe-area-inset-top) + 8px));
+  right: max(72px, calc(env(safe-area-inset-right) + 68px));
+  z-index: 401;
   width: 56px; height: 56px;
   border-radius: 50%;
   background: #dc2626;
@@ -946,10 +946,37 @@ html, body, #root {
 .day .spot-action-dist  { color: #0369a1; }
 .day .spot-action-eta   { color: #4d7c0f; }
 
+/* ── Weather/tide toggle button ── */
+.wx-tide-toggle {
+  position: absolute;
+  top: max(12px, calc(env(safe-area-inset-top) + 8px));
+  left: 12px;
+  z-index: 401;
+  display: flex; align-items: center; gap: 2px;
+  background: rgba(15,23,42,0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 5px 8px;
+  color: #64748b;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.wx-tide-toggle:active { opacity: 0.75; }
+.wx-tide-toggle-active { color: #38bdf8; border-color: rgba(56,189,248,0.30); }
+.wx-tide-wave { opacity: 0.7; }
+
+.day .wx-tide-toggle {
+  background: rgba(248,250,252,0.92);
+  border-color: rgba(0,0,0,0.12);
+  color: #64748b;
+}
+.day .wx-tide-toggle-active { color: #2563eb; border-color: rgba(37,99,235,0.30); }
+
 /* ── Left info panels (weather + tide) ── */
 .map-left-panels {
   position: absolute;
-  top: max(12px, calc(env(safe-area-inset-top) + 8px)); left: 12px;
+  top: max(52px, calc(env(safe-area-inset-top) + 48px)); left: 12px;
   z-index: 400;
   display: flex; flex-direction: column; gap: 8px;
   pointer-events: none;
@@ -1162,34 +1189,71 @@ html, body, #root {
   color: #0f172a !important; font-weight: 700;
 }
 
-/* ── Landscape: side-by-side ── */
+/* ── Landscape: grid layout ── */
 @media (orientation: landscape) {
-  .app-root { flex-direction: row; }
+  .app-root {
+    display: grid;
+    grid-template-columns: max(76px, calc(env(safe-area-inset-left) + 56px)) 1fr;
+    grid-template-rows: 1fr auto;
+  }
 
+  /* Status bar: left column, spans both rows */
   .status-bar {
+    grid-column: 1;
+    grid-row: 1 / 3;
     flex-direction: column;
-    /* Wide enough to clear iPhone notch/sensor housing */
-    width: max(76px, calc(env(safe-area-inset-left) + 56px));
-    height: 100%;
+    width: auto;
+    height: auto;
     border-top: none;
     border-right: 1px solid rgba(255,255,255,0.10);
     padding: 12px 6px 12px max(8px, env(safe-area-inset-left));
     justify-content: flex-start;
     gap: 10px;
     font-size: 11px;
-    order: -1;
+    order: 0;
   }
   .status-divider { width: 44px; height: 1px; }
   .status-item { flex-direction: column; gap: 2px; text-align: center; }
   .status-unit { font-size: 10px; }
 
-  /* Right-side safe area for FABs and menu (notch on opposite side) */
+  /* Map: right column, top row */
+  .map-wrapper { grid-column: 2; grid-row: 1; }
+
+  /* Bottom nav: right column, bottom row – stays at the bottom */
+  .bottom-nav { grid-column: 2; grid-row: 2; }
+
+  /* FABs: styled panel for contrast on both day and night */
   .map-controls {
     right: max(12px, calc(env(safe-area-inset-right) + 8px));
+    bottom: 12px;
+    background: rgba(15,23,42,0.82);
+    border-radius: 16px;
+    padding: 8px;
+    border: 1px solid rgba(255,255,255,0.10);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
   }
+
+  /* MOB: stay top-right but clear of FABs panel */
+  .mob-btn {
+    right: max(80px, calc(env(safe-area-inset-right) + 76px));
+  }
+
   .menu-panel {
     right: max(68px, calc(env(safe-area-inset-right) + 64px));
     max-height: calc(100% - 24px);
+  }
+}
+
+/* Day mode: FABs panel in landscape */
+@media (orientation: landscape) {
+  .day .map-controls {
+    background: rgba(248,250,252,0.94);
+    border-color: rgba(0,0,0,0.12);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  }
+  .day .status-bar {
+    border-right-color: rgba(0,0,0,0.10);
   }
 }
 
@@ -1220,11 +1284,11 @@ html, body, #root {
 .day .bottom-nav-item { color: #475569; }
 .day .bottom-nav-item-active { color: #2563eb; }
 
-/* Landscape: hide labels, keep icon-only compact nav */
+/* Landscape: hide labels, keep icon-only compact nav at bottom */
 @media (orientation: landscape) {
   .bottom-nav-item span { display: none; }
-  .bottom-nav-item { padding: 8px 0; gap: 0; }
-  .bottom-nav { padding-bottom: 0; }
+  .bottom-nav-item { padding: 6px 0; gap: 0; }
+  .bottom-nav { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
 }
 
 /* ── REC (tracking) FAB ── */
