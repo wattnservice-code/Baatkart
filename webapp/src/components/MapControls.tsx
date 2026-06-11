@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, MapPin, X, Play, Square, Trash2, Layers, Compass, Sun, Moon, Search, Gauge, Circle, Anchor, Wind, Waves, WifiOff, Ship, Plus, Minus, Flag, Globe, Zap, Settings, Map, Bookmark } from 'lucide-react'
+import { Navigation, MapPin, X, Play, Square, Trash2, Layers, Compass, Sun, Moon, Search, Gauge, Circle, Wind, Waves, WifiOff, Ship, Plus, Minus, Globe, Zap, Settings, Map, Bookmark } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -9,7 +9,6 @@ import { getMapInstance } from '../mapInstance'
 import SpotListPanel from './SpotListPanel'
 import SearchBar from './SearchBar'
 import SpotDialog from './SpotDialog'
-import AnchorDialog from './AnchorDialog'
 import OfflinePanel from './OfflinePanel'
 import BoatInfoPanel from './BoatInfoPanel'
 
@@ -74,7 +73,6 @@ export default function MapControls() {
   const [boatInfoOpen, setBoatInfoOpen]   = useState(false)
   const [gpsSpot, setGpsSpot]             = useState<{ lat: number; lng: number } | null>(null)
   const [confirmTrack, setConfirmTrack]   = useState(false)
-  const [anchorOpen, setAnchorOpen]       = useState(false)
 
   const closeMenus = () => { setActionsOpen(false); setSettingsOpen(false) }
 
@@ -98,8 +96,6 @@ export default function MapControls() {
   const clearTrack       = useMapStore((s) => s.clearTrack)
   const setMob           = useMapStore((s) => s.setMob)
   const seamarkVisible   = useMapStore((s) => s.seamarkVisible)
-  const anchorPoint      = useMapStore((s) => s.anchorPoint)
-  const clearAnchor      = useMapStore((s) => s.clearAnchor)
   const weatherVisible   = useMapStore((s) => s.weatherVisible)
   const tideVisible      = useMapStore((s) => s.tideVisible)
   const toggleCompass    = useMapStore((s) => s.toggleCompass)
@@ -108,14 +104,9 @@ export default function MapControls() {
   const toggleWeather    = useMapStore((s) => s.toggleWeather)
   const toggleTide       = useMapStore((s) => s.toggleTide)
   const distUnit           = useMapStore((s) => s.distUnit)
-  const waypoints          = useMapStore((s) => s.waypoints)
-  const addingWaypoint     = useMapStore((s) => s.addingWaypoint)
   const toggleSpeedUnit    = useMapStore((s) => s.toggleSpeedUnit)
   const cycleDistUnit      = useMapStore((s) => s.cycleDistUnit)
   const cycleRingRadius    = useMapStore((s) => s.cycleRingRadius)
-  const setAddingWaypoint  = useMapStore((s) => s.setAddingWaypoint)
-  const clearWaypoints     = useMapStore((s) => s.clearWaypoints)
-  const removeWaypoint     = useMapStore((s) => s.removeWaypoint)
   const spotMenu           = useMapStore((s) => s.spotMenu)
   const setSpotMenu        = useMapStore((s) => s.setSpotMenu)
   const setNavPreview      = useMapStore((s) => s.setNavPreview)
@@ -187,12 +178,6 @@ export default function MapControls() {
           <button onClick={() => setAddingSpot(false)}><X size={18} /></button>
         </div>
       )}
-      {addingWaypoint && (
-        <div className="map-banner" style={{ background: '#7c3aed' }}>
-          <span>Trykk på kartet for å legge til waypoint</span>
-          <button onClick={() => setAddingWaypoint(false)}><X size={18} /></button>
-        </div>
-      )}
 
       <button className={`mob-btn ${mobPoint ? 'mob-btn-active' : ''}`} onClick={handleMob} title="Mann over bord" disabled={!!mobPoint}>
         MOB
@@ -256,42 +241,10 @@ export default function MapControls() {
           )}
 
           <div className="menu-divider" />
-          <div style={subheadStyle}>Anker</div>
-          {!anchorPoint ? (
-            <button className="menu-item" style={{ color: '#f59e0b' }} onClick={() => { setAnchorOpen(true); closeMenus() }}>
-              <Anchor size={20} /><span>Sett anker</span>
-            </button>
-          ) : (
-            <button className="menu-item" style={{ color: '#94a3b8' }} onClick={() => { clearAnchor(); closeMenus() }}>
-              <Anchor size={20} /><span>Løft anker</span>
-            </button>
-          )}
-
-          <div className="menu-divider" />
-          <div style={subheadStyle}>Steder og rute</div>
+          <div style={subheadStyle}>Steder</div>
           <button className="menu-item" onClick={() => { setSearchOpen(true); closeMenus() }}>
             <Search size={20} /><span>Søk etter sted</span>
           </button>
-          <button className="menu-item" style={{ color: addingWaypoint ? '#a78bfa' : undefined }} onClick={() => { setAddingWaypoint(!addingWaypoint); closeMenus() }}>
-            <Flag size={20} /><span>{addingWaypoint ? 'Avbryt waypoint' : 'Trykk på kart for waypoint'}</span>
-          </button>
-          {waypoints.map((wp, i) => (
-            <div key={wp.id} className="menu-item" style={{ justifyContent: 'space-between' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className="waypoint-pin-inline">{i + 1}</span>
-                {wp.name}
-              </span>
-              <button style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 4 }}
-                onClick={() => removeWaypoint(wp.id)}>
-                <X size={14} />
-              </button>
-            </div>
-          ))}
-          {waypoints.length > 0 && (
-            <button className="menu-item" style={{ color: '#f87171' }} onClick={() => clearWaypoints()}>
-              <Trash2 size={20} /><span>Slett alle waypoints</span>
-            </button>
-          )}
 
           <div className="menu-divider" />
           <div style={subheadStyle}>Kart</div>
@@ -368,7 +321,6 @@ export default function MapControls() {
       )}
       {searchOpen && <SearchBar onClose={() => setSearchOpen(false)} />}
       {gpsSpot && <SpotDialog lat={gpsSpot.lat} lng={gpsSpot.lng} onClose={() => setGpsSpot(null)} />}
-      {anchorOpen && <AnchorDialog onClose={() => setAnchorOpen(false)} />}
 
       {spotMenu && (
         <div className="spot-action-card">

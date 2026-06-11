@@ -5,7 +5,6 @@ import '../leafletRotateSetup'
 import { useMapStore } from '../store/useMapStore'
 import { setCurrentBearing } from '../currentBearing'
 import SpotDialog from './SpotDialog'
-import WaypointDialog from './WaypointDialog'
 import { getTile } from '../offline/tileDb'
 import { tileKey } from '../offline/tileCalc'
 import { setMapInstance } from '../mapInstance'
@@ -156,8 +155,6 @@ export default function MapView() {
   const ringLabelRef    = useRef<L.Marker | null>(null)
   const mobTrackLineRef   = useRef<L.Polyline | null>(null)
   const mobMarkerRef      = useRef<L.Marker | null>(null)
-  const anchorMarkerRef   = useRef<L.Marker | null>(null)
-  const anchorCircleRef   = useRef<L.Circle | null>(null)
   const navLineRef        = useRef<L.Polyline | null>(null)
   const navMarkerRef      = useRef<L.Marker | null>(null)
   const previewLineRef    = useRef<L.Polyline | null>(null)
@@ -169,9 +166,6 @@ export default function MapView() {
   const spotMarkersRef  = useRef<Map<string, L.Marker>>(new Map())
 
   const [pendingSpot, setPendingSpot]       = useState<{ lat: number; lng: number } | null>(null)
-  const [pendingWaypoint, setPendingWaypoint] = useState<{ lat: number; lng: number } | null>(null)
-  const waypointLineRef    = useRef<L.Polyline | null>(null)
-  const waypointMarkersRef = useRef<Map<string, L.Marker>>(new Map())
   const bearingRef         = useRef(0)   // currently displayed map bearing (deg)
   const targetBearingRef   = useRef(0)   // desired bearing (deg)
   const appliedBearingRef  = useRef(0)   // last bearing pushed to the map
@@ -194,15 +188,9 @@ export default function MapView() {
   const compassHeading   = useMapStore((s) => s.compassHeading)
   const darkMode         = useMapStore((s) => s.darkMode)
   const seamarkVisible   = useMapStore((s) => s.seamarkVisible)
-  const anchorPoint      = useMapStore((s) => s.anchorPoint)
-  const anchorRadius     = useMapStore((s) => s.anchorRadius)
-  const anchorAlarm      = useMapStore((s) => s.anchorAlarm)
   const customRingRadius = useMapStore((s) => s.customRingRadius)
   const lookAhead        = useMapStore((s) => s.lookAhead)
   const headingUp        = useMapStore((s) => s.headingUp)
-  const waypoints        = useMapStore((s) => s.waypoints)
-  const addingWaypoint   = useMapStore((s) => s.addingWaypoint)
-  const addWaypoint        = useMapStore((s) => s.addWaypoint)
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
   const setFlyTo         = useMapStore((s) => s.setFlyTo)
 
@@ -264,15 +252,9 @@ export default function MapView() {
     return () => { map.remove(); mapRef.current = null; setMapInstance(null) }
   }, [setFollowBoat])
 
-  // Keep position ref current + update route line first point
+  // Keep position ref current
   useEffect(() => {
     positionRef.current = position
-    if (!waypointLineRef.current || !position) return
-    const pts = waypointLineRef.current.getLatLngs() as L.LatLng[]
-    if (pts.length > 0) {
-      pts[0] = L.latLng(position.lat, position.lng)
-      waypointLineRef.current.setLatLngs(pts)
-    }
   }, [position])
 
   // Dark/day mode tile switch
@@ -570,37 +552,6 @@ export default function MapView() {
     previewLineRef.current.setLatLngs([[position.lat, position.lng], [navPreview.lat, navPreview.lng]])
   }, [position, navPreview])
 
-  // Anchor marker + alarm circle
-  useEffect(() => {
-    if (!mapRef.current) return
-    if (!anchorPoint) {
-      anchorMarkerRef.current?.remove(); anchorMarkerRef.current = null
-      anchorCircleRef.current?.remove(); anchorCircleRef.current = null
-      return
-    }
-    const latlng: L.LatLngExpression = [anchorPoint.lat, anchorPoint.lng]
-    const color = anchorAlarm ? '#ef4444' : '#f59e0b'
-    const icon = L.divIcon({
-      className: '',
-      html: `<div style="font-size:24px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.7))">⚓</div>`,
-      iconSize: [28, 28], iconAnchor: [14, 14],
-    })
-    if (!anchorMarkerRef.current) {
-      anchorMarkerRef.current = L.marker(latlng, { icon, zIndexOffset: 900 }).addTo(mapRef.current)
-    } else {
-      anchorMarkerRef.current.setLatLng(latlng)
-    }
-    if (!anchorCircleRef.current) {
-      anchorCircleRef.current = L.circle(latlng, {
-        radius: anchorRadius, color, weight: 2, opacity: 0.8,
-        fill: true, fillColor: color, fillOpacity: 0.08,
-      }).addTo(mapRef.current)
-    } else {
-      anchorCircleRef.current.setLatLng(latlng).setRadius(anchorRadius)
-        .setStyle({ color, fillColor: color })
-    }
-  }, [anchorPoint, anchorRadius, anchorAlarm])
-
   // MOB marker
   useEffect(() => {
     if (!mapRef.current) return
@@ -647,99 +598,12 @@ export default function MapView() {
     })
   }, [savedSpots, activeSpotId])
 
-  // Route line + draggable waypoint markers
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map) return
-
-    // Build full route: position → waypoints → navTarget (or navPreview while planning)
-    const pos = positionRef.current
-    const terminal = navTarget ?? navPreview
-    const routePts: L.LatLngExpression[] = [
-      ...(pos ? [[pos.lat, pos.lng] as L.LatLngExpression] : []),
-      ...waypoints.map((w) => [w.lat, w.lng] as L.LatLngExpression),
-      ...(terminal ? [[terminal.lat, terminal.lng] as L.LatLngExpression] : []),
-    ]
-
-    // Hide green nav line when waypoints exist — route shows the full path
-    if (waypoints.length > 0 && navLineRef.current) {
-      navLineRef.current.setStyle({ opacity: 0 })
-    } else if (navLineRef.current) {
-      navLineRef.current.setStyle({ opacity: 1 })
-    }
-
-    // Hide blue preview line when waypoints exist — purple route line covers the path
-    if (waypoints.length > 0 && previewLineRef.current) {
-      previewLineRef.current.setStyle({ opacity: 0 })
-    } else if (previewLineRef.current) {
-      previewLineRef.current.setStyle({ opacity: 1 })
-    }
-
-    // Route line
-    if (routePts.length >= 2) {
-      if (!waypointLineRef.current) {
-        waypointLineRef.current = L.polyline(routePts, { color: '#a78bfa', weight: 4, opacity: 0.85, dashArray: '10, 6' }).addTo(map)
-      } else {
-        waypointLineRef.current.setLatLngs(routePts)
-      }
-
-      // Click on route line → insert waypoint at nearest segment
-      waypointLineRef.current.off('click')
-      waypointLineRef.current.on('click', (e: L.LeafletMouseEvent) => {
-        L.DomEvent.stopPropagation(e)
-        const clicked = e.latlng
-        const pts = routePts.map((p) => Array.isArray(p) ? L.latLng(p[0], p[1]) : L.latLng((p as L.LatLngLiteral).lat, (p as L.LatLngLiteral).lng))
-        let minDist = Infinity, insertIdx = 0
-        for (let i = 0; i < pts.length - 1; i++) {
-          const dx = pts[i + 1].lat - pts[i].lat, dy = pts[i + 1].lng - pts[i].lng
-          const t = dx || dy ? Math.max(0, Math.min(1, ((clicked.lat - pts[i].lat) * dx + (clicked.lng - pts[i].lng) * dy) / (dx * dx + dy * dy))) : 0
-          const d = clicked.distanceTo(L.latLng(pts[i].lat + t * dx, pts[i].lng + t * dy))
-          if (d < minDist) { minDist = d; insertIdx = i }
-        }
-        const wpIdx = Math.min(insertIdx, useMapStore.getState().waypoints.length)
-        useMapStore.getState().insertWaypointAt(
-          { id: `wp-${Date.now()}`, lat: clicked.lat, lng: clicked.lng, name: `WP${useMapStore.getState().waypoints.length + 1}` },
-          wpIdx
-        )
-      })
-    } else {
-      waypointLineRef.current?.remove()
-      waypointLineRef.current = null
-    }
-
-    // Waypoint markers (draggable)
-    const currentIds = new Set(waypoints.map((w) => w.id))
-    waypointMarkersRef.current.forEach((marker, id) => {
-      if (!currentIds.has(id)) { marker.remove(); waypointMarkersRef.current.delete(id) }
-    })
-
-    waypoints.forEach((wp, i) => {
-      const html = `<div class="waypoint-pin">${i + 1}</div>`
-      const icon = L.divIcon({ className: '', html, iconSize: [28, 28], iconAnchor: [14, 14] })
-      if (waypointMarkersRef.current.has(wp.id)) {
-        waypointMarkersRef.current.get(wp.id)!.setLatLng([wp.lat, wp.lng]).setIcon(icon)
-      } else {
-        const marker = L.marker([wp.lat, wp.lng], { icon, draggable: true, zIndexOffset: 600 }).addTo(map)
-        marker.on('dragend', () => {
-          const ll = marker.getLatLng()
-          useMapStore.getState().updateWaypoint(wp.id, ll.lat, ll.lng)
-        })
-        marker.on('click', (e) => {
-          L.DomEvent.stopPropagation(e)
-          useMapStore.getState().removeWaypoint(wp.id)
-        })
-        waypointMarkersRef.current.set(wp.id, marker)
-      }
-    })
-  }, [waypoints, navTarget, navPreview])
-
-  // Click to add spot or waypoint
+  // Click to add spot, or tap anywhere to drop a pin
   useEffect(() => {
     if (!mapRef.current) return
     const map = mapRef.current
     const onClick = (e: L.LeafletMouseEvent) => {
-      if (addingWaypoint) setPendingWaypoint({ lat: e.latlng.lat, lng: e.latlng.lng })
-      else if (addingSpot) setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng })
+      if (addingSpot) setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng })
       else {
         // Tap anywhere: drop a pin at that point and open the action card
         const lat = e.latlng.lat, lng = e.latlng.lng
@@ -750,27 +614,15 @@ export default function MapView() {
       }
     }
     map.on('click', onClick)
-    map.getContainer().style.cursor = (addingSpot || addingWaypoint) ? 'crosshair' : ''
+    map.getContainer().style.cursor = addingSpot ? 'crosshair' : ''
     return () => { map.off('click', onClick) }
-  }, [addingSpot, addingWaypoint])
+  }, [addingSpot])
 
   return (
     <>
       <div ref={containerRef} className="w-full h-full">
       </div>
       {pendingSpot && <SpotDialog lat={pendingSpot.lat} lng={pendingSpot.lng} onClose={() => setPendingSpot(null)} />}
-      {pendingWaypoint && (
-        <WaypointDialog
-          lat={pendingWaypoint.lat}
-          lng={pendingWaypoint.lng}
-          index={waypoints.length + 1}
-          onSave={(name) => {
-            addWaypoint({ id: `wp-${Date.now()}`, lat: pendingWaypoint.lat, lng: pendingWaypoint.lng, name })
-            setPendingWaypoint(null)
-          }}
-          onClose={() => { setPendingWaypoint(null); useMapStore.getState().setAddingWaypoint(true) }}
-        />
-      )}
     </>
   )
 }

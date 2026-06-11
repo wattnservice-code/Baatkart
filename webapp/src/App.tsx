@@ -5,7 +5,6 @@ import MapControls from './components/MapControls'
 import MobOverlay from './components/MobOverlay'
 import NavOverlay from './components/NavOverlay'
 import NavPreviewBar from './components/NavPreviewBar'
-import AnchorOverlay from './components/AnchorOverlay'
 import WeatherOverlay from './components/WeatherOverlay'
 import TideOverlay from './components/TideOverlay'
 import { useGPS } from './hooks/useGPS'
@@ -40,7 +39,6 @@ export default function App() {
           <TideOverlay />
         </div>
         <MobOverlay />
-        <AnchorOverlay />
         <NavPreviewBar />
         <NavOverlay />
       </div>

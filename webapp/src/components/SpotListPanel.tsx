@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Trash2, RouteIcon, LocateFixed, Map, Flag, Globe } from 'lucide-react'
+import { X, Trash2, RouteIcon, LocateFixed, Map, Globe } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth } from '../googleEarth'
@@ -18,8 +18,6 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
   const setNavPreview = useMapStore((s) => s.setNavPreview)
   const activeSpotId  = useMapStore((s) => s.activeSpotId)
   const setActiveSpot = useMapStore((s) => s.setActiveSpot)
-  const addWaypoint   = useMapStore((s) => s.addWaypoint)
-  const waypoints     = useMapStore((s) => s.waypoints)
 
   const isOnline = useOnline()
 
@@ -65,17 +63,6 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
               <div className="spot-panel-actions" onClick={(e) => e.stopPropagation()}>
                 <button className="spot-panel-btn spot-panel-nav" onClick={() => navigate(spot.lat, spot.lng, spot.name)} title="Naviger hit">
                   <RouteIcon size={15} />
-                </button>
-                <button
-                  className="spot-panel-btn"
-                  style={{ background: waypoints.some((w) => w.id === `spot-wp-${spot.id}`) ? '#7c3aed' : '#1e3a5f' }}
-                  onClick={() => {
-                    if (!waypoints.some((w) => w.id === `spot-wp-${spot.id}`))
-                      addWaypoint({ id: `spot-wp-${spot.id}`, lat: spot.lat, lng: spot.lng, name: spot.name })
-                  }}
-                  title="Legg til som waypoint"
-                >
-                  <Flag size={15} color="white" />
                 </button>
                 {isOnline && (
                   <button className="spot-panel-btn" style={{ background: '#065f46' }}

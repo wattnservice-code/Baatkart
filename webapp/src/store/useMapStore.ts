@@ -22,13 +22,6 @@ export interface SavedSpot {
   name: string
 }
 
-export interface Waypoint {
-  id: string
-  lat: number
-  lng: number
-  name: string
-}
-
 export interface MobPoint {
   lat: number
   lng: number
@@ -56,9 +49,6 @@ interface MapStore {
   savedSpots: SavedSpot[]
   mobPoint: MobPoint | null
   mobTrack: TrackPoint[]
-  anchorPoint: { lat: number; lng: number } | null
-  anchorRadius: number
-  anchorAlarm: boolean
   followBoat: boolean
   addingSpot: boolean
   compassEnabled: boolean
@@ -83,8 +73,6 @@ interface MapStore {
   boatInfo: BoatInfo
   lookAhead: boolean
   headingUp: boolean
-  waypoints: Waypoint[]
-  addingWaypoint: boolean
 
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
@@ -95,9 +83,6 @@ interface MapStore {
   removeSpot: (id: string) => void
   setMob: (pos: { lat: number; lng: number }) => void
   clearMob: () => void
-  setAnchor: (pos: { lat: number; lng: number }, radius: number) => void
-  clearAnchor: () => void
-  setAnchorRadius: (r: number) => void
   setFollowBoat: (v: boolean) => void
   setAddingSpot: (v: boolean) => void
   toggleCompass: () => void
@@ -125,12 +110,6 @@ interface MapStore {
   setBoatInfo: (info: Partial<BoatInfo>) => void
   toggleLookAhead: () => void
   toggleHeadingUp: () => void
-  addWaypoint: (wp: Waypoint) => void
-  insertWaypointAt: (wp: Waypoint, index: number) => void
-  removeWaypoint: (id: string) => void
-  updateWaypoint: (id: string, lat: number, lng: number) => void
-  clearWaypoints: () => void
-  setAddingWaypoint: (v: boolean) => void
 }
 
 function loadSpots(): SavedSpot[] {
@@ -186,9 +165,6 @@ export const useMapStore = create<MapStore>((set) => ({
   savedSpots: loadSpots(),
   mobPoint: loadMob(),
   mobTrack: [],
-  anchorPoint: null,
-  anchorRadius: 50,
-  anchorAlarm: false,
   followBoat: true,
   addingSpot: false,
   compassEnabled: loadCompass(),
@@ -213,8 +189,6 @@ export const useMapStore = create<MapStore>((set) => ({
   boatInfo: loadBoatInfo(),
   lookAhead: loadBool('lookAhead', false),
   headingUp: loadBool('headingUp', false),
-  waypoints: [],
-  addingWaypoint: false,
 
   setPosition: (pos) =>
     set((state) => {
@@ -226,15 +200,6 @@ export const useMapStore = create<MapStore>((set) => ({
       }
       if (state.mobPoint) {
         updates.mobTrack = [...state.mobTrack, { lat: pos.lat, lng: pos.lng, timestamp: pos.timestamp }]
-      }
-      if (state.anchorPoint) {
-        const R = 6371000
-        const φ1 = state.anchorPoint.lat * Math.PI / 180, φ2 = pos.lat * Math.PI / 180
-        const Δφ = (pos.lat - state.anchorPoint.lat) * Math.PI / 180
-        const Δλ = (pos.lng - state.anchorPoint.lng) * Math.PI / 180
-        const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2
-        const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-        updates.anchorAlarm = dist > state.anchorRadius
       }
       return updates
     }),
@@ -296,10 +261,6 @@ export const useMapStore = create<MapStore>((set) => ({
     return { customRingRadius: next }
   }),
 
-  setAnchor: (pos, radius) => set({ anchorPoint: pos, anchorRadius: radius, anchorAlarm: false }),
-  clearAnchor: () => set({ anchorPoint: null, anchorAlarm: false }),
-  setAnchorRadius: (r) => set({ anchorRadius: r, anchorAlarm: false }),
-
   setFlyTo: (pos) => set({ flyTo: pos, followBoat: false }),
   setSearchPin: (pin) => set({ searchPin: pin }),
   setSpotMenu: (spot) => set({ spotMenu: spot }),
@@ -316,16 +277,6 @@ export const useMapStore = create<MapStore>((set) => ({
   toggleOfflineOnly: () => set((s) => { const v = !s.offlineOnly; localStorage.setItem('offlineOnly', String(v)); return { offlineOnly: v } }),
   toggleLookAhead: () => set((s) => { const v = !s.lookAhead; localStorage.setItem('lookAhead', String(v)); return { lookAhead: v } }),
   toggleHeadingUp: () => set((s) => { const v = !s.headingUp; localStorage.setItem('headingUp', String(v)); return { headingUp: v } }),
-  addWaypoint: (wp) => set((s) => ({ waypoints: [...s.waypoints, wp], addingWaypoint: false })),
-  insertWaypointAt: (wp, index) => set((s) => {
-    const wps = [...s.waypoints]; wps.splice(index, 0, wp); return { waypoints: wps }
-  }),
-  removeWaypoint: (id) => set((s) => ({ waypoints: s.waypoints.filter((w) => w.id !== id) })),
-  updateWaypoint: (id, lat, lng) => set((s) => ({
-    waypoints: s.waypoints.map((w) => w.id === id ? { ...w, lat, lng } : w)
-  })),
-  clearWaypoints: () => set({ waypoints: [] }),
-  setAddingWaypoint: (v) => set({ addingWaypoint: v }),
   setBoatInfo: (info) => set((s) => {
     const updated = { ...s.boatInfo, ...info }
     localStorage.setItem(BOAT_INFO_KEY, JSON.stringify(updated))
