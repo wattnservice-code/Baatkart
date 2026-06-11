@@ -117,7 +117,7 @@ export default function SettingsPanel({ onClose }: Props) {
           <div className="menu-divider" />
           <div style={subhead}>AIS – fartøy på kartet</div>
           <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ fontSize: 12, color: '#64748b' }}>
+            <div style={{ fontSize: 12, color: darkMode ? '#94a3b8' : '#475569' }}>
               Gratis nøkkel: <b style={{ color: '#38bdf8' }}>aisstream.io</b>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -128,8 +128,9 @@ export default function SettingsPanel({ onClose }: Props) {
                 onChange={(e) => setAisKeyInput(e.target.value)}
                 style={{
                   flex: 1, padding: '8px 10px', borderRadius: 8,
-                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                  color: 'white', fontSize: 13, outline: 'none',
+                  background: darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.15)',
+                  color: darkMode ? 'white' : '#0f172a', fontSize: 13, outline: 'none',
                 }}
               />
               <button
@@ -141,22 +142,21 @@ export default function SettingsPanel({ onClose }: Props) {
               >
                 Lagre
               </button>
-              {aisKey && (
-                <button
-                  onClick={() => { setAisKey(''); setAisKeyInput('') }}
-                  style={{
-                    padding: '8px 10px', borderRadius: 8, border: 'none',
-                    background: '#7f1d1d', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                  }}
-                  title="Slett nøkkel"
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
+              <button
+                onClick={() => { setAisKey(''); setAisKeyInput('') }}
+                style={{
+                  padding: '8px 10px', borderRadius: 8, border: 'none',
+                  background: '#dc2626', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                  opacity: aisKey ? 1 : 0.35,
+                }}
+                title="Slett nøkkel"
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
             {aisKey
-              ? <div style={{ fontSize: 11, color: '#4ade80' }}>✓ Nøkkel lagret — bruk Ship-knappen på kartet</div>
-              : <div style={{ fontSize: 11, color: '#64748b' }}>Ingen nøkkel — AIS ikke tilgjengelig</div>
+              ? <div style={{ fontSize: 11, color: '#16a34a' }}>✓ Nøkkel lagret — bruk Ship-knappen på kartet</div>
+              : <div style={{ fontSize: 11, color: darkMode ? '#64748b' : '#94a3b8' }}>Ingen nøkkel — AIS ikke tilgjengelig</div>
             }
           </div>
 
