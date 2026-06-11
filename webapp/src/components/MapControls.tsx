@@ -77,6 +77,7 @@ export default function MapControls() {
   const aisVisible       = useMapStore((s) => s.aisVisible)
   const aisKey           = useMapStore((s) => s.aisKey)
   const toggleAis        = useMapStore((s) => s.toggleAis)
+  const aisStatus        = useMapStore((s) => s.aisStatus)
   const speedUnit        = useMapStore((s) => s.speedUnit)
   const toggleSpeedUnit  = useMapStore((s) => s.toggleSpeedUnit)
   const distUnit         = useMapStore((s) => s.distUnit)
@@ -121,6 +122,19 @@ export default function MapControls() {
         <div className="map-banner">
           <span>Trykk på kartet for å lagre sted</span>
           <button onClick={() => setAddingSpot(false)}><X size={18} /></button>
+        </div>
+      )}
+
+      {/* AIS status pill — only while AIS is enabled */}
+      {aisVisible && (
+        <div className={`ais-status ais-status-${aisStatus.state}`}>
+          {aisStatus.state === 'live'
+            ? `🚢 ${aisStatus.count} fartøy`
+            : aisStatus.state === 'connecting'
+            ? `🚢 ${aisStatus.message}`
+            : aisStatus.state === 'error'
+            ? `⚠ AIS: ${aisStatus.message}`
+            : '🚢 AIS av'}
         </div>
       )}
 

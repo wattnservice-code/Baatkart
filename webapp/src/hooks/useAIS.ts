@@ -70,8 +70,12 @@ export function useAIS() {
       wsRef.current = null
       layerRef.current?.clearLayers()
       markersRef.current.clear()
+      useMapStore.getState().setAisStatus({ state: 'idle', count: 0, message: '' })
       return
     }
+
+    const setAisStatus = useMapStore.getState().setAisStatus
+    setAisStatus({ state: 'connecting', count: 0, message: 'Kobler til…' })
 
     const map = getMapInstance()
     if (!layerRef.current) {
@@ -81,11 +85,21 @@ export function useAIS() {
     const ws = new WebSocket('wss://stream.aisstream.io/v0/stream')
     wsRef.current = ws
 
-    ws.onopen = () => sendSubscription()
+    ws.onopen = () => {
+      sendSubscription()
+      setAisStatus({ state: 'connecting', count: markersRef.current.size, message: 'Venter på fartøy…' })
+    }
 
     ws.onmessage = (e: MessageEvent) => {
       try {
         const msg = JSON.parse(e.data as string)
+
+        // aisstream surfaces auth/subscription problems as an `error` field
+        if (msg.error || msg.Error) {
+          setAisStatus({ state: 'error', count: markersRef.current.size, message: String(msg.error || msg.Error) })
+          return
+        }
+
         if (msg.MessageType !== 'PositionReport') return
 
         const meta = msg.MetaData
@@ -117,11 +131,19 @@ export function useAIS() {
           marker.addTo(layerRef.current)
           markersRef.current.set(mmsi, marker)
         }
+        setAisStatus({ state: 'live', count: markersRef.current.size, message: '' })
       } catch { /* ignore malformed messages */ }
     }
 
-    ws.onerror = () => {}
-    ws.onclose = () => {}
+    ws.onerror = () => {
+      setAisStatus({ state: 'error', count: markersRef.current.size, message: 'Tilkoblingsfeil' })
+    }
+    ws.onclose = (ev) => {
+      // 1000 = normal close (we toggled off). Anything else = unexpected.
+      if (ev.code !== 1000) {
+        setAisStatus({ state: 'error', count: markersRef.current.size, message: `Frakoblet (${ev.code})` })
+      }
+    }
 
     // Prune vessels older than 15 min every minute
     const pruneInterval = setInterval(() => {

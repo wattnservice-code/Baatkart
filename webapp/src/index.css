@@ -1038,6 +1038,26 @@ html, body, #root {
   display: flex; flex-direction: column; gap: 8px;
   pointer-events: none;
 }
+/* ── AIS status pill ── */
+.ais-status {
+  position: absolute;
+  top: max(12px, calc(env(safe-area-inset-top) + 6px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px; font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  pointer-events: none;
+}
+.ais-status-connecting { background: rgba(37,99,235,0.92); }
+.ais-status-live       { background: rgba(22,163,74,0.92); }
+.ais-status-error      { background: rgba(220,38,38,0.95); }
+.ais-status-idle       { background: rgba(71,85,105,0.9); }
+
 .info-panel {
   pointer-events: auto;
   background: rgba(15,23,42,0.82);
