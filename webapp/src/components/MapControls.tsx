@@ -136,6 +136,13 @@ export default function MapControls() {
 
       <div className="map-controls">
         <button
+          className={`fab compass-fab ${compassEnabled ? 'cmps-btn-krs' : ''}`}
+          onClick={handleCompassBtn}
+          title={compassEnabled ? 'Kurs opp aktiv – trykk for å slå av' : 'Trykk for kurs opp'}
+        >
+          <CompassBtn active={compassEnabled} />
+        </button>
+        <button
           className={`fab ${!darkMode ? 'fab-active' : ''}`}
           onClick={toggleDarkMode}
           title={darkMode ? 'Bytt til dagmodus' : 'Bytt til nattmodus'}
@@ -155,13 +162,6 @@ export default function MapControls() {
           if (m && m.getZoom() < 14) m.setZoom(14)
         }} title="Sentrer kart">
           <LocateFixed size={22} />
-        </button>
-        <button
-          className={`fab compass-fab ${compassEnabled ? 'cmps-btn-krs' : ''}`}
-          onClick={handleCompassBtn}
-          title={compassEnabled ? 'Kurs opp aktiv – trykk for å slå av' : 'Trykk for kurs opp'}
-        >
-          <CompassBtn active={compassEnabled} />
         </button>
         <button
           className={`fab ${isTracking ? 'fab-rec' : ''}`}
