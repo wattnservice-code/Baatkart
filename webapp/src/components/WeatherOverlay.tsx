@@ -5,6 +5,23 @@ interface WxData {
   windSpeed: number  // m/s
   windDir: number    // degrees, FROM direction
   temp: number       // celsius
+  symbol: string     // met.no symbol_code
+}
+
+function wxEmoji(code: string): string {
+  if (!code) return ''
+  if (code.includes('thunder'))      return '⛈️'
+  if (code.includes('snow'))         return '❄️'
+  if (code.includes('sleet'))        return '🌨️'
+  if (code.includes('heavyrain'))    return '🌧️'
+  if (code.includes('rain'))         return '🌧️'
+  if (code.includes('lightrain') || code.includes('drizzle')) return '🌦️'
+  if (code.includes('fog'))          return '🌫️'
+  if (code.startsWith('clearsky'))   return '☀️'
+  if (code.startsWith('fair'))       return '🌤️'
+  if (code.includes('partlycloudy')) return '⛅'
+  if (code.includes('cloudy'))       return '☁️'
+  return '🌡️'
 }
 
 export default function WeatherOverlay() {
@@ -30,8 +47,12 @@ export default function WeatherOverlay() {
     )
       .then((r) => r.json())
       .then((data) => {
-        const d = data.properties.timeseries[0].data.instant.details
-        const w = { windSpeed: d.wind_speed, windDir: d.wind_from_direction, temp: d.air_temperature }
+        const ts0 = data.properties.timeseries[0].data
+        const d = ts0.instant.details
+        const symbol = ts0.next_1_hours?.summary?.symbol_code
+          ?? ts0.next_6_hours?.summary?.symbol_code
+          ?? ''
+        const w = { windSpeed: d.wind_speed, windDir: d.wind_from_direction, temp: d.air_temperature, symbol }
         setWx(w)
         setCurrentWeather(w)
         setErr(null)
@@ -59,7 +80,10 @@ export default function WeatherOverlay() {
             <span className="wx-val">{ms} m/s</span>
             <span className="wx-sub">{Math.round(wx.windDir)}°</span>
           </div>
-          <div className="wx-temp">{Math.round(wx.temp)}°C</div>
+          <div className="wx-temp">
+            {wx.symbol && <span className="wx-symbol">{wxEmoji(wx.symbol)}</span>}
+            {Math.round(wx.temp)}°C
+          </div>
         </>
       )}
     </div>
