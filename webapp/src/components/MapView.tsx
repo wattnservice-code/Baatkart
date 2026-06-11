@@ -45,8 +45,14 @@ class OfflineTileLayer extends L.TileLayer {
         recordTileHit(true)
         img.src = URL.createObjectURL(blob)
       } else if (useMapStore.getState().offlineOnly) {
-        recordTileHit(true) // treat as "offline" — tile is just missing
-        // leave img.src blank: tile renders as empty
+        recordTileHit(true)
+        // Draw a grey placeholder so areas without offline coverage are clearly toned down
+        const isDark = useMapStore.getState().darkMode
+        const canvas = document.createElement('canvas')
+        canvas.width = 1; canvas.height = 1
+        const ctx = canvas.getContext('2d')
+        if (ctx) { ctx.fillStyle = isDark ? '#1e2a38' : '#c8d3dc'; ctx.fillRect(0, 0, 1, 1) }
+        img.src = canvas.toDataURL()
       } else {
         recordTileHit(false)
         img.src = this.getTileUrl(coords)
@@ -191,6 +197,7 @@ export default function MapView() {
   const seamarkVisible   = useMapStore((s) => s.seamarkVisible)
   const customRingRadius = useMapStore((s) => s.customRingRadius)
   const followingTrack   = useMapStore((s) => s.followingTrack)
+  const offlineOnly      = useMapStore((s) => s.offlineOnly)
   const lookAhead        = useMapStore((s) => s.lookAhead)
   const headingUp        = useMapStore((s) => s.headingUp)
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
@@ -243,7 +250,7 @@ export default function MapView() {
       if (rangeRingRef.current && pos) {
         const r = customR ?? ringRadius(zoom)
         rangeRingRef.current.setRadius(r)
-        const labelPos = destPoint(pos.lat, pos.lng, 0, r)
+        const labelPos = destPoint(pos.lat, pos.lng, (pos.heading + 180) % 360, r)
         ringLabelRef.current?.setLatLng(labelPos)
         const el = ringLabelRef.current?.getElement()?.querySelector('.ring-label')
         if (el) el.textContent = formatRingLabel(r)
@@ -355,8 +362,8 @@ export default function MapView() {
       rangeRingRef.current.setLatLng(latlng).setRadius(radius)
     }
 
-    // Ring label (north edge, red text)
-    const labelPos = destPoint(position.lat, position.lng, 0, radius)
+    // Ring label behind the boat
+    const labelPos = destPoint(position.lat, position.lng, (position.heading + 180) % 360, radius)
     if (!ringLabelRef.current) {
       ringLabelRef.current = L.marker(labelPos, {
         icon: ringLabelIcon(radius),
@@ -451,6 +458,12 @@ export default function MapView() {
 
     return () => { if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null } }
   }, [headingUp, compassEnabled, compassHeading])
+
+  // Redraw tiles when offlineOnly toggles so grey placeholders appear immediately
+  useEffect(() => {
+    kartvTileRef.current?.redraw()
+    seamarkTileRef.current?.redraw()
+  }, [offlineOnly])
 
   // Track line
   useEffect(() => {
