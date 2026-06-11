@@ -1362,6 +1362,16 @@ html, body, #root {
   .bottom-nav { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
 }
 
+/* ── Responsive FABs: shrink on short screens so they don't overlap weather panels ── */
+@media (max-height: 700px) and (orientation: portrait) {
+  .fab { width: 42px; height: 42px; }
+  .map-controls { gap: 5px; }
+}
+@media (max-height: 600px) and (orientation: portrait) {
+  .fab { width: 38px; height: 38px; }
+  .map-controls { gap: 4px; bottom: 14px; }
+}
+
 /* ── REC (tracking) FAB ── */
 .fab-rec {
   background: #dc2626;
