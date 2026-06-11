@@ -129,7 +129,7 @@ export default function MapControls() {
       )}
 
       {/* Speed badge — top-left, grows at ≥ 3 kn */}
-      {position && position.speed >= 0.5 && (() => {
+      {position && position.speed > 0 && (() => {
         const spd = speedUnit === 'kn' ? position.speed * 1.94384 : position.speed * 3.6
         const unit = speedUnit === 'kn' ? 'kn' : 'km/t'
         const fast = position.speed * 1.94384 >= 3

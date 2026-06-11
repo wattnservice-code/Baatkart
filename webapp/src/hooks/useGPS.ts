@@ -3,7 +3,7 @@ import { useMapStore } from '../store/useMapStore'
 
 const ALPHA = 0.25       // EMA for position
 const SPEED_ALPHA = 0.2  // EMA for speed — lower = smoother
-const MIN_SPEED = 0.3    // m/s below this = show 0 (filters GPS noise ~1 km/h)
+const MIN_SPEED = 0.8    // m/s below this = show 0 (~1.5 kn threshold, filters indoor GPS noise)
 
 export function useGPS() {
   const setPosition = useMapStore((s) => s.setPosition)

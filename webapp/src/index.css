@@ -250,8 +250,8 @@ html, body, #root {
   padding: 6px 12px;
   min-width: 56px;
 }
-.speed-badge-slow .speed-badge-val { font-size: 24px; font-weight: 800; color: #e2e8f0; line-height: 1; }
-.speed-badge-slow .speed-badge-unit { font-size: 11px; color: #64748b; margin-top: 1px; }
+.speed-badge-slow .speed-badge-val { font-size: 24px; font-weight: 800; color: white; line-height: 1; }
+.speed-badge-slow .speed-badge-unit { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 1px; }
 .speed-badge-fast {
   padding: 10px 18px;
   min-width: 90px;

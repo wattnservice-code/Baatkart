@@ -1,12 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Gauge, MapPin, Compass, WifiOff, Wifi, Copy, Check } from 'lucide-react'
+import { MapPin, Compass, WifiOff, Wifi, Copy, Check } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
-
-function formatSpeed(ms: number, unit: 'kn' | 'kmh'): string {
-  return unit === 'kn'
-    ? (ms * 1.94384).toFixed(1)
-    : (ms * 3.6).toFixed(1)
-}
 
 function headingLabel(deg: number): string {
   const dirs = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV']
@@ -16,11 +10,10 @@ function headingLabel(deg: number): string {
 export default function StatusBar() {
   const position          = useMapStore((s) => s.position)
   const isTracking        = useMapStore((s) => s.isTracking)
-  const speedUnit         = useMapStore((s) => s.speedUnit)
-  const toggleSpeedUnit   = useMapStore((s) => s.toggleSpeedUnit)
   const offlineOnly       = useMapStore((s) => s.offlineOnly)
   const toggleOfflineOnly = useMapStore((s) => s.toggleOfflineOnly)
   const setOfflineOnly    = useMapStore((s) => s.setOfflineOnly)
+  // speed is shown in the floating badge (MapControls) — not duplicated here
 
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [copied, setCopied] = useState(false)
@@ -48,14 +41,6 @@ export default function StatusBar() {
 
   return (
     <div className="status-bar">
-      <button className="status-item status-coords-btn" onClick={toggleSpeedUnit} title="Trykk for å bytte enhet">
-        <Gauge size={16} className="status-icon" />
-        <span className="status-value">{position ? formatSpeed(position.speed, speedUnit) : '--'}</span>
-        <span className="status-unit">{speedUnit === 'kn' ? 'kn' : 'km/t'}</span>
-      </button>
-
-      <div className="status-divider" />
-
       {/* Coordinates — tap to copy */}
       <button className={`status-item status-coords-btn ${copied ? 'status-coords-copied' : ''}`} onClick={copyCoords} title="Trykk for å kopiere">
         <MapPin size={16} className="status-icon" />
