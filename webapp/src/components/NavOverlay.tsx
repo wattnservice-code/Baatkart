@@ -29,7 +29,7 @@ function crossTrackError(pLat: number, pLon: number, aLat: number, aLon: number,
 }
 
 export function formatDist(m: number, unit: DistUnit): string {
-  if (unit === 'nm') return `${(m / 1852).toFixed(1)} nm`
+  if (unit === 'nm') { const nm = m / 1852; return `${nm < 1 ? nm.toFixed(2) : nm.toFixed(1)} nm` }
   if (unit === 'km') return m < 1000
     ? `${Math.round(m)} m`
     : `${(m / 1000).toFixed(m < 10000 ? 1 : 0)} km`

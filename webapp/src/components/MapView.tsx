@@ -86,7 +86,12 @@ function ringRadius(zoom: number): number {
 }
 
 function formatRingLabel(m: number): string {
-  return m >= 1000 ? `${m / 1000} km` : `${m} m`
+  const r = Math.round(m)
+  if (r >= 1000) {
+    const km = r / 1000
+    return `${Number.isInteger(km) ? km : km.toFixed(1)} km`
+  }
+  return `${r} m`
 }
 
 // Shortest signed angular delta from `from` to `to`, in [-180, 180]
