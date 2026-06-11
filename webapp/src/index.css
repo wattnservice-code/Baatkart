@@ -233,7 +233,7 @@ html, body, #root {
 .mob-btn {
   position: absolute;
   top: max(14px, calc(env(safe-area-inset-top) + 8px));
-  right: max(72px, calc(env(safe-area-inset-right) + 68px));
+  left: max(12px, calc(env(safe-area-inset-left) + 8px));
   z-index: 401;
   width: 56px; height: 56px;
   border-radius: 50%;
@@ -950,33 +950,43 @@ html, body, #root {
 .wx-tide-toggle {
   position: absolute;
   top: max(12px, calc(env(safe-area-inset-top) + 8px));
-  left: 12px;
+  right: max(70px, calc(env(safe-area-inset-right) + 66px));
   z-index: 401;
-  display: flex; align-items: center; gap: 2px;
-  background: rgba(15,23,42,0.75);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.12);
+  display: flex; align-items: center; gap: 3px;
+  background: rgba(15,23,42,0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.20);
   border-radius: 10px;
-  padding: 5px 8px;
-  color: #64748b;
+  padding: 6px 10px;
+  color: #94a3b8;
   cursor: pointer;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
 .wx-tide-toggle:active { opacity: 0.75; }
-.wx-tide-toggle-active { color: #38bdf8; border-color: rgba(56,189,248,0.30); }
-.wx-tide-wave { opacity: 0.7; }
+.wx-tide-toggle-active {
+  color: #38bdf8;
+  border-color: rgba(56,189,248,0.45);
+  background: rgba(15,23,42,0.92);
+}
+.wx-tide-wave { opacity: 0.8; }
 
 .day .wx-tide-toggle {
-  background: rgba(248,250,252,0.92);
-  border-color: rgba(0,0,0,0.12);
-  color: #64748b;
+  background: rgba(255,255,255,0.95);
+  border-color: rgba(0,0,0,0.18);
+  color: #475569;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
-.day .wx-tide-toggle-active { color: #2563eb; border-color: rgba(37,99,235,0.30); }
+.day .wx-tide-toggle-active {
+  color: #2563eb;
+  border-color: rgba(37,99,235,0.40);
+  background: rgba(239,246,255,0.98);
+}
 
-/* ── Left info panels (weather + tide) ── */
+/* ── Right info panels (weather + tide) ── */
 .map-left-panels {
   position: absolute;
-  top: max(52px, calc(env(safe-area-inset-top) + 48px)); left: 12px;
+  top: max(52px, calc(env(safe-area-inset-top) + 48px));
+  right: max(70px, calc(env(safe-area-inset-right) + 66px));
   z-index: 400;
   display: flex; flex-direction: column; gap: 8px;
   pointer-events: none;
@@ -1222,10 +1232,10 @@ html, body, #root {
   /* Bottom nav: right column, bottom row – stays at the bottom */
   .bottom-nav { grid-column: 2; grid-row: 2; }
 
-  /* FABs: styled panel for contrast on both day and night */
+  /* FABs: styled panel flush to right edge */
   .map-controls {
-    right: max(12px, calc(env(safe-area-inset-right) + 8px));
-    bottom: 12px;
+    right: max(4px, env(safe-area-inset-right));
+    bottom: 8px;
     background: rgba(15,23,42,0.82);
     border-radius: 16px;
     padding: 8px;
@@ -1234,14 +1244,17 @@ html, body, #root {
     box-shadow: 0 4px 16px rgba(0,0,0,0.35);
   }
 
-  /* MOB: stay top-right but clear of FABs panel */
-  .mob-btn {
-    right: max(80px, calc(env(safe-area-inset-right) + 76px));
-  }
-
   .menu-panel {
     right: max(68px, calc(env(safe-area-inset-right) + 64px));
     max-height: calc(100% - 24px);
+  }
+
+  /* In landscape, wx toggle + panels sit above the FABs panel */
+  .wx-tide-toggle {
+    right: max(4px, env(safe-area-inset-right));
+  }
+  .map-left-panels {
+    right: max(4px, env(safe-area-inset-right));
   }
 }
 
