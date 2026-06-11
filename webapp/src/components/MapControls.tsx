@@ -130,6 +130,8 @@ export default function MapControls() {
         <div className={`ais-status ais-status-${aisStatus.state}`}>
           {aisStatus.state === 'live'
             ? `🚢 ${aisStatus.count} fartøy`
+            : aisStatus.state === 'warn'
+            ? `${aisStatus.message} · ${aisStatus.count} fartøy`
             : aisStatus.state === 'connecting'
             ? `🚢 ${aisStatus.message}`
             : aisStatus.state === 'error'

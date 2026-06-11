@@ -90,7 +90,7 @@ interface MapStore {
   offlineDownload: { status: 'downloading' | 'done' | 'error'; progress: number; total: number; skipped: number; areaName: string } | null
   aisVisible: boolean
   aisKey: string
-  aisStatus: { state: 'idle' | 'connecting' | 'live' | 'error'; count: number; message: string }
+  aisStatus: { state: 'idle' | 'connecting' | 'live' | 'warn' | 'error'; count: number; message: string }
   boatInfo: BoatInfo
   lookAhead: boolean
   headingUp: boolean
@@ -136,7 +136,7 @@ interface MapStore {
   setOfflineDownload: (d: { status: 'downloading' | 'done' | 'error'; progress: number; total: number; skipped: number; areaName: string } | null) => void
   toggleAis: () => void
   setAisKey: (key: string) => void
-  setAisStatus: (s: { state: 'idle' | 'connecting' | 'live' | 'error'; count: number; message: string }) => void
+  setAisStatus: (s: { state: 'idle' | 'connecting' | 'live' | 'warn' | 'error'; count: number; message: string }) => void
   setBoatInfo: (info: Partial<BoatInfo>) => void
   toggleLookAhead: () => void
   toggleHeadingUp: () => void

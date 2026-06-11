@@ -1055,8 +1055,21 @@ html, body, #root {
 }
 .ais-status-connecting { background: rgba(37,99,235,0.92); }
 .ais-status-live       { background: rgba(22,163,74,0.92); }
+.ais-status-warn       { background: rgba(220,38,38,0.95); animation: aisStatusPulse 1.1s ease-in-out infinite; }
 .ais-status-error      { background: rgba(220,38,38,0.95); }
 .ais-status-idle       { background: rgba(71,85,105,0.9); }
+
+@keyframes aisStatusPulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.35); }
+  50%      { box-shadow: 0 0 14px 4px rgba(239,68,68,0.85); }
+}
+
+/* Pulsing red halo on AIS vessels that are on a collision course */
+@keyframes aisDangerPulse {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(239,68,68,0.9)); }
+  50%      { filter: drop-shadow(0 0 9px rgba(239,68,68,1)); }
+}
+.ais-danger-wrap { animation: aisDangerPulse 1s ease-in-out infinite; }
 
 .info-panel {
   pointer-events: auto;

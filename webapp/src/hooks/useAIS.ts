@@ -18,19 +18,60 @@ function vesselColor(sog: number): string {
   return '#4ade80'                   // moving — green
 }
 
+// ── Collision (CPA/TCPA) ──────────────────────────────────────────────
+// CPA = Closest Point of Approach (how near we'd pass if both hold course)
+// TCPA = Time to CPA in minutes (positive = approaching, negative = opening)
+const DANGER_CPA_M   = 926    // 0.5 nautical miles
+const DANGER_TCPA_MIN = 15    // warn if closest approach is within 15 min
+const KN_TO_MS = 0.514444
+
+interface OwnState { lat: number; lng: number; speedMs: number; courseDeg: number }
+interface CpaInfo { cpaM: number; tcpaMin: number }
+
+function computeCPA(own: OwnState, t: AISVessel): CpaInfo | null {
+  const R = 6371000
+  const latRad = (own.lat * Math.PI) / 180
+  // Target position relative to own (own at origin), in metres. x=east, y=north.
+  const px = ((t.lng - own.lng) * Math.PI / 180) * R * Math.cos(latRad)
+  const py = ((t.lat - own.lat) * Math.PI / 180) * R
+  // Velocity vectors (m/s). Course 0=N, clockwise. vx=east, vy=north.
+  const ovx = own.speedMs * Math.sin((own.courseDeg * Math.PI) / 180)
+  const ovy = own.speedMs * Math.cos((own.courseDeg * Math.PI) / 180)
+  const tSpeed = t.sog * KN_TO_MS
+  const tCourse = t.heading > 0 && t.heading < 360 ? t.heading : 0
+  const tvx = tSpeed * Math.sin((tCourse * Math.PI) / 180)
+  const tvy = tSpeed * Math.cos((tCourse * Math.PI) / 180)
+  // Relative velocity (target − own)
+  const rvx = tvx - ovx
+  const rvy = tvy - ovy
+  const rv2 = rvx * rvx + rvy * rvy
+  if (rv2 < 1e-4) return { cpaM: Math.hypot(px, py), tcpaMin: 0 }  // no relative motion
+  const tcpaSec = -(px * rvx + py * rvy) / rv2
+  const cx = px + rvx * tcpaSec
+  const cy = py + rvy * tcpaSec
+  return { cpaM: Math.hypot(cx, cy), tcpaMin: tcpaSec / 60 }
+}
+
+function isDanger(cpa: CpaInfo | null): boolean {
+  return !!cpa && cpa.tcpaMin > 0 && cpa.tcpaMin < DANGER_TCPA_MIN && cpa.cpaM < DANGER_CPA_M
+}
+
 const ICON_SIZE = 26
 
-function vesselIcon(vessel: AISVessel): L.DivIcon {
+function vesselIcon(vessel: AISVessel, danger: boolean): L.DivIcon {
   const hdg = vessel.heading > 0 && vessel.heading < 360 ? vessel.heading : 0
-  const color = vesselColor(vessel.sog)
-  const html = `<div style="
-    width:${ICON_SIZE}px;height:${ICON_SIZE}px;
-    transform:rotate(${hdg}deg);
-    filter:drop-shadow(0 1px 4px rgba(0,0,0,0.85));
-  ">
-    <svg width="${ICON_SIZE}" height="${ICON_SIZE}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="12,2 21,22 12,17 3,22" fill="${color}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
-    </svg>
+  const color = danger ? '#ef4444' : vesselColor(vessel.sog)
+  const wrapCls = danger ? 'ais-danger-wrap' : ''
+  const html = `<div class="${wrapCls}" style="width:${ICON_SIZE}px;height:${ICON_SIZE}px;">
+    <div style="
+      width:${ICON_SIZE}px;height:${ICON_SIZE}px;
+      transform:rotate(${hdg}deg);
+      filter:drop-shadow(0 1px 4px rgba(0,0,0,0.85));
+    ">
+      <svg width="${ICON_SIZE}" height="${ICON_SIZE}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,2 21,22 12,17 3,22" fill="${color}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
+      </svg>
+    </div>
   </div>`
   return L.divIcon({ className: '', html, iconSize: [ICON_SIZE, ICON_SIZE], iconAnchor: [ICON_SIZE / 2, ICON_SIZE / 2] })
 }
@@ -46,6 +87,7 @@ export function useAIS() {
   const boundsRef     = useRef(mapBounds)
   const subTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reconnectRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dangerRef     = useRef<Set<number>>(new Set())
 
   // Keep bounds ref current without triggering re-subscription immediately
   useEffect(() => { boundsRef.current = mapBounds }, [mapBounds])
@@ -81,6 +123,7 @@ export function useAIS() {
       wsRef.current = null
       layerRef.current?.clearLayers()
       markersRef.current.clear()
+      dangerRef.current.clear()
       useMapStore.getState().setAisStatus({ state: 'idle', count: 0, message: '' })
       return
     }
@@ -144,19 +187,34 @@ export function useAIS() {
             name: (meta.ShipName as string ?? '').trim() || `MMSI ${mmsi}`,
           }
 
+          // Collision check against own boat (needs a GPS fix)
+          const pos = useMapStore.getState().position
+          const cpa = pos
+            ? computeCPA({ lat: pos.lat, lng: pos.lng, speedMs: pos.speed ?? 0, courseDeg: pos.heading ?? 0 }, vessel)
+            : null
+          const danger = isDanger(cpa)
+          if (danger) dangerRef.current.add(mmsi)
+          else dangerRef.current.delete(mmsi)
+
           const existing = markersRef.current.get(mmsi)
           if (existing) {
             existing.setLatLng([lat, lng])
-            existing.setIcon(vesselIcon(vessel))
-            existing.getPopup()?.setContent(popupContent(vessel))
+            existing.setIcon(vesselIcon(vessel, danger))
+            existing.getPopup()?.setContent(popupContent(vessel, cpa, danger))
           } else {
             if (!layerRef.current) return
-            const marker = L.marker([lat, lng], { icon: vesselIcon(vessel), zIndexOffset: 200 })
-            marker.bindPopup(popupContent(vessel), { maxWidth: 200 })
+            const marker = L.marker([lat, lng], { icon: vesselIcon(vessel, danger), zIndexOffset: danger ? 600 : 200 })
+            marker.bindPopup(popupContent(vessel, cpa, danger), { maxWidth: 220 })
             marker.addTo(layerRef.current)
             markersRef.current.set(mmsi, marker)
           }
-          setAisStatus({ state: 'live', count: markersRef.current.size, message: '' })
+
+          const dn = dangerRef.current.size
+          setAisStatus({
+            state: dn > 0 ? 'warn' : 'live',
+            count: markersRef.current.size,
+            message: dn > 0 ? `⚠ ${dn} på kollisjonskurs` : '',
+          })
         } catch { /* ignore malformed messages */ }
       }
 
@@ -191,6 +249,7 @@ export function useAIS() {
       wsRef.current = null
       layerRef.current?.clearLayers()
       markersRef.current.clear()
+      dangerRef.current.clear()
     }
   }, [aisVisible, aisKey, sendSubscription])
 
@@ -202,12 +261,21 @@ export function useAIS() {
   })
 }
 
-function popupContent(v: AISVessel): string {
+function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean): string {
   const sog = v.sog.toFixed(1)
   const hdg = v.heading > 0 && v.heading < 360 ? `${Math.round(v.heading)}°` : '—'
+  let cpaLine = ''
+  if (cpa && cpa.tcpaMin > 0 && isFinite(cpa.tcpaMin)) {
+    const nm  = (cpa.cpaM / 1852).toFixed(2)
+    const min = Math.round(cpa.tcpaMin)
+    cpaLine = danger
+      ? `<div style="margin-top:4px;color:#ef4444;font-weight:700">⚠ Kollisjonskurs<br/>Passerer ${nm} nm om ${min} min</div>`
+      : `<div style="margin-top:4px;color:#94a3b8;font-size:12px">Nærmeste: ${nm} nm om ${min} min</div>`
+  }
   return `<div style="font-size:13px;line-height:1.5">
     <b>${v.name}</b><br/>
     ${sog} kn · ${hdg}<br/>
     <span style="color:#64748b;font-size:11px">MMSI ${v.mmsi}</span>
+    ${cpaLine}
   </div>`
 }
