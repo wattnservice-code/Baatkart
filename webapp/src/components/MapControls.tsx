@@ -30,7 +30,7 @@ function formatEta(distM: number, speedMs: number): string | null {
   return `${h} t ${m} min`
 }
 
-function CompassRose({ headingUp }: { headingUp: boolean }) {
+function CompassBtn({ compassEnabled, headingUp }: { compassEnabled: boolean; headingUp: boolean }) {
   const elRef  = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number | null>(null)
 
@@ -38,18 +38,21 @@ function CompassRose({ headingUp }: { headingUp: boolean }) {
     const el = elRef.current
     if (!el) return
     const loop = () => {
-      // Rotate the N indicator opposite to the map so it always points to true north
-      el.style.transform = headingUp ? `rotate(${-getCurrentBearing()}deg)` : ''
+      // In heading-up mode rotate N to always point true north
+      el.style.transform = (compassEnabled && headingUp) ? `rotate(${-getCurrentBearing()}deg)` : ''
       rafRef.current = requestAnimationFrame(loop)
     }
     rafRef.current = requestAnimationFrame(loop)
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
-  }, [headingUp])
+  }, [compassEnabled, headingUp])
 
   return (
-    <div ref={elRef} className="compass-rose">
-      <span className="compass-n">N</span>
-      <div className="compass-needle" />
+    <div ref={elRef} className={`cmps-rose ${!compassEnabled ? 'cmps-off' : ''}`}>
+      <span className="cmps-n">N</span>
+      <div className="cmps-needle" />
+      {compassEnabled && (
+        <span className="cmps-label">{headingUp ? 'KRS' : 'NORD'}</span>
+      )}
     </div>
   )
 }
@@ -66,13 +69,11 @@ export default function MapControls() {
   const followBoat       = useMapStore((s) => s.followBoat)
   const addingSpot       = useMapStore((s) => s.addingSpot)
   const isTracking       = useMapStore((s) => s.isTracking)
-  const mobPoint         = useMapStore((s) => s.mobPoint)
   const position         = useMapStore((s) => s.position)
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
   const setAddingSpot    = useMapStore((s) => s.setAddingSpot)
   const startTracking    = useMapStore((s) => s.startTracking)
   const stopTracking     = useMapStore((s) => s.stopTracking)
-  const setMob           = useMapStore((s) => s.setMob)
   const darkMode         = useMapStore((s) => s.darkMode)
   const toggleDarkMode   = useMapStore((s) => s.toggleDarkMode)
   const speedUnit        = useMapStore((s) => s.speedUnit)
@@ -92,12 +93,6 @@ export default function MapControls() {
   const closeSpotMenu = () => {
     if (spotMenu && !spotMenu.id) setSearchPin(null)
     setSpotMenu(null)
-  }
-
-  const handleMob = () => {
-    if (mobPoint || !position) return
-    navigator.vibrate?.([200, 100, 200, 100, 400])
-    setMob({ lat: position.lat, lng: position.lng })
   }
 
   const useGpsPos = () => { if (position) setGpsSpot({ lat: position.lat, lng: position.lng }) }
@@ -141,10 +136,6 @@ export default function MapControls() {
         )
       })()}
 
-      <button className={`mob-btn ${mobPoint ? 'mob-btn-active' : ''}`} onClick={handleMob} title="Mann over bord" disabled={!!mobPoint}>
-        MOB
-      </button>
-
       <div className="map-controls">
         <button
           className={`fab ${!darkMode ? 'fab-active' : ''}`}
@@ -168,11 +159,11 @@ export default function MapControls() {
           <LocateFixed size={22} />
         </button>
         <button
-          className={`fab compass-fab ${compassEnabled && headingUp ? 'fab-active' : compassEnabled ? 'fab-dim' : ''}`}
+          className={`fab compass-fab ${compassEnabled && headingUp ? 'cmps-btn-krs' : compassEnabled ? 'cmps-btn-nord' : ''}`}
           onClick={handleCompassBtn}
-          title={!compassEnabled ? 'Kompass av – trykk for å aktivere' : headingUp ? 'Kursretning opp – trykk for Nord opp' : 'Nord opp – trykk for å deaktivere kompass'}
+          title={!compassEnabled ? 'Kompass av – trykk for kurs opp' : headingUp ? 'Kurs opp – trykk for Nord opp' : 'Nord opp – trykk for å slå av'}
         >
-          <CompassRose headingUp={headingUp} />
+          <CompassBtn compassEnabled={compassEnabled} headingUp={headingUp} />
         </button>
         <button
           className={`fab ${isTracking ? 'fab-rec' : ''}`}

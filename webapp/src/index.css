@@ -89,20 +89,30 @@ html, body, #root {
 .fab-dim { background: #1e3a5f; border-color: #2563eb; opacity: 0.75; }
 .fab-divider { height: 1px; background: rgba(255,255,255,0.12); margin: 2px 6px; }
 
-/* ── Compass FAB (heading-up toggle + north indicator) ── */
-.compass-fab { padding: 0; overflow: hidden; }
-.compass-rose {
-  display: flex; flex-direction: column; align-items: center; gap: 1px;
-  pointer-events: none;
-  /* No CSS transition — rAF drives the rotation directly at 60fps */
-}
-.compass-n {
-  font-size: 11px; font-weight: 900; color: #f87171;
-  line-height: 1; letter-spacing: -0.5px;
-}
-.compass-needle {
+/* ── Compass FAB — 3 distinct states ── */
+.compass-fab { padding: 0; overflow: visible; }
+
+/* OFF: dim, barely visible */
+.cmps-rose { display: flex; flex-direction: column; align-items: center; gap: 2px; pointer-events: none; }
+.cmps-off  { opacity: 0.35; }
+.cmps-n    { font-size: 15px; font-weight: 900; color: white; line-height: 1; }
+.cmps-needle {
   width: 3px; height: 14px; border-radius: 2px;
-  background: linear-gradient(to bottom, #f87171 50%, #64748b 50%);
+  background: linear-gradient(to bottom, #f87171 50%, rgba(255,255,255,0.25) 50%);
+}
+.cmps-label { font-size: 8px; font-weight: 800; color: rgba(255,255,255,0.9); letter-spacing: 0.1em; line-height: 1; }
+
+/* KRS-OPP: amber glow */
+.cmps-btn-krs {
+  background: #92400e !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 18px rgba(245,158,11,0.55), 0 2px 6px rgba(0,0,0,0.4) !important;
+}
+/* NORD-OPP: blue glow */
+.cmps-btn-nord {
+  background: #1e3a8a !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 14px rgba(96,165,250,0.45), 0 2px 6px rgba(0,0,0,0.4) !important;
 }
 
 /* ── Menu backdrop – catches taps on map to close menu ── */
@@ -262,10 +272,12 @@ html, body, #root {
 .speed-badge-fast .speed-badge-unit { font-size: 15px; color: #93c5fd; margin-top: 2px; font-weight: 600; }
 
 .mob-btn {
-  position: absolute;
-  top: max(14px, calc(env(safe-area-inset-top) + 8px));
-  left: max(100px, calc(env(safe-area-inset-left) + 96px));
-  z-index: 401;
+  position: fixed;
+  /* Sit centered on the white line between map and status bar */
+  bottom: calc(90px + env(safe-area-inset-bottom, 0px) - 28px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 600;
   width: 56px; height: 56px;
   border-radius: 50%;
   background: #dc2626;
