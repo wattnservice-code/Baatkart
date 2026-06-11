@@ -86,6 +86,7 @@ html, body, #root {
 }
 .fab:active { transform: scale(0.94); }
 .fab-active { background: #2563eb; border-color: #3b82f6; }
+.fab-dim { background: #1e3a5f; border-color: #2563eb; opacity: 0.75; }
 
 /* ── Compass FAB (heading-up toggle + north indicator) ── */
 .compass-fab { padding: 0; overflow: hidden; }
@@ -738,6 +739,7 @@ html, body, #root {
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 .day .fab-active { background: #2563eb; border-color: #3b82f6; color: white; }
+.day .fab-dim { background: #dbeafe; border-color: #93c5fd; opacity: 0.85; }
 
 .day .menu-panel {
   background: rgba(248,250,252,0.98);

@@ -61,6 +61,8 @@ export default function MapControls() {
   const isOnline         = useOnline()
   const headingUp        = useMapStore((s) => s.headingUp)
   const toggleHeadingUp  = useMapStore((s) => s.toggleHeadingUp)
+  const compassEnabled   = useMapStore((s) => s.compassEnabled)
+  const toggleCompass    = useMapStore((s) => s.toggleCompass)
   const followBoat       = useMapStore((s) => s.followBoat)
   const addingSpot       = useMapStore((s) => s.addingSpot)
   const isTracking       = useMapStore((s) => s.isTracking)
@@ -97,6 +99,22 @@ export default function MapControls() {
   const useGpsPos = () => { if (position) setGpsSpot({ lat: position.lat, lng: position.lng }) }
   const useMapPos = () => { setAddingSpot(true) }
 
+  // 3-state cycle: OFF → heading-up (compass on) → north-up (compass on) → OFF
+  const handleCompassBtn = async () => {
+    if (!compassEnabled) {
+      const DevOr = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
+      if (typeof DevOr.requestPermission === 'function') {
+        try { if (await DevOr.requestPermission() !== 'granted') return } catch { return }
+      }
+      toggleCompass()
+      if (!headingUp) toggleHeadingUp()
+    } else if (headingUp) {
+      toggleHeadingUp()
+    } else {
+      toggleCompass()
+    }
+  }
+
   return (
     <>
       {addingSpot && (
@@ -125,9 +143,9 @@ export default function MapControls() {
           <LocateFixed size={22} />
         </button>
         <button
-          className={`fab compass-fab ${headingUp ? 'fab-active' : ''}`}
-          onClick={toggleHeadingUp}
-          title={headingUp ? 'Kursretning opp – bytt til Nord opp' : 'Nord opp – bytt til Kursretning opp'}
+          className={`fab compass-fab ${compassEnabled && headingUp ? 'fab-active' : compassEnabled ? 'fab-dim' : ''}`}
+          onClick={handleCompassBtn}
+          title={!compassEnabled ? 'Kompass av – trykk for å aktivere' : headingUp ? 'Kursretning opp – trykk for Nord opp' : 'Nord opp – trykk for å deaktivere kompass'}
         >
           <CompassRose headingUp={headingUp} />
         </button>
