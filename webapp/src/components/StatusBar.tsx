@@ -17,6 +17,7 @@ export default function StatusBar() {
   const position          = useMapStore((s) => s.position)
   const isTracking        = useMapStore((s) => s.isTracking)
   const speedUnit         = useMapStore((s) => s.speedUnit)
+  const toggleSpeedUnit   = useMapStore((s) => s.toggleSpeedUnit)
   const offlineOnly       = useMapStore((s) => s.offlineOnly)
   const toggleOfflineOnly = useMapStore((s) => s.toggleOfflineOnly)
   const setOfflineOnly    = useMapStore((s) => s.setOfflineOnly)
@@ -47,11 +48,11 @@ export default function StatusBar() {
 
   return (
     <div className="status-bar">
-      <div className="status-item">
+      <button className="status-item status-coords-btn" onClick={toggleSpeedUnit} title="Trykk for å bytte enhet">
         <Gauge size={16} className="status-icon" />
         <span className="status-value">{position ? formatSpeed(position.speed, speedUnit) : '--'}</span>
         <span className="status-unit">{speedUnit === 'kn' ? 'kn' : 'km/t'}</span>
-      </div>
+      </button>
 
       <div className="status-divider" />
 
