@@ -165,14 +165,18 @@ export function useAIS() {
       ws.onclose = (ev) => {
         if (cancelled || ev.code === 1000) return   // intentional shutdown
 
-        // Unexpected close. The most common cause is aisstream's single-connection
-        // limit per key (a stale socket from a previous page/deploy still lingers).
-        // Retry with backoff — within a few seconds the old socket drops and the
-        // reconnect succeeds, so we never get stuck on a false "key rejected".
+        // Unexpected close. Most common cause is aisstream's single-connection
+        // limit per key: a stale socket (previous deploy) or the SAME app open on
+        // another device/tab is holding the only allowed slot. Retry with backoff.
         attempt += 1
-        const delayMs = Math.min(3000 * attempt, 20000)
+        const delayMs = Math.min(4000 * attempt, 30000)
         const secs = Math.round(delayMs / 1000)
-        setAisStatus({ state: 'connecting', count: markersRef.current.size, message: `Frakoblet – nytt forsøk om ${secs}s…` })
+        // After a few failed attempts it's almost certainly a competing connection,
+        // not a transient hiccup — tell the user so they can close the other one.
+        const msg = attempt >= 3
+          ? `AIS opptatt – er appen åpen et annet sted? (forsøk ${attempt})`
+          : `Frakoblet – nytt forsøk om ${secs}s…`
+        setAisStatus({ state: attempt >= 3 ? 'error' : 'connecting', count: markersRef.current.size, message: msg })
         reconnectRef.current = setTimeout(connect, delayMs)
       }
     }
