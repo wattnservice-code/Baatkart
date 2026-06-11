@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Trash2, RouteIcon, LocateFixed, Map, Globe } from 'lucide-react'
+import { X, Trash2, Navigation, LocateFixed, MapPin, Globe } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth } from '../googleEarth'
@@ -21,7 +21,7 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
 
   const isOnline = useOnline()
 
-  const [query, setQuery]       = useState('')
+  const [query, setQuery]         = useState('')
   const [confirmId, setConfirmId] = useState<string | null>(null)
 
   const filtered = savedSpots.filter((s) =>
@@ -37,14 +37,36 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
 
   return (
     <>
-      <div className="spot-panel">
-        <div className="spot-panel-header">
-          <span>Steder</span>
-          <button onClick={onClose}><X size={18} /></button>
+      <div className="settings-sheet">
+        <div className="settings-head">
+          <span className="settings-title">Steder</span>
+          <button className="settings-close" onClick={onClose}><X size={20} /></button>
         </div>
 
-        {/* Saved spots list */}
-        <div className="spot-panel-list">
+        <div className="settings-body">
+          {/* Primary actions — top */}
+          <div className="spots-actions">
+            <button className="spots-action-btn" onClick={handleAddGps} disabled={!position}>
+              <LocateFixed size={20} />
+              <span>Min posisjon</span>
+            </button>
+            <button className="spots-action-btn" onClick={handleAddMap}>
+              <MapPin size={20} />
+              <span>Velg på kartet</span>
+            </button>
+          </div>
+
+          {/* Search */}
+          <div className="spots-search">
+            <input
+              className="spot-panel-search-input"
+              placeholder="Søk i lagrede steder…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+
+          {/* Results */}
           {filtered.length === 0 && (
             <div className="spot-panel-empty">
               {savedSpots.length === 0 ? 'Ingen steder lagret ennå' : 'Ingen treff'}
@@ -62,7 +84,7 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
               </div>
               <div className="spot-panel-actions" onClick={(e) => e.stopPropagation()}>
                 <button className="spot-panel-btn spot-panel-nav" onClick={() => navigate(spot.lat, spot.lng, spot.name)} title="Naviger hit">
-                  <RouteIcon size={15} />
+                  <Navigation size={15} />
                 </button>
                 {isOnline && (
                   <button className="spot-panel-btn" style={{ background: '#065f46' }}
@@ -77,33 +99,6 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Add new spot */}
-        {(onAddGps || onAddMap) && (
-          <div className="spot-panel-add">
-            <div className="spot-panel-add-label">Legg til nytt sted</div>
-            {onAddGps && (
-              <button className="spot-panel-add-btn" onClick={handleAddGps} disabled={!position}>
-                <LocateFixed size={16} /> Min posisjon nå
-              </button>
-            )}
-            {onAddMap && (
-              <button className="spot-panel-add-btn" onClick={handleAddMap}>
-                <Map size={16} /> Velg på kartet
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Search – at the bottom so keyboard doesn't pop up automatically */}
-        <div className="spot-panel-search">
-          <input
-            className="spot-panel-search-input"
-            placeholder="Søk i lagrede steder…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
         </div>
       </div>
 

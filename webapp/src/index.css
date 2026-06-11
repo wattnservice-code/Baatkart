@@ -300,7 +300,24 @@ html, body, #root {
   cursor: pointer;
 }
 
-/* ── Spot list panel ── */
+/* ── Spot list panel — primary actions ── */
+.spots-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  padding: 14px 16px 10px;
+}
+.spots-action-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 8px;
+  background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 12px; color: #93c5fd; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background 0.15s;
+}
+.spots-action-btn:active { background: rgba(59,130,246,0.22); }
+.spots-action-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.spots-search { padding: 6px 16px 10px; }
+.day .spots-action-btn { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.25); color: #1d4ed8; }
+
+/* ── Spot list panel (floating, unused after sheet migration) ── */
 .spot-panel {
   position: absolute;
   bottom: 70px; right: 68px;
