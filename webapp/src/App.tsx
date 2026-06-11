@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { CloudSun, Waves } from 'lucide-react'
+import { Sun, Waves } from 'lucide-react'
 import MapView from './components/MapView'
 import StatusBar from './components/StatusBar'
 import BottomNav from './components/BottomNav'
@@ -53,8 +53,8 @@ export default function App() {
           onClick={toggleWxTide}
           title={wxTideActive ? 'Skjul vær og tidevann' : 'Vis vær og tidevann'}
         >
-          <CloudSun size={15} />
-          <Waves size={11} className="wx-tide-wave" />
+          <Sun size={16} className="wx-sun-icon" />
+          <Waves size={13} className="wx-tide-wave" />
         </button>
         <div className="map-left-panels">
           <WeatherOverlay />
