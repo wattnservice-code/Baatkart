@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import L from 'leaflet'
 import { useMapStore } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
+import { collisionAlarm } from '../audio'
 
 interface AISVessel {
   mmsi: number
@@ -88,6 +89,7 @@ export function useAIS() {
   const subTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reconnectRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const dangerRef     = useRef<Set<number>>(new Set())
+  const lastAlarmRef  = useRef(0)
 
   // Keep bounds ref current without triggering re-subscription immediately
   useEffect(() => { boundsRef.current = mapBounds }, [mapBounds])
@@ -193,8 +195,18 @@ export function useAIS() {
             ? computeCPA({ lat: pos.lat, lng: pos.lng, speedMs: pos.speed ?? 0, courseDeg: pos.heading ?? 0 }, vessel)
             : null
           const danger = isDanger(cpa)
+          const wasDanger = dangerRef.current.has(mmsi)
           if (danger) dangerRef.current.add(mmsi)
           else dangerRef.current.delete(mmsi)
+
+          // Sound + vibrate when a NEW vessel turns into a threat (throttled 8s)
+          if (danger && !wasDanger) {
+            const now = Date.now()
+            if (now - lastAlarmRef.current > 8000) {
+              lastAlarmRef.current = now
+              collisionAlarm()
+            }
+          }
 
           const existing = markersRef.current.get(mmsi)
           if (existing) {
