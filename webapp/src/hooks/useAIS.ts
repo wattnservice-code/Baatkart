@@ -90,6 +90,10 @@ export function useAIS() {
     }
 
     const ws = new WebSocket('wss://stream.aisstream.io/v0/stream')
+    // aisstream sends each report as a binary frame. Force ArrayBuffer so we can
+    // decode it synchronously — the default 'blob' makes e.data a Blob, and
+    // JSON.parse(String(blob)) === JSON.parse('[object Blob]') silently fails.
+    ws.binaryType = 'arraybuffer'
     wsRef.current = ws
 
     ws.onopen = () => {
@@ -99,7 +103,10 @@ export function useAIS() {
 
     ws.onmessage = (e: MessageEvent) => {
       try {
-        const msg = JSON.parse(e.data as string)
+        const raw = typeof e.data === 'string'
+          ? e.data
+          : new TextDecoder().decode(e.data as ArrayBuffer)
+        const msg = JSON.parse(raw)
 
         // aisstream surfaces auth/subscription problems as an `error` field
         if (msg.error || msg.Error) {
