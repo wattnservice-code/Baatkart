@@ -23,6 +23,7 @@ interface Props { onClose: () => void }
 export default function SettingsPanel({ onClose }: Props) {
   const [offlineOpen, setOfflineOpen]     = useState(false)
   const [boatInfoOpen, setBoatInfoOpen]   = useState(false)
+  const [aisKeyInput, setAisKeyInput]     = useState('')
   const [confirmTrack, setConfirmTrack]   = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
@@ -46,6 +47,8 @@ export default function SettingsPanel({ onClose }: Props) {
   const toggleSpeedUnit = useMapStore((s) => s.toggleSpeedUnit)
   const cycleDistUnit  = useMapStore((s) => s.cycleDistUnit)
   const cycleRingRadius      = useMapStore((s) => s.cycleRingRadius)
+  const aisKey               = useMapStore((s) => s.aisKey)
+  const setAisKey            = useMapStore((s) => s.setAisKey)
   const savedTracks          = useMapStore((s) => s.savedTracks)
   const followingTrack       = useMapStore((s) => s.followingTrack)
   const deleteSavedTrack     = useMapStore((s) => s.deleteSavedTrack)
@@ -109,6 +112,37 @@ export default function SettingsPanel({ onClose }: Props) {
           <button className="menu-item" style={{ color: compassEnabled ? '#60a5fa' : undefined }} onClick={handleCompassToggle}>
             <Compass size={20} /><span>Kompass {compassEnabled ? '(på)' : '(av)'}</span>
           </button>
+
+          <div className="menu-divider" />
+          <div style={subhead}>AIS – fartøy på kartet</div>
+          <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ fontSize: 12, color: '#64748b' }}>
+              Gratis nøkkel: <b style={{ color: '#38bdf8' }}>aisstream.io</b>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="text"
+                placeholder="Lim inn API-nøkkel"
+                value={aisKeyInput || aisKey}
+                onChange={(e) => setAisKeyInput(e.target.value)}
+                style={{
+                  flex: 1, padding: '8px 10px', borderRadius: 8,
+                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                  color: 'white', fontSize: 13, outline: 'none',
+                }}
+              />
+              <button
+                onClick={() => { setAisKey(aisKeyInput || aisKey); setAisKeyInput('') }}
+                style={{
+                  padding: '8px 14px', borderRadius: 8, border: 'none',
+                  background: '#2563eb', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                }}
+              >
+                Lagre
+              </button>
+            </div>
+            {aisKey && <div style={{ fontSize: 11, color: '#4ade80' }}>✓ Nøkkel lagret — bruk Ship-knappen på kartet</div>}
+          </div>
 
           <div className="menu-divider" />
           <div style={subhead}>Enheter</div>

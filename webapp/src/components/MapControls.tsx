@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, X, Plus, Minus, LocateFixed, Circle, Square, Globe, Map, Bookmark, Trash2, Sun, Moon } from 'lucide-react'
+import { Navigation, X, Plus, Minus, LocateFixed, Circle, Square, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -74,6 +74,9 @@ export default function MapControls() {
   const stopTracking     = useMapStore((s) => s.stopTracking)
   const darkMode         = useMapStore((s) => s.darkMode)
   const toggleDarkMode   = useMapStore((s) => s.toggleDarkMode)
+  const aisVisible       = useMapStore((s) => s.aisVisible)
+  const aisKey           = useMapStore((s) => s.aisKey)
+  const toggleAis        = useMapStore((s) => s.toggleAis)
   const speedUnit        = useMapStore((s) => s.speedUnit)
   const toggleSpeedUnit  = useMapStore((s) => s.toggleSpeedUnit)
   const distUnit         = useMapStore((s) => s.distUnit)
@@ -141,6 +144,13 @@ export default function MapControls() {
           title={compassEnabled ? 'Kurs opp aktiv – trykk for å slå av' : 'Trykk for kurs opp'}
         >
           <CompassBtn active={compassEnabled} />
+        </button>
+        <button
+          className={`fab ${aisVisible ? 'fab-active' : ''}`}
+          onClick={toggleAis}
+          title={aisVisible ? 'Skjul AIS-fartøy' : aisKey ? 'Vis AIS-fartøy' : 'AIS – legg inn API-nøkkel i innstillinger'}
+        >
+          <Ship size={20} />
         </button>
         <button
           className={`fab ${!darkMode ? 'fab-active' : ''}`}

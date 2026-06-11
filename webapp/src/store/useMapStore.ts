@@ -88,6 +88,8 @@ interface MapStore {
   currentWeather: { windSpeed: number; windDir: number; temp: number } | null
   offlineOnly: boolean
   offlineDownload: { status: 'downloading' | 'done' | 'error'; progress: number; total: number; skipped: number; areaName: string } | null
+  aisVisible: boolean
+  aisKey: string
   boatInfo: BoatInfo
   lookAhead: boolean
   headingUp: boolean
@@ -131,6 +133,8 @@ interface MapStore {
   toggleOfflineOnly: () => void
   setOfflineOnly: (v: boolean) => void
   setOfflineDownload: (d: { status: 'downloading' | 'done' | 'error'; progress: number; total: number; skipped: number; areaName: string } | null) => void
+  toggleAis: () => void
+  setAisKey: (key: string) => void
   setBoatInfo: (info: Partial<BoatInfo>) => void
   toggleLookAhead: () => void
   toggleHeadingUp: () => void
@@ -223,6 +227,8 @@ export const useMapStore = create<MapStore>((set) => ({
   currentWeather: null,
   offlineOnly: loadBool('offlineOnly', false),
   offlineDownload: null,
+  aisVisible: loadBool('aisVisible', false),
+  aisKey: localStorage.getItem('aisKey') ?? '',
   boatInfo: loadBoatInfo(),
   lookAhead: loadBool('lookAhead', false),
   headingUp: loadBool('headingUp', false),
@@ -318,6 +324,8 @@ export const useMapStore = create<MapStore>((set) => ({
   toggleOfflineOnly: () => set((s) => { const v = !s.offlineOnly; localStorage.setItem('offlineOnly', String(v)); return { offlineOnly: v } }),
   setOfflineOnly: (v) => { localStorage.setItem('offlineOnly', String(v)); set({ offlineOnly: v }) },
   setOfflineDownload: (d) => set({ offlineDownload: d }),
+  toggleAis: () => set((s) => { const v = !s.aisVisible; localStorage.setItem('aisVisible', String(v)); return { aisVisible: v } }),
+  setAisKey: (key) => { localStorage.setItem('aisKey', key); set({ aisKey: key }) },
   toggleLookAhead: () => set((s) => { const v = !s.lookAhead; localStorage.setItem('lookAhead', String(v)); return { lookAhead: v } }),
   toggleHeadingUp: () => set((s) => { const v = !s.headingUp; localStorage.setItem('headingUp', String(v)); return { headingUp: v } }),
 
