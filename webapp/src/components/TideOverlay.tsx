@@ -82,7 +82,7 @@ export default function TideOverlay() {
         <span className="info-error">Ingen tidedata</span>
       ) : (
         <>
-          {tide.station && <div className="tide-station">{tide.station}</div>}
+          {tide.station && <div className="tide-station">{tide.station} (nærmest)</div>}
           {tide.events.map((ev, i) => (
             <div key={i} className="tide-row">
               <span className={ev.type === 'high' ? 'tide-high' : 'tide-low'}>

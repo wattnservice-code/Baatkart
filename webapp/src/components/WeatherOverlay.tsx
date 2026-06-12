@@ -78,12 +78,18 @@ export default function WeatherOverlay() {
     )
       .then((r) => r.json())
       .then((data) => {
-        const navn = (data?.navn ?? []) as Array<{ skrivemåte?: string; meterFraPunkt?: number }>
+        // Kartverket nests the written name under navn[].stedsnavn[].skrivemåte
+        const navn = (data?.navn ?? []) as Array<{
+          meterFraPunkt?: number
+          stedsnavn?: Array<{ skrivemåte?: string; navnestatus?: string }>
+        }>
         if (!navn.length) { setPlace(null); return }
         const nearest = navn.reduce((a, b) =>
           (b.meterFraPunkt ?? 1e9) < (a.meterFraPunkt ?? 1e9) ? b : a
         )
-        setPlace(nearest.skrivemåte ?? null)
+        const sn = nearest.stedsnavn ?? []
+        const main = sn.find((s) => s.navnestatus === 'hovednavn') ?? sn[0]
+        setPlace(main?.skrivemåte ?? null)
       })
       .catch(() => setPlace(null))
   }, [weatherVisible, position?.lat, position?.lng])
