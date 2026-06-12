@@ -31,7 +31,9 @@ export default function WeatherOverlay() {
   const setCurrentWeather  = useMapStore((s) => s.setCurrentWeather)
   const [wx, setWx]        = useState<WxData | null>(null)
   const [err, setErr]      = useState<string | null>(null)
+  const [place, setPlace]  = useState<string | null>(null)
   const fetchedKey         = useRef<string | null>(null)
+  const placeKey           = useRef<string | null>(null)
 
   useEffect(() => {
     if (!weatherVisible) return
@@ -61,6 +63,31 @@ export default function WeatherOverlay() {
       .catch(() => setErr('api'))
   }, [weatherVisible, position?.lat, position?.lng, setCurrentWeather])
 
+  // Nearest place name via Kartverket stedsnavn (Norwegian, no API key).
+  // Coarser key (~1 km) so we don't re-query on every GPS tick.
+  useEffect(() => {
+    if (!weatherVisible || !position) return
+    const key = `${position.lat.toFixed(2)},${position.lng.toFixed(2)}`
+    if (placeKey.current === key) return
+    placeKey.current = key
+
+    fetch(
+      `https://api.kartverket.no/stedsnavn/v1/punkt` +
+      `?nord=${position.lat.toFixed(4)}&ost=${position.lng.toFixed(4)}` +
+      `&koordsys=4258&radius=5000&treffPerSide=10&utkoordsys=4258`
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        const navn = (data?.navn ?? []) as Array<{ skrivemåte?: string; meterFraPunkt?: number }>
+        if (!navn.length) { setPlace(null); return }
+        const nearest = navn.reduce((a, b) =>
+          (b.meterFraPunkt ?? 1e9) < (a.meterFraPunkt ?? 1e9) ? b : a
+        )
+        setPlace(nearest.skrivemåte ?? null)
+      })
+      .catch(() => setPlace(null))
+  }, [weatherVisible, position?.lat, position?.lng])
+
   if (!weatherVisible) return null
 
   const ms = wx ? wx.windSpeed.toFixed(1) : null
@@ -75,6 +102,7 @@ export default function WeatherOverlay() {
         <span className="info-loading">Laster vær…</span>
       ) : (
         <>
+          {place && <div className="tide-station">{place}</div>}
           <div className="wx-row">
             {/* Arrow points direction wind blows TO */}
             <span className="wx-arrow" style={{ transform: `rotate(${wx.windDir + 180}deg)` }}>↑</span>
