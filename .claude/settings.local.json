@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Skill(firecrawl-search)",
-      "Skill(firecrawl-search:*)"
+      "Skill(firecrawl-search:*)",
+      "mcp__f1755b54-581f-4247-ac9a-45038f31d9c6__search_files"
     ]
   }
 }
