@@ -1059,6 +1059,17 @@ html, body, #root {
 .ais-status-error      { background: rgba(220,38,38,0.95); }
 .ais-status-idle       { background: rgba(71,85,105,0.9); }
 
+/* On narrow portrait phones a long warn message would overrun into the MOB
+   (left) and weather (right) corner buttons. Cap the width and let it wrap. */
+@media (max-width: 480px) and (orientation: portrait) {
+  .ais-status {
+    max-width: calc(100vw - 150px);
+    white-space: normal;
+    text-align: center;
+    line-height: 1.25;
+  }
+}
+
 @keyframes aisStatusPulse {
   0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.35); }
   50%      { box-shadow: 0 0 14px 4px rgba(239,68,68,0.85); }
@@ -1415,6 +1426,13 @@ html, body, #root {
 @media (orientation: landscape) and (max-height: 430px) {
   .fab { width: 37px; height: 37px; }
   .map-controls { gap: 4px; padding: 5px; bottom: 6px; }
+}
+/* Smallest landscape phones (iPhone SE 1st-gen class, ≤360px tall): 8 FABs
+   would run off the top, so shrink one more notch. */
+@media (orientation: landscape) and (max-height: 360px) {
+  .fab { width: 33px; height: 33px; }
+  .map-controls { gap: 3px; padding: 4px; bottom: 5px; }
+  .fab-divider { margin: 0 6px; }
 }
 
 /* ── Tablet: bigger touch targets (primary use is a tablet in the cockpit) ──
