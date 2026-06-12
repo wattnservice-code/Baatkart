@@ -14,9 +14,15 @@ interface AISVessel {
 }
 
 function vesselColor(sog: number): string {
-  if (sog < 0.5) return '#64748b'   // stationary — gray
-  if (sog < 5)   return '#38bdf8'   // slow — cyan
-  return '#4ade80'                   // moving — green
+  if (sog < 5) return '#38bdf8'   // slow — cyan
+  return '#4ade80'                 // moving — green
+}
+
+function vesselSize(zoom: number): number {
+  if (zoom >= 16) return 30
+  if (zoom >= 14) return 24
+  if (zoom >= 12) return 20
+  return 16
 }
 
 // ── Collision (CPA/TCPA) ──────────────────────────────────────────────
@@ -57,24 +63,23 @@ function isDanger(cpa: CpaInfo | null): boolean {
   return !!cpa && cpa.tcpaMin > 0 && cpa.tcpaMin < DANGER_TCPA_MIN && cpa.cpaM < DANGER_CPA_M
 }
 
-const ICON_SIZE = 26
-
-function vesselIcon(vessel: AISVessel, danger: boolean): L.DivIcon {
+function vesselIcon(vessel: AISVessel, danger: boolean, zoom: number): L.DivIcon {
+  const sz = vesselSize(zoom)
   const hdg = vessel.heading > 0 && vessel.heading < 360 ? vessel.heading : 0
   const color = danger ? '#ef4444' : vesselColor(vessel.sog)
   const wrapCls = danger ? 'ais-danger-wrap' : ''
-  const html = `<div class="${wrapCls}" style="width:${ICON_SIZE}px;height:${ICON_SIZE}px;">
+  const html = `<div class="${wrapCls}" style="width:${sz}px;height:${sz}px;">
     <div style="
-      width:${ICON_SIZE}px;height:${ICON_SIZE}px;
+      width:${sz}px;height:${sz}px;
       transform:rotate(${hdg}deg);
       filter:drop-shadow(0 1px 4px rgba(0,0,0,0.85));
     ">
-      <svg width="${ICON_SIZE}" height="${ICON_SIZE}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <svg width="${sz}" height="${sz}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <polygon points="12,2 21,22 12,17 3,22" fill="${color}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
       </svg>
     </div>
   </div>`
-  return L.divIcon({ className: '', html, iconSize: [ICON_SIZE, ICON_SIZE], iconAnchor: [ICON_SIZE / 2, ICON_SIZE / 2] })
+  return L.divIcon({ className: '', html, iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2] })
 }
 
 export function useAIS() {
@@ -181,13 +186,25 @@ export function useAIS() {
 
           attempt = 0   // healthy data — reset backoff
 
+          const sog = (rep.Sog ?? 0) as number
+
+          // Drop stationary vessels — they're clutter, not navigation hazards
+          if (sog < 0.5) {
+            const old = markersRef.current.get(mmsi)
+            if (old) { old.remove(); markersRef.current.delete(mmsi) }
+            dangerRef.current.delete(mmsi)
+            return
+          }
+
           const vessel: AISVessel = {
             mmsi,
             lat, lng,
             heading: (rep.TrueHeading !== 511 ? rep.TrueHeading : rep.Cog) as number,
-            sog: (rep.Sog ?? 0) as number,
+            sog,
             name: (meta.ShipName as string ?? '').trim() || `MMSI ${mmsi}`,
           }
+
+          const zoom = getMapInstance()?.getZoom() ?? 13
 
           // Collision check against own boat (needs a GPS fix)
           const pos = useMapStore.getState().position
@@ -211,11 +228,11 @@ export function useAIS() {
           const existing = markersRef.current.get(mmsi)
           if (existing) {
             existing.setLatLng([lat, lng])
-            existing.setIcon(vesselIcon(vessel, danger))
+            existing.setIcon(vesselIcon(vessel, danger, zoom))
             existing.getPopup()?.setContent(popupContent(vessel, cpa, danger))
           } else {
             if (!layerRef.current) return
-            const marker = L.marker([lat, lng], { icon: vesselIcon(vessel, danger), zIndexOffset: danger ? 600 : 200 })
+            const marker = L.marker([lat, lng], { icon: vesselIcon(vessel, danger, zoom), zIndexOffset: danger ? 600 : 200 })
             marker.bindPopup(popupContent(vessel, cpa, danger), { maxWidth: 220 })
             marker.addTo(layerRef.current)
             markersRef.current.set(mmsi, marker)

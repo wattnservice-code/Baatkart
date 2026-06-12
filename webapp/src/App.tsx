@@ -24,6 +24,7 @@ export default function App() {
   useAIS()
   const compassEnabled   = useMapStore((s) => s.compassEnabled)
   const darkMode         = useMapStore((s) => s.darkMode)
+  const nightVision      = useMapStore((s) => s.nightVision)
   const weatherVisible   = useMapStore((s) => s.weatherVisible)
   const tideVisible      = useMapStore((s) => s.tideVisible)
   const toggleWeather    = useMapStore((s) => s.toggleWeather)
@@ -47,7 +48,7 @@ export default function App() {
   }, [])
 
   return (
-    <div className={`app-root ${darkMode ? '' : 'day'}`}>
+    <div className={`app-root ${darkMode ? '' : 'day'}${nightVision ? ' night-vision' : ''}`}>
       <div className="map-wrapper">
         <MapView />
         <MapControls />

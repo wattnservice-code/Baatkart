@@ -1417,6 +1417,33 @@ html, body, #root {
   .map-controls { gap: 4px; padding: 5px; bottom: 6px; }
 }
 
+/* ── Tablet: bigger touch targets (primary use is a tablet in the cockpit) ──
+   min-width 760 + min-height 600 catches iPad in both orientations but excludes
+   phones (a phone in landscape is wide but < 600 tall). Wet hands + spray need
+   larger targets; phones keep the compact layout. */
+@media (min-width: 760px) and (min-height: 600px) {
+  .fab { width: 60px; height: 60px; }
+  .map-controls { gap: 11px; }
+  .compass-fab .cmps-n { font-size: 18px; }
+  .wx-tide-toggle { width: 64px; height: 64px; }
+  .mob-btn { width: 66px; height: 66px; font-size: 15px; }
+  .speed-badge-slow { min-width: 68px; padding: 8px 14px; }
+  .speed-badge-slow .speed-badge-val { font-size: 30px; }
+  .speed-badge-slow .speed-badge-unit { font-size: 13px; }
+  .bottom-nav-item { font-size: 13px; padding: 12px 4px 11px; }
+  .status-bar { font-size: 15px; padding: 10px 20px; }
+  .ais-status { font-size: 15px; padding: 8px 18px; }
+  .nav-overlay { min-width: 260px; }
+  .nav-dist-big { font-size: 46px; }
+  .nav-eta-big { font-size: 25px; }
+  .spot-action-btn { font-size: 16px; padding: 15px 12px; }
+}
+
+/* Tablet in landscape: status column a touch wider for the larger fonts */
+@media (min-width: 760px) and (min-height: 600px) and (orientation: landscape) {
+  .app-root { grid-template-columns: max(92px, calc(env(safe-area-inset-left) + 72px)) 1fr; }
+}
+
 /* ── REC (tracking) FAB ── */
 .fab-rec {
   background: #dc2626;
@@ -1461,3 +1488,30 @@ html, body, #root {
 .day .settings-close { color: #475569; }
 .day .menu-item { color: #0f172a; border-bottom-color: rgba(0,0,0,0.06); }
 .day .menu-item:hover { background: rgba(0,0,0,0.04); }
+
+/* ── Night vision mode ───────────────────────────────────────────────────── */
+/* Red/amber tint over map — preserves dark-adapted night vision.            */
+/* Only active when .night-vision is set on .app-root.                       */
+.night-vision .map-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(180, 20, 0, 0.18);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 800;
+}
+.night-vision .leaflet-tile {
+  filter: saturate(0) brightness(0.55) sepia(1) hue-rotate(320deg) saturate(2.5) brightness(0.85);
+}
+/* Dim all UI chrome so it doesn't blind in the dark */
+.night-vision .fab,
+.night-vision .speed-badge,
+.night-vision .ais-status,
+.night-vision .map-banner {
+  opacity: 0.65;
+  filter: sepia(0.6) hue-rotate(320deg);
+}
+.night-vision .wx-tide-toggle { opacity: 0.55; filter: sepia(0.6) hue-rotate(320deg); }
+/* Active night vision button — show it's on */
+.fab-nightvision { background: #7f1d1d !important; color: #fca5a5 !important; }

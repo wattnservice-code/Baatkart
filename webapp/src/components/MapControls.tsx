@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, X, Plus, Minus, LocateFixed, Circle, Square, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship } from 'lucide-react'
+import { Navigation, X, Plus, Minus, LocateFixed, Circle, Square, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -74,6 +74,8 @@ export default function MapControls() {
   const stopTracking     = useMapStore((s) => s.stopTracking)
   const darkMode         = useMapStore((s) => s.darkMode)
   const toggleDarkMode   = useMapStore((s) => s.toggleDarkMode)
+  const nightVision      = useMapStore((s) => s.nightVision)
+  const toggleNightVision = useMapStore((s) => s.toggleNightVision)
   const aisVisible       = useMapStore((s) => s.aisVisible)
   const aisKey           = useMapStore((s) => s.aisKey)
   const toggleAis        = useMapStore((s) => s.toggleAis)
@@ -174,6 +176,13 @@ export default function MapControls() {
           title={darkMode ? 'Bytt til dagmodus' : 'Bytt til nattmodus'}
         >
           {darkMode ? <Sun size={22} /> : <Moon size={22} />}
+        </button>
+        <button
+          className={`fab ${nightVision ? 'fab-nightvision' : ''}`}
+          onClick={toggleNightVision}
+          title={nightVision ? 'Slå av nattmodus' : 'Nattmodus (rødt lys)'}
+        >
+          <Eye size={20} />
         </button>
         <div className="fab-divider" />
         <button className="fab" onClick={() => getMapInstance()?.zoomIn()} title="Zoom inn">
