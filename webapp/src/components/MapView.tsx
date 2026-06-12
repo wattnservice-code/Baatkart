@@ -156,8 +156,10 @@ export default function MapView() {
   const boatMarkerRef   = useRef<L.Marker | null>(null)
   const trackLineRef    = useRef<L.Polyline | null>(null)
   const courseLineRef   = useRef<L.Polyline | null>(null)
+  const courseCasingRef = useRef<L.Polyline | null>(null)
   const compassLineRef  = useRef<L.Polyline | null>(null)
   const rangeRingRef    = useRef<L.Circle | null>(null)
+  const accuracyRingRef = useRef<L.Circle | null>(null)
   const ringLabelRef    = useRef<L.Marker | null>(null)
   const mobTrackLineRef   = useRef<L.Polyline | null>(null)
   const mobMarkerRef      = useRef<L.Marker | null>(null)
@@ -170,6 +172,8 @@ export default function MapView() {
   const baseTileRef     = useRef<L.TileLayer | null>(null)
   const kartvTileRef    = useRef<L.TileLayer | null>(null)
   const seamarkTileRef  = useRef<L.TileLayer | null>(null)
+  const resumeFollowRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wasMovingRef    = useRef(false)
   const spotMarkersRef      = useRef<Map<string, L.Marker>>(new Map())
   const followTrackLineRef  = useRef<L.Polyline | null>(null)
 
@@ -223,7 +227,16 @@ export default function MapView() {
       attribution: SEAMARK_ATTR, maxZoom: 19,
     }, 'seamark').addTo(map)
     setMapInstance(map)
-    map.on('dragstart', () => setFollowBoat(false))
+    map.on('dragstart', () => {
+      setFollowBoat(false)
+      // Auto-resume: if boat is still moving and user hasn't dragged again within 10s, re-lock onto boat
+      if (resumeFollowRef.current) clearTimeout(resumeFollowRef.current)
+      resumeFollowRef.current = setTimeout(() => {
+        if ((useMapStore.getState().position?.speed ?? 0) > 0.3) {
+          useMapStore.getState().setFollowBoat(true)
+        }
+      }, 10000)
+    })
 
     const updateBounds = () => {
       const b = map.getBounds()
@@ -259,7 +272,10 @@ export default function MapView() {
     })
 
     mapRef.current = map
-    return () => { map.remove(); mapRef.current = null; setMapInstance(null) }
+    return () => {
+      if (resumeFollowRef.current) clearTimeout(resumeFollowRef.current)
+      map.remove(); mapRef.current = null; setMapInstance(null)
+    }
   }, [setFollowBoat])
 
   // Keep position ref current
@@ -314,6 +330,13 @@ export default function MapView() {
     const map = mapRef.current
     const latlng: L.LatLngExpression = [position.lat, position.lng]
     const zoom = map.getZoom()
+
+    // Auto-zoom to navigation level when the boat starts moving and follow is on
+    const isMoving = (position.speed ?? 0) > 0.5
+    if (isMoving && !wasMovingRef.current && followBoat && zoom < 13) {
+      map.setZoom(14, { animate: true })
+    }
+    wasMovingRef.current = isMoving
     const mpp = (156543 * Math.cos(position.lat * Math.PI / 180)) / Math.pow(2, zoom)
     const speedRadius = position.speed > 0.5 ? Math.max(100, Math.min(10000, position.speed * 120)) : ringRadius(zoom)
     const radius = customRingRadius ?? speedRadius
@@ -348,15 +371,35 @@ export default function MapView() {
     const courseLen = Math.max(mpp * screenH * 0.4, Math.min(position.speed * 300, mpp * screenH))
     const courseEnd = destPoint(position.lat, position.lng, position.heading, courseLen)
     if (!courseLineRef.current) {
-      courseLineRef.current = L.polyline([latlng, courseEnd], { color: '#fb923c', weight: 3, opacity: 0.9, dashArray: '8, 6' }).addTo(map)
+      // Dark casing under the orange course predictor so it stays readable on a
+      // pale day chart (orange-on-beige otherwise washes out).
+      courseCasingRef.current = L.polyline([latlng, courseEnd], { color: '#0f172a', weight: 5, opacity: 0.35 }).addTo(map)
+      courseLineRef.current = L.polyline([latlng, courseEnd], { color: '#fb923c', weight: 3, opacity: 0.95, dashArray: '8, 6' }).addTo(map)
     } else {
+      courseCasingRef.current?.setLatLngs([latlng, courseEnd])
       courseLineRef.current.setLatLngs([latlng, courseEnd])
+    }
+
+    // GPS accuracy circle — shows how confident the fix is (Google-Maps style).
+    // Only when the figure is meaningful so a sharp fix doesn't clutter the view.
+    const acc = position.accuracy
+    if (acc && acc > 8 && acc < 1000) {
+      if (!accuracyRingRef.current) {
+        accuracyRingRef.current = L.circle(latlng, {
+          radius: acc, color: '#38bdf8', weight: 1, opacity: 0.4,
+          fill: true, fillColor: '#38bdf8', fillOpacity: 0.08, interactive: false,
+        }).addTo(map)
+      } else {
+        accuracyRingRef.current.setLatLng(latlng).setRadius(acc)
+      }
+    } else {
+      accuracyRingRef.current?.remove(); accuracyRingRef.current = null
     }
 
     // Range ring
     if (!rangeRingRef.current) {
       rangeRingRef.current = L.circle(latlng, {
-        radius, color: '#3b82f6', weight: 2, opacity: 0.8,
+        radius, color: '#3b82f6', weight: 2.5, opacity: 0.9,
         fill: true, fillColor: '#3b82f6', fillOpacity: 0.05,
       }).addTo(map)
     } else {

@@ -193,11 +193,15 @@ export default function MapControls() {
         <button className="fab" onClick={() => getMapInstance()?.zoomOut()} title="Zoom ut">
           <Minus size={22} />
         </button>
-        <button className={`fab ${followBoat ? 'fab-active' : ''}`} onClick={() => {
-          setFollowBoat(true)
-          const m = getMapInstance()
-          if (m && m.getZoom() < 14) m.setZoom(14)
-        }} title="Sentrer kart">
+        <button
+          className={`fab ${followBoat ? 'fab-active' : (position?.speed ?? 0) > 0.3 ? 'fab-locate-lost' : ''}`}
+          onClick={() => {
+            setFollowBoat(true)
+            const m = getMapInstance()
+            if (m && m.getZoom() < 14) m.setZoom(14)
+          }}
+          title={followBoat ? 'Følger båten' : 'Tilbake til båten'}
+        >
           <LocateFixed size={22} />
         </button>
         <button

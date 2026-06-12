@@ -1515,3 +1515,13 @@ html, body, #root {
 .night-vision .wx-tide-toggle { opacity: 0.55; filter: sepia(0.6) hue-rotate(320deg); }
 /* Active night vision button — show it's on */
 .fab-nightvision { background: #7f1d1d !important; color: #fca5a5 !important; }
+
+/* Pulsing locate button when follow is lost and boat is moving */
+@keyframes locatePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251,146,60,0.6), var(--fab-shadow); }
+  60%       { box-shadow: 0 0 0 10px rgba(251,146,60,0), var(--fab-shadow); }
+}
+.fab-locate-lost {
+  color: #fb923c !important;
+  animation: locatePulse 1.8s ease-out infinite;
+}
