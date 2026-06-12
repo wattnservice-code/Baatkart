@@ -163,13 +163,15 @@ export default function MapControls() {
         >
           <CompassBtn active={compassEnabled} />
         </button>
-        <button
-          className={`fab ${aisVisible ? 'fab-active' : ''}`}
-          onClick={toggleAis}
-          title={aisVisible ? 'Skjul AIS-fartøy' : aisKey ? 'Vis AIS-fartøy' : 'AIS – legg inn API-nøkkel i innstillinger'}
-        >
-          <Ship size={20} />
-        </button>
+        {aisKey && (
+          <button
+            className={`fab ${aisVisible ? 'fab-active' : ''}`}
+            onClick={toggleAis}
+            title={aisVisible ? 'Skjul AIS-fartøy' : 'Vis AIS-fartøy'}
+          >
+            <Ship size={20} />
+          </button>
+        )}
         <button
           className={`fab ${!darkMode ? 'fab-active' : ''}`}
           onClick={toggleDarkMode}
