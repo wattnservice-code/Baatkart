@@ -1470,17 +1470,14 @@ html, body, #root {
 }
 
 /* ── REC (tracking) FAB ── */
+/* Steady red (no pulse): tracking auto-starts on launch, so a constant blink
+   would just be ambient noise. The red square already reads as "tap to stop". */
 .fab-rec {
   background: #dc2626;
   border-color: #fca5a5;
   color: white;
-  animation: rec-pulse 1.6s infinite;
 }
 .day .fab-rec { background: #dc2626; border-color: #fca5a5; color: white; }
-@keyframes rec-pulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.5); }
-  50%      { box-shadow: 0 0 0 7px rgba(220,38,38,0); }
-}
 
 /* ── Settings sheet ("Meg") ── */
 .settings-sheet {

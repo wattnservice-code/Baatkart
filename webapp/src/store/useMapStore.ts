@@ -113,6 +113,7 @@ interface MapStore {
   toggleCompass: () => void
   toggleDarkMode: () => void
   toggleNightVision: () => void
+  cycleDisplayMode: () => void   // day → night → night-vision → day
   toggleSeamark: () => void
   toggleWeather: () => void
   toggleTide: () => void
@@ -305,6 +306,17 @@ export const useMapStore = create<MapStore>((set) => ({
       return { nightVision: next, darkMode: true }
     }
     return { nightVision: next }
+  }),
+  // Single button cycles the three display modes:
+  // 1 day (light) → 2 night (dark) → 3 night-vision (dark + red) → back to day
+  cycleDisplayMode: () => set((s) => {
+    let darkMode: boolean, nightVision: boolean
+    if (!s.darkMode && !s.nightVision)      { darkMode = true;  nightVision = false } // day → night
+    else if (s.darkMode && !s.nightVision)  { darkMode = true;  nightVision = true  } // night → night-vision
+    else                                    { darkMode = false; nightVision = false } // → day
+    localStorage.setItem('darkMode', String(darkMode))
+    localStorage.setItem('nightVision', String(nightVision))
+    return { darkMode, nightVision }
   }),
   toggleSpeedUnit: () => set((s) => {
     const next: SpeedUnit = s.speedUnit === 'kn' ? 'kmh' : 'kn'

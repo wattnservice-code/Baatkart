@@ -73,9 +73,8 @@ export default function MapControls() {
   const startTracking    = useMapStore((s) => s.startTracking)
   const stopTracking     = useMapStore((s) => s.stopTracking)
   const darkMode         = useMapStore((s) => s.darkMode)
-  const toggleDarkMode   = useMapStore((s) => s.toggleDarkMode)
   const nightVision      = useMapStore((s) => s.nightVision)
-  const toggleNightVision = useMapStore((s) => s.toggleNightVision)
+  const cycleDisplayMode = useMapStore((s) => s.cycleDisplayMode)
   const aisVisible       = useMapStore((s) => s.aisVisible)
   const aisKey           = useMapStore((s) => s.aisKey)
   const toggleAis        = useMapStore((s) => s.toggleAis)
@@ -173,18 +172,15 @@ export default function MapControls() {
           </button>
         )}
         <button
-          className={`fab ${!darkMode ? 'fab-active' : ''}`}
-          onClick={toggleDarkMode}
-          title={darkMode ? 'Bytt til dagmodus' : 'Bytt til nattmodus'}
+          className={`fab ${nightVision ? 'fab-nightvision' : !darkMode ? 'fab-active' : ''}`}
+          onClick={cycleDisplayMode}
+          title={
+            nightVision ? 'Nattsyn (rødt) – trykk for dag'
+            : darkMode  ? 'Natt – trykk for nattsyn'
+            :             'Dag – trykk for natt'
+          }
         >
-          {darkMode ? <Sun size={22} /> : <Moon size={22} />}
-        </button>
-        <button
-          className={`fab ${nightVision ? 'fab-nightvision' : ''}`}
-          onClick={toggleNightVision}
-          title={nightVision ? 'Slå av nattmodus' : 'Nattmodus (rødt lys)'}
-        >
-          <Eye size={20} />
+          {nightVision ? <Eye size={22} /> : darkMode ? <Moon size={22} /> : <Sun size={22} />}
         </button>
         <div className="fab-divider" />
         <button className="fab" onClick={() => getMapInstance()?.zoomIn()} title="Zoom inn">
