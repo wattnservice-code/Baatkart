@@ -264,7 +264,7 @@ export default function MapView() {
       if (rangeRingRef.current && pos) {
         const r = customR ?? ringRadius(zoom)
         rangeRingRef.current.setRadius(r)
-        const labelPos = destPoint(pos.lat, pos.lng, (pos.heading + 180) % 360, r)
+        const labelPos = destPoint(pos.lat, pos.lng, (pos.heading + 270) % 360, r)
         ringLabelRef.current?.setLatLng(labelPos)
         const el = ringLabelRef.current?.getElement()?.querySelector('.ring-label')
         if (el) el.textContent = formatRingLabel(r)
@@ -333,8 +333,8 @@ export default function MapView() {
 
     // Auto-zoom to navigation level when the boat starts moving and follow is on
     const isMoving = (position.speed ?? 0) > 0.5
-    if (isMoving && !wasMovingRef.current && followBoat && zoom < 13) {
-      map.setZoom(14, { animate: true })
+    if (isMoving && !wasMovingRef.current && followBoat && zoom < 12) {
+      map.setZoom(13, { animate: true })
     }
     wasMovingRef.current = isMoving
     const mpp = (156543 * Math.cos(position.lat * Math.PI / 180)) / Math.pow(2, zoom)
@@ -346,7 +346,7 @@ export default function MapView() {
     if (!boatMarkerRef.current) {
       const icon = L.divIcon({ className: '', html: boatSvg(position.heading, size), iconSize: [size, size], iconAnchor: [size / 2, size / 2] })
       boatMarkerRef.current = L.marker(latlng, { icon, zIndexOffset: 1000 }).addTo(map)
-      map.setView(latlng, Math.max(zoom, 14), { animate: false })
+      map.setView(latlng, Math.max(zoom, 13), { animate: false })
     } else {
       boatMarkerRef.current.setLatLng(latlng)
       if (followBoat) {
@@ -406,8 +406,9 @@ export default function MapView() {
       rangeRingRef.current.setLatLng(latlng).setRadius(radius)
     }
 
-    // Ring label behind the boat
-    const labelPos = destPoint(position.lat, position.lng, (position.heading + 180) % 360, radius)
+    // Ring label to the port side of the ring (90° left of heading) so it stays
+    // on-screen when the boat is pushed low by look-ahead while moving.
+    const labelPos = destPoint(position.lat, position.lng, (position.heading + 270) % 360, radius)
     if (!ringLabelRef.current) {
       ringLabelRef.current = L.marker(labelPos, {
         icon: ringLabelIcon(radius),

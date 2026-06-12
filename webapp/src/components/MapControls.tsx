@@ -198,7 +198,7 @@ export default function MapControls() {
           onClick={() => {
             setFollowBoat(true)
             const m = getMapInstance()
-            if (m && m.getZoom() < 14) m.setZoom(14)
+            if (m && m.getZoom() < 13) m.setZoom(13)
           }}
           title={followBoat ? 'Følger båten' : 'Tilbake til båten'}
         >

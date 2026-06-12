@@ -13,6 +13,37 @@ interface AISVessel {
   name: string
 }
 
+// Static/voyage data (AIS message type 5) — arrives separately from position
+// reports and rarely changes, so we cache it per MMSI and merge into the popup.
+interface ShipStatic {
+  type?: string        // readable category, e.g. "Lasteskip"
+  length?: number      // metres
+  beam?: number        // metres
+  draught?: number     // metres
+  destination?: string
+  callSign?: string
+  imo?: number
+}
+
+// AIS ship-type code → Norwegian label (broad categories)
+function shipTypeLabel(code: number): string | undefined {
+  if (!code) return undefined
+  if (code === 30) return 'Fiskefartøy'
+  if (code === 31 || code === 32 || code === 52) return 'Slepebåt'
+  if (code === 35) return 'Militært'
+  if (code === 36) return 'Seilbåt'
+  if (code === 37) return 'Fritidsbåt'
+  if (code >= 40 && code <= 49) return 'Hurtigbåt'
+  if (code === 50) return 'Losbåt'
+  if (code === 51) return 'Redningsfartøy'
+  if (code === 53) return 'Arbeidsbåt'
+  if (code === 55) return 'Myndighet'
+  if (code >= 60 && code <= 69) return 'Passasjerskip'
+  if (code >= 70 && code <= 79) return 'Lasteskip'
+  if (code >= 80 && code <= 89) return 'Tankskip'
+  return undefined
+}
+
 function vesselColor(sog: number): string {
   if (sog < 5) return '#38bdf8'   // slow — cyan
   return '#4ade80'                 // moving — green
@@ -95,6 +126,7 @@ export function useAIS() {
   const reconnectRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const dangerRef     = useRef<Set<number>>(new Set())
   const lastAlarmRef  = useRef(0)
+  const staticRef     = useRef<Map<number, ShipStatic>>(new Map())
 
   // Keep bounds ref current without triggering re-subscription immediately
   useEffect(() => { boundsRef.current = mapBounds }, [mapBounds])
@@ -112,7 +144,7 @@ export function useAIS() {
     ws.send(JSON.stringify({
       APIKey: aisKey,
       BoundingBoxes: [box],
-      FilterMessageTypes: ['PositionReport'],
+      FilterMessageTypes: ['PositionReport', 'ShipStaticData'],
     }))
   }, [aisKey])
 
@@ -131,6 +163,7 @@ export function useAIS() {
       layerRef.current?.clearLayers()
       markersRef.current.clear()
       dangerRef.current.clear()
+      staticRef.current.clear()
       useMapStore.getState().setAisStatus({ state: 'idle', count: 0, message: '' })
       return
     }
@@ -170,6 +203,35 @@ export function useAIS() {
           // aisstream surfaces auth/subscription problems as an `error` field
           if (msg.error || msg.Error) {
             setAisStatus({ state: 'error', count: markersRef.current.size, message: String(msg.error || msg.Error) })
+            return
+          }
+
+          // Static/voyage data — cache it and refresh the popup if open
+          if (msg.MessageType === 'ShipStaticData') {
+            const sd = msg.Message?.ShipStaticData
+            const m  = msg.MetaData
+            if (!sd || !m) return
+            const mmsi = m.MMSI as number
+            const dim  = sd.Dimension ?? {}
+            const stat: ShipStatic = {
+              type: shipTypeLabel(sd.Type as number),
+              length: dim.A != null && dim.B != null ? dim.A + dim.B : undefined,
+              beam: dim.C != null && dim.D != null ? dim.C + dim.D : undefined,
+              draught: sd.MaximumStaticDraught || undefined,
+              destination: (sd.Destination as string ?? '').trim() || undefined,
+              callSign: (sd.CallSign as string ?? '').trim() || undefined,
+              imo: sd.ImoNumber || undefined,
+            }
+            staticRef.current.set(mmsi, stat)
+            const mk = markersRef.current.get(mmsi)
+            if (mk?.isPopupOpen()) {
+              const name = (m.ShipName as string ?? '').trim() || `MMSI ${mmsi}`
+              const ll = mk.getLatLng()
+              mk.getPopup()?.setContent(popupContent(
+                { mmsi, lat: ll.lat, lng: ll.lng, heading: 0, sog: 0, name },
+                null, dangerRef.current.has(mmsi), stat,
+              ))
+            }
             return
           }
 
@@ -225,15 +287,16 @@ export function useAIS() {
             }
           }
 
+          const stat = staticRef.current.get(mmsi)
           const existing = markersRef.current.get(mmsi)
           if (existing) {
             existing.setLatLng([lat, lng])
             existing.setIcon(vesselIcon(vessel, danger, zoom))
-            existing.getPopup()?.setContent(popupContent(vessel, cpa, danger))
+            existing.getPopup()?.setContent(popupContent(vessel, cpa, danger, stat))
           } else {
             if (!layerRef.current) return
             const marker = L.marker([lat, lng], { icon: vesselIcon(vessel, danger, zoom), zIndexOffset: danger ? 600 : 200 })
-            marker.bindPopup(popupContent(vessel, cpa, danger), { maxWidth: 220 })
+            marker.bindPopup(popupContent(vessel, cpa, danger, stat), { maxWidth: 240 })
             marker.addTo(layerRef.current)
             markersRef.current.set(mmsi, marker)
           }
@@ -279,6 +342,7 @@ export function useAIS() {
       layerRef.current?.clearLayers()
       markersRef.current.clear()
       dangerRef.current.clear()
+      staticRef.current.clear()
     }
   }, [aisVisible, aisKey, sendSubscription])
 
@@ -290,7 +354,7 @@ export function useAIS() {
   })
 }
 
-function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean): string {
+function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean, stat?: ShipStatic): string {
   const sog = v.sog.toFixed(1)
   const hdg = v.heading > 0 && v.heading < 360 ? `${Math.round(v.heading)}°` : '—'
   let cpaLine = ''
@@ -301,10 +365,26 @@ function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean): strin
       ? `<div style="margin-top:4px;color:#ef4444;font-weight:700">⚠ Kollisjonskurs<br/>Passerer ${nm} nm om ${min} min</div>`
       : `<div style="margin-top:4px;color:#94a3b8;font-size:12px">Nærmeste: ${nm} nm om ${min} min</div>`
   }
+
+  // Static/voyage lines — only render what we actually have
+  let staticLines = ''
+  if (stat) {
+    const rows: string[] = []
+    if (stat.type) rows.push(stat.type)
+    if (stat.length) rows.push(`${Math.round(stat.length)}${stat.beam ? `×${Math.round(stat.beam)}` : ''} m`)
+    if (stat.draught) rows.push(`dypg. ${stat.draught.toFixed(1)} m`)
+    const line1 = rows.join(' · ')
+    const dest = stat.destination ? `<div style="color:#94a3b8;font-size:12px">→ ${stat.destination}</div>` : ''
+    if (line1 || dest) {
+      staticLines = `<div style="margin-top:4px;color:#cbd5e1;font-size:12px">${line1}</div>${dest}`
+    }
+  }
+
   return `<div style="font-size:13px;line-height:1.5">
     <b>${v.name}</b><br/>
-    ${sog} kn · ${hdg}<br/>
-    <span style="color:#64748b;font-size:11px">MMSI ${v.mmsi}</span>
+    ${sog} kn · ${hdg}
+    ${staticLines}
+    <div style="color:#64748b;font-size:11px;margin-top:2px">MMSI ${v.mmsi}${stat?.callSign ? ` · ${stat.callSign}` : ''}</div>
     ${cpaLine}
   </div>`
 }

@@ -29,7 +29,11 @@ export default function App() {
   const tideVisible      = useMapStore((s) => s.tideVisible)
   const toggleWeather    = useMapStore((s) => s.toggleWeather)
   const toggleTide       = useMapStore((s) => s.toggleTide)
+  const startTracking    = useMapStore((s) => s.startTracking)
   useCompass(compassEnabled)
+
+  // Auto-start track recording when the app launches
+  useEffect(() => { startTracking() }, [startTracking])
 
   const wxTideActive = weatherVisible || tideVisible
   const toggleWxTide = () => {

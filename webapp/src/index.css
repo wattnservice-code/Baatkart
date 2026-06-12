@@ -1340,31 +1340,30 @@ html, body, #root {
     max-height: calc(100% - 24px);
   }
 
-  /* Landscape: the FAB column fills the bottom-right and grows tall enough to
-     reach the top-right corner on short phones, so the wx toggle can't live
-     top-right. Move it bottom-left, stacked above the MOB button; panels open
-     upward from there. Speed badge keeps the top-left corner. */
+  /* Landscape: MOB in bottom-left, speed badge top-left. The wx toggle stays
+     top-right but to the LEFT of the FAB column (which fills the right edge),
+     so it never overlaps even on short phones where the column reaches the top. */
   .mob-btn {
     top: auto;
     bottom: 16px;
     left: max(10px, calc(env(safe-area-inset-left) + 10px));
     transform: none;
   }
-  .wx-tide-toggle {
-    top: auto;
-    right: auto;
-    bottom: calc(16px + 66px);
-    left: max(10px, calc(env(safe-area-inset-left) + 10px));
-  }
-  .map-left-panels {
-    top: auto;
-    right: auto;
-    bottom: calc(16px + 66px + 64px);
-    left: max(10px, calc(env(safe-area-inset-left) + 10px));
-  }
   .speed-badge {
     top: max(14px, calc(env(safe-area-inset-top) + 8px));
     left: max(4px, env(safe-area-inset-left));
+  }
+  .wx-tide-toggle {
+    top: max(14px, calc(env(safe-area-inset-top) + 8px));
+    bottom: auto;
+    right: max(62px, calc(env(safe-area-inset-right) + 58px));
+    left: auto;
+  }
+  .map-left-panels {
+    top: max(52px, calc(env(safe-area-inset-top) + 48px));
+    bottom: auto;
+    right: max(70px, calc(env(safe-area-inset-right) + 66px));
+    left: auto;
   }
 }
 

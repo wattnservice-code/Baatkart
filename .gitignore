@@ -12,3 +12,6 @@ build/
 
 # Local Netlify folder
 .netlify
+
+# Local AIS key test file (never commit)
+aiskey.local.txt
