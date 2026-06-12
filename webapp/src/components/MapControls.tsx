@@ -128,7 +128,7 @@ export default function MapControls() {
       )}
 
       {/* AIS status pill — only while AIS is enabled */}
-      {aisVisible && (
+      {aisVisible && aisKey && (
         <div className={`ais-status ais-status-${aisStatus.state}`}>
           {aisStatus.state === 'live'
             ? `🚢 ${aisStatus.count} fartøy`

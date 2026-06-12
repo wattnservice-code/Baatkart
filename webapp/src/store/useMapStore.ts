@@ -70,6 +70,7 @@ interface MapStore {
   activePanel: 'search' | 'spots' | 'meg' | null
   compassEnabled: boolean
   darkMode: boolean
+  nightVision: boolean
   seamarkVisible: boolean
   weatherVisible: boolean
   tideVisible: boolean
@@ -111,6 +112,7 @@ interface MapStore {
   setActivePanel: (p: 'search' | 'spots' | 'meg' | null) => void
   toggleCompass: () => void
   toggleDarkMode: () => void
+  toggleNightVision: () => void
   toggleSeamark: () => void
   toggleWeather: () => void
   toggleTide: () => void
@@ -211,6 +213,7 @@ export const useMapStore = create<MapStore>((set) => ({
   activePanel: null,
   compassEnabled: loadCompass(),
   darkMode: loadDarkMode(),
+  nightVision: loadBool('nightVision', false),
   seamarkVisible: loadSeamark(),
   weatherVisible: loadWeather(),
   tideVisible: loadTide(),
@@ -293,6 +296,16 @@ export const useMapStore = create<MapStore>((set) => ({
     localStorage.setItem('darkMode', String(next))
     return { darkMode: next }
   }),
+  toggleNightVision: () => set((s) => {
+    const next = !s.nightVision
+    localStorage.setItem('nightVision', String(next))
+    // Night vision only makes sense on a dark base — force dark mode on when enabling.
+    if (next && s.darkMode === false) {
+      localStorage.setItem('darkMode', 'true')
+      return { nightVision: next, darkMode: true }
+    }
+    return { nightVision: next }
+  }),
   toggleSpeedUnit: () => set((s) => {
     const next: SpeedUnit = s.speedUnit === 'kn' ? 'kmh' : 'kn'
     localStorage.setItem('speedUnit', next)
@@ -328,7 +341,12 @@ export const useMapStore = create<MapStore>((set) => ({
   setOfflineOnly: (v) => { localStorage.setItem('offlineOnly', String(v)); set({ offlineOnly: v }) },
   setOfflineDownload: (d) => set({ offlineDownload: d }),
   toggleAis: () => set((s) => { const v = !s.aisVisible; localStorage.setItem('aisVisible', String(v)); return { aisVisible: v } }),
-  setAisKey: (key) => { localStorage.setItem('aisKey', key); set({ aisKey: key }) },
+  setAisKey: (key) => {
+    localStorage.setItem('aisKey', key)
+    const extra = key ? {} : { aisVisible: false }
+    if (!key) localStorage.setItem('aisVisible', 'false')
+    set({ aisKey: key, ...extra })
+  },
   setAisStatus: (s) => set({ aisStatus: s }),
   toggleLookAhead: () => set((s) => { const v = !s.lookAhead; localStorage.setItem('lookAhead', String(v)); return { lookAhead: v } }),
   toggleHeadingUp: () => set((s) => { const v = !s.headingUp; localStorage.setItem('headingUp', String(v)); return { headingUp: v } }),
