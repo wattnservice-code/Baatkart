@@ -71,7 +71,7 @@ export default function StatusBar() {
         onClick={toggleOfflineOnly}
         title={offlineOnly ? 'Offline-modus PÅ – trykk for å skru av' : 'Trykk for å bruke kun nedlastet kart'}
       >
-        {offlineOnly || !isOnline ? <WifiOff size={14} /> : <Wifi size={14} />}
+        {offlineOnly || !isOnline ? <WifiOff size={18} /> : <Wifi size={18} />}
         {offlineOnly && <span className="status-offline-label">Offline</span>}
       </button>
 
