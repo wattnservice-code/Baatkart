@@ -8,6 +8,7 @@ import SpotDialog from './SpotDialog'
 import { getTile } from '../offline/tileDb'
 import { tileKey } from '../offline/tileCalc'
 import { setMapInstance } from '../mapInstance'
+import { iconEmoji } from '../spotIcons'
 
 // Track cache vs network tile loads and report to store (debounced)
 let _cacheHits = 0
@@ -728,11 +729,9 @@ export default function MapView() {
 
     savedSpots.forEach((spot) => {
       const isActive = spot.id === activeSpotId
-      const size = isActive ? 22 : 14
-      const html = isActive
-        ? `<div class="spot-pin spot-pin-active"><div class="spot-pin-label">${spot.name}</div></div>`
-        : `<div class="spot-pin"></div>`
-      const icon = L.divIcon({ className: '', html, iconSize: [size, size], iconAnchor: [size / 2, size] })
+      const emoji = iconEmoji(spot.icon)
+      const html = `<div class="spot-emoji-pin ${isActive ? 'spot-emoji-pin-active' : ''}"><span class="spot-emoji-glyph">${emoji}</span>${isActive ? `<div class="spot-emoji-label">${spot.name}</div>` : ''}</div>`
+      const icon = L.divIcon({ className: '', html, iconSize: [30, 30], iconAnchor: [15, 15] })
       if (spotMarkersRef.current.has(spot.id)) {
         spotMarkersRef.current.get(spot.id)!.setLatLng([spot.lat, spot.lng]).setIcon(icon)
       } else {

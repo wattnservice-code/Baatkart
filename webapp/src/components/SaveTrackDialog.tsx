@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Save, Trash2 } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
+import IconPicker from './IconPicker'
+import { DEFAULT_SPOT_ICON } from '../spotIcons'
 
 interface Props { onClose: () => void }
 
@@ -10,13 +12,14 @@ export default function SaveTrackDialog({ onClose }: Props) {
   const clearTrack       = useMapStore((s) => s.clearTrack)
 
   const [name, setName] = useState('')
+  const [icon, setIcon] = useState(DEFAULT_SPOT_ICON)
 
   const handleSave = () => {
     // The date is stored as metadata regardless; fall back to it if no name given
     const fallback = new Date().toLocaleDateString('no-NO', {
       day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
     })
-    saveCurrentTrack(name.trim() || fallback)
+    saveCurrentTrack(name.trim() || fallback, icon)
     clearTrack()
     onClose()
   }
@@ -36,6 +39,7 @@ export default function SaveTrackDialog({ onClose }: Props) {
           autoFocus
           onKeyDown={(e) => e.key === 'Enter' && handleSave()}
         />
+        <IconPicker value={icon} onChange={setIcon} />
         <div className="dialog-actions">
           <button className="btn-secondary" onClick={() => { clearTrack(); onClose() }}>
             <Trash2 size={15} /> Forkast

@@ -20,6 +20,7 @@ export interface SavedSpot {
   lat: number
   lng: number
   name: string
+  icon?: string   // category key from spotIcons (pin/fish/swim/…)
 }
 
 export interface MobPoint {
@@ -45,6 +46,7 @@ export interface SavedTrack {
   date: string
   points: { lat: number; lng: number }[]
   distanceM: number
+  icon?: string   // category key from spotIcons
 }
 
 function _haversineM(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -143,7 +145,7 @@ interface MapStore {
   setBoatInfo: (info: Partial<BoatInfo>) => void
   toggleLookAhead: () => void
   toggleHeadingUp: () => void
-  saveCurrentTrack: (name: string) => void
+  saveCurrentTrack: (name: string, icon?: string) => void
   deleteSavedTrack: (id: string) => void
   startFollowingTrack: (track: SavedTrack) => void
   stopFollowingTrack: () => void
@@ -363,14 +365,14 @@ export const useMapStore = create<MapStore>((set) => ({
   toggleLookAhead: () => set((s) => { const v = !s.lookAhead; localStorage.setItem('lookAhead', String(v)); return { lookAhead: v } }),
   toggleHeadingUp: () => set((s) => { const v = !s.headingUp; localStorage.setItem('headingUp', String(v)); return { headingUp: v } }),
 
-  saveCurrentTrack: (name) => set((s) => {
+  saveCurrentTrack: (name, icon) => set((s) => {
     if (s.track.length < 2) return {}
     const pts = s.track.map((p) => ({ lat: p.lat, lng: p.lng }))
     const dist = pts.reduce((acc, pt, i) => {
       if (i === 0) return 0
       return acc + _haversineM(pts[i - 1].lat, pts[i - 1].lng, pt.lat, pt.lng)
     }, 0)
-    const saved: SavedTrack = { id: Date.now().toString(), name, date: new Date().toISOString(), points: pts, distanceM: dist }
+    const saved: SavedTrack = { id: Date.now().toString(), name, date: new Date().toISOString(), points: pts, distanceM: dist, icon }
     const tracks = [...s.savedTracks, saved]
     persistSavedTracks(tracks)
     return { savedTracks: tracks }

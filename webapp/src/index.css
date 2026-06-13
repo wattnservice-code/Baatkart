@@ -557,6 +557,54 @@ html, body, #root {
 }
 
 /* ── Saved spot pin markers ── */
+/* Emoji category pin for saved spots */
+.spot-emoji-pin {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(15,23,42,0.82);
+  border: 2px solid #f59e0b;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.55);
+}
+.spot-emoji-glyph { font-size: 16px; line-height: 1; }
+.spot-emoji-pin-active {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.35), 0 2px 6px rgba(0,0,0,0.5);
+  animation: spot-pulse 1.5s infinite;
+}
+.spot-emoji-label {
+  position: absolute;
+  bottom: 36px; left: 50%; translate: -50% 0;
+  background: rgba(15,23,42,0.92); color: white;
+  padding: 3px 8px; border-radius: 6px;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+  pointer-events: none; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.day .spot-emoji-pin { background: rgba(255,255,255,0.92); }
+.day .spot-emoji-label { background: rgba(15,23,42,0.88); }
+
+/* Icon picker (save dialogs) */
+.icon-picker {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin: 10px 0 4px;
+}
+.icon-pick {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 8px; min-width: 52px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px; cursor: pointer;
+}
+.icon-pick-emoji { font-size: 20px; line-height: 1; }
+.icon-pick-label { font-size: 10px; color: #94a3b8; font-weight: 600; }
+.icon-pick-active {
+  background: rgba(56,189,248,0.18);
+  border-color: #38bdf8;
+}
+.icon-pick-active .icon-pick-label { color: #e2e8f0; }
+.day .icon-pick { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); }
+.day .icon-pick-label { color: #475569; }
+.day .icon-pick-active { background: rgba(37,99,235,0.12); border-color: #2563eb; }
+
 .spot-pin {
   width: 14px; height: 14px;
   background: #f59e0b;

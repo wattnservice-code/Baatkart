@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Trash2, Play, Square, Circle } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
+import { iconEmoji } from '../spotIcons'
 import SaveTrackDialog from './SaveTrackDialog'
 
 interface Props { onClose: () => void }
@@ -87,7 +88,7 @@ export default function TripsPanel({ onClose }: Props) {
           {savedTracks.map((t) => (
             <div key={t.id} className="saved-track-row">
               <div className="saved-track-info">
-                <span className="saved-track-name">{t.name}</span>
+                <span className="saved-track-name">{iconEmoji(t.icon)} {t.name}</span>
                 <span className="saved-track-meta">
                   {formatDist(t.distanceM, distUnit)} · {new Date(t.date).toLocaleDateString('no-NO')}
                 </span>

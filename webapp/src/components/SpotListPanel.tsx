@@ -3,6 +3,7 @@ import { X, Trash2, Navigation, LocateFixed, MapPin, Globe, Bookmark, BookmarkCh
 import { useMapStore } from '../store/useMapStore'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth } from '../googleEarth'
+import { iconEmoji } from '../spotIcons'
 
 interface NominatimResult {
   place_id: number
@@ -119,7 +120,7 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
               onClick={() => goToSpot(spot.id, spot.lat, spot.lng)}
             >
               <div className="spot-panel-info">
-                <span className="spot-panel-name">📍 {spot.name}</span>
+                <span className="spot-panel-name">{iconEmoji(spot.icon)} {spot.name}</span>
                 <span className="spot-panel-coords">{spot.lat.toFixed(4)}°N {spot.lng.toFixed(4)}°E</span>
               </div>
               <div className="spot-panel-actions" onClick={(e) => e.stopPropagation()}>
