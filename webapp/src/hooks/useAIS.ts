@@ -113,6 +113,24 @@ function vesselIcon(vessel: AISVessel, danger: boolean, zoom: number): L.DivIcon
   return L.divIcon({ className: '', html, iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2] })
 }
 
+interface Bounds { north: number; south: number; east: number; west: number }
+
+// Produce a valid aisstream box [[south,west],[north,east]]. Clamps to legal
+// lat/lon, fixes inverted corners, and avoids a zero-size box (which the server
+// rejects). Falls back to a wide box around Norway when bounds aren't ready.
+function clampBox(b: Bounds | null): number[][] {
+  if (!b || ![b.north, b.south, b.east, b.west].every(Number.isFinite)) {
+    return [[57, 4], [72, 32]]
+  }
+  let s = Math.max(-90, Math.min(90, Math.min(b.south, b.north)))
+  let n = Math.max(-90, Math.min(90, Math.max(b.south, b.north)))
+  let w = Math.max(-180, Math.min(180, Math.min(b.west, b.east)))
+  let e = Math.max(-180, Math.min(180, Math.max(b.west, b.east)))
+  if (n - s < 0.02) { n = Math.min(90, n + 0.01); s = Math.max(-90, s - 0.01) }
+  if (e - w < 0.02) { e = Math.min(180, e + 0.01); w = Math.max(-180, w - 0.01) }
+  return [[s, w], [n, e]]
+}
+
 export function useAIS() {
   const aisVisible  = useMapStore((s) => s.aisVisible)
   const aisKey      = useMapStore((s) => s.aisKey)
@@ -127,6 +145,8 @@ export function useAIS() {
   const dangerRef     = useRef<Set<number>>(new Set())
   const lastAlarmRef  = useRef(0)
   const staticRef     = useRef<Map<number, ShipStatic>>(new Map())
+  const lastMsgRef    = useRef(0)        // timestamp of last frame (for the watchdog)
+  const watchdogRef   = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Keep bounds ref current without triggering re-subscription immediately
   useEffect(() => { boundsRef.current = mapBounds }, [mapBounds])
@@ -135,15 +155,12 @@ export function useAIS() {
     const ws = wsRef.current
     if (!ws || ws.readyState !== WebSocket.OPEN || !aisKey) return
     // aisstream closes the socket (code 1006) if no subscription arrives within
-    // 3 s of connecting. If the map bounds aren't ready yet, fall back to a
-    // wide box around Norway so we always subscribe in time.
-    const b = boundsRef.current
-    const box = b
-      ? [[b.south, b.west], [b.north, b.east]]
-      : [[57, 4], [72, 32]]
+    // 3 s of connecting, and rejects malformed/degenerate boxes with an error.
+    // Clamp to valid ranges and guarantee a sane, non-zero box; fall back to a
+    // wide box around Norway if the map bounds aren't ready yet.
     ws.send(JSON.stringify({
       APIKey: aisKey,
-      BoundingBoxes: [box],
+      BoundingBoxes: [clampBox(boundsRef.current)],
       FilterMessageTypes: ['PositionReport', 'ShipStaticData'],
     }))
   }, [aisKey])
@@ -158,6 +175,7 @@ export function useAIS() {
   useEffect(() => {
     if (!aisVisible || !aisKey) {
       if (reconnectRef.current) { clearTimeout(reconnectRef.current); reconnectRef.current = null }
+      if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null }
       wsRef.current?.close(1000)
       wsRef.current = null
       layerRef.current?.clearLayers()
@@ -177,6 +195,27 @@ export function useAIS() {
       layerRef.current = L.layerGroup().addTo(map!)
     }
 
+    // Single place that schedules a reconnect. Guarded so overlapping triggers
+    // (onclose + error + watchdog) can't stack into a reconnect storm.
+    const scheduleReconnect = (reason: string, fixedDelay?: number) => {
+      if (cancelled || reconnectRef.current) return
+      if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null }
+      try { wsRef.current?.close() } catch { /* already closing */ }
+      attempt += 1
+      const delayMs = fixedDelay ?? Math.min(4000 * attempt, 30000)
+      const secs = Math.round(delayMs / 1000)
+      if (reason) {
+        const msg = attempt >= 3
+          ? `AIS opptatt – er appen åpen et annet sted? (forsøk ${attempt})`
+          : reason
+        setAisStatus({ state: attempt >= 3 ? 'error' : 'connecting', count: markersRef.current.size, message: msg })
+      } else if (attempt >= 3) {
+        setAisStatus({ state: 'error', count: markersRef.current.size, message: `AIS opptatt – er appen åpen et annet sted? (forsøk ${attempt})` })
+      }
+      void secs
+      reconnectRef.current = setTimeout(() => { reconnectRef.current = null; connect() }, delayMs)
+    }
+
     const connect = () => {
       if (cancelled) return
       setAisStatus({ state: 'connecting', count: markersRef.current.size, message: attempt === 0 ? 'Kobler til…' : 'Kobler til på nytt…' })
@@ -191,18 +230,32 @@ export function useAIS() {
       ws.onopen = () => {
         sendSubscription()
         setAisStatus({ state: 'connecting', count: markersRef.current.size, message: 'Venter på fartøy…' })
+        // Watchdog: a silently-dead socket sometimes never fires onclose. If no
+        // frame arrives for a while, force a reconnect so AIS self-heals.
+        lastMsgRef.current = Date.now()
+        if (watchdogRef.current) clearInterval(watchdogRef.current)
+        watchdogRef.current = setInterval(() => {
+          if (cancelled) return
+          if (Date.now() - lastMsgRef.current > 60000) {
+            attempt = 0   // silence isn't a connection conflict — don't escalate to "opptatt"
+            scheduleReconnect('Ingen data – kobler til på nytt…')
+          }
+        }, 5000)
       }
 
       ws.onmessage = (e: MessageEvent) => {
+        lastMsgRef.current = Date.now()
         try {
           const raw = typeof e.data === 'string'
             ? e.data
             : new TextDecoder().decode(e.data as ArrayBuffer)
           const msg = JSON.parse(raw)
 
-          // aisstream surfaces auth/subscription problems as an `error` field
+          // aisstream surfaces auth/subscription problems as an `error` field.
+          // Show the real reason and self-heal (retry in 15 s) instead of freezing.
           if (msg.error || msg.Error) {
-            setAisStatus({ state: 'error', count: markersRef.current.size, message: String(msg.error || msg.Error) })
+            setAisStatus({ state: 'error', count: markersRef.current.size, message: `AIS: ${String(msg.error || msg.Error)}` })
+            scheduleReconnect('', 15000)
             return
           }
 
@@ -313,21 +366,13 @@ export function useAIS() {
       ws.onerror = () => { /* close handler decides what to do next */ }
 
       ws.onclose = (ev) => {
+        if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null }
         if (cancelled || ev.code === 1000) return   // intentional shutdown
-
-        // Unexpected close. Most common cause is aisstream's single-connection
-        // limit per key: a stale socket (previous deploy) or the SAME app open on
-        // another device/tab is holding the only allowed slot. Retry with backoff.
-        attempt += 1
-        const delayMs = Math.min(4000 * attempt, 30000)
-        const secs = Math.round(delayMs / 1000)
-        // After a few failed attempts it's almost certainly a competing connection,
-        // not a transient hiccup — tell the user so they can close the other one.
-        const msg = attempt >= 3
-          ? `AIS opptatt – er appen åpen et annet sted? (forsøk ${attempt})`
-          : `Frakoblet – nytt forsøk om ${secs}s…`
-        setAisStatus({ state: attempt >= 3 ? 'error' : 'connecting', count: markersRef.current.size, message: msg })
-        reconnectRef.current = setTimeout(connect, delayMs)
+        // Unexpected close — most often aisstream's single-connection limit (the
+        // same app open on another device/tab) or a transient drop. Retry with
+        // backoff; after a few tries say it's likely a competing connection.
+        const delayMs = Math.min(4000 * (attempt + 1), 30000)
+        scheduleReconnect(`Frakoblet – nytt forsøk om ${Math.round(delayMs / 1000)}s…`)
       }
     }
 
@@ -337,6 +382,7 @@ export function useAIS() {
       cancelled = true
       if (reconnectRef.current) { clearTimeout(reconnectRef.current); reconnectRef.current = null }
       if (subTimerRef.current) clearTimeout(subTimerRef.current)
+      if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null }
       wsRef.current?.close(1000)
       wsRef.current = null
       layerRef.current?.clearLayers()

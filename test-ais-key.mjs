@@ -25,10 +25,16 @@ ws.onopen = () => {
     FilterMessageTypes: ['PositionReport'],
   }))
 }
-ws.onmessage = (e) => {
-  const txt = String(e.data)
+ws.onmessage = async (e) => {
+  // aisstream sends binary frames — decode ArrayBuffer/Blob, not String(e.data).
+  let txt
+  if (typeof e.data === 'string') txt = e.data
+  else if (e.data instanceof ArrayBuffer) txt = new TextDecoder().decode(e.data)
+  else if (typeof e.data.arrayBuffer === 'function') txt = new TextDecoder().decode(await e.data.arrayBuffer())
+  else txt = String(e.data)
+
   if (txt.includes('"error"') || txt.includes('"Error"')) {
-    console.log('RESULTAT: ❌ NØKKEL AVVIST — server svarte:', txt.slice(0, 200))
+    console.log('RESULTAT: ❌ SERVERFEIL — svar:', txt.slice(0, 300))
     clearTimeout(t); process.exit(0)
   }
   try {
