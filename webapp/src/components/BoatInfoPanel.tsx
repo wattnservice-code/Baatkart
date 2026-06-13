@@ -6,7 +6,9 @@ interface Props { onClose: () => void }
 
 const FIELDS: { key: keyof BoatInfo; label: string; placeholder: string; type?: string; hint?: string }[] = [
   { key: 'name',     label: 'Båtnavn',       placeholder: 'f.eks. Havørn' },
-  { key: 'boatType', label: 'Type / størrelse', placeholder: 'f.eks. Aquador 28 HT, 8,5 m' },
+  { key: 'boatType', label: 'Type',          placeholder: 'f.eks. Aquador 28 HT' },
+  { key: 'length',   label: 'Lengde (m)',    placeholder: 'f.eks. 8,5' },
+  { key: 'beam',     label: 'Bredde (m)',    placeholder: 'f.eks. 2,9' },
   { key: 'mmsi',     label: 'MMSI-nummer',   placeholder: '9 siffer (VHF/AIS)', type: 'tel',
     hint: 'Maritime Mobile Service Identity' },
   { key: 'phone',    label: 'Mobilnummer',   placeholder: '+47 000 00 000', type: 'tel' },
@@ -63,12 +65,15 @@ export default function BoatInfoPanel({ onClose }: Props) {
         </button>
       </div>
 
-      {(boatInfo.name || boatInfo.mmsi) && (
+      {(boatInfo.name || boatInfo.mmsi || boatInfo.length || boatInfo.beam) && (
         <div className="boat-info-preview">
           <div className="offline-section-label">Vises i MOB-nødmelding</div>
           <div className="boat-info-preview-text">
             {boatInfo.name && <span>Båt: {boatInfo.name}</span>}
             {boatInfo.boatType && <span>{boatInfo.boatType}</span>}
+            {(boatInfo.length || boatInfo.beam) && (
+              <span>Mål: {boatInfo.length || '?'} × {boatInfo.beam || '?'} m</span>
+            )}
             {boatInfo.mmsi && <span>MMSI: {boatInfo.mmsi}</span>}
             {boatInfo.phone && <span>Tlf: {boatInfo.phone}</span>}
           </div>

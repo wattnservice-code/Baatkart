@@ -64,6 +64,9 @@ export default function MobOverlay() {
       const boatLine = [`Båt: ${boatInfo.name}`, boatInfo.boatType, boatInfo.mmsi ? `MMSI: ${boatInfo.mmsi}` : ''].filter(Boolean).join('  ')
       lines.push(boatLine)
     }
+    if (boatInfo.length || boatInfo.beam) {
+      lines.push(`Mål: ${boatInfo.length || '?'} × ${boatInfo.beam || '?'} m`)
+    }
     lines.push(`Posisjon: ${mobPoint.lat.toFixed(5)}°N ${mobPoint.lng.toFixed(5)}°E`)
     if (currentWeather) {
       const dir = windDirLabel(currentWeather.windDir)

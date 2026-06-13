@@ -37,6 +37,8 @@ export interface BoatInfo {
   mmsi: string
   phone: string
   boatType: string
+  length: string
+  beam: string
   notes: string
 }
 
@@ -174,8 +176,9 @@ function saveMob(mob: MobPoint | null) {
 
 const BOAT_INFO_KEY = 'baatkart-boatinfo'
 function loadBoatInfo(): BoatInfo {
-  try { return { name: '', mmsi: '', phone: '', boatType: '', notes: '', ...JSON.parse(localStorage.getItem(BOAT_INFO_KEY) ?? '{}') } }
-  catch { return { name: '', mmsi: '', phone: '', boatType: '', notes: '' } }
+  const empty: BoatInfo = { name: '', mmsi: '', phone: '', boatType: '', length: '', beam: '', notes: '' }
+  try { return { ...empty, ...JSON.parse(localStorage.getItem(BOAT_INFO_KEY) ?? '{}') } }
+  catch { return empty }
 }
 
 function loadSavedTracks(): SavedTrack[] {
