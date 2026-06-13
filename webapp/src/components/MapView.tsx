@@ -81,15 +81,6 @@ function boatSize(zoom: number): number {
   return 16
 }
 
-function ringRadius(zoom: number): number {
-  if (zoom >= 16) return 50
-  if (zoom >= 15) return 100
-  if (zoom >= 14) return 200
-  if (zoom >= 13) return 500
-  if (zoom >= 11) return 1000
-  return 5000
-}
-
 function formatRingLabel(m: number): string {
   const r = Math.round(m)
   if (r >= 1000) {
@@ -97,6 +88,38 @@ function formatRingLabel(m: number): string {
     return `${Number.isInteger(km) ? km : km.toFixed(1)} km`
   }
   return `${r} m`
+}
+
+// How far ahead of the boat the map centre sits, as a fraction of screen height,
+// in look-ahead mode. Smaller = boat higher on screen = more room for the ring.
+const LOOK_AHEAD_FRAC = 0.28
+
+// Round a distance DOWN to a clean 1/2/5 × 10ⁿ value (50, 100, 200, 500, …)
+function niceRound(m: number): number {
+  if (m <= 0) return 50
+  const pow = Math.pow(10, Math.floor(Math.log10(m)))
+  const f = m / pow
+  const nice = f >= 5 ? 5 : f >= 2 ? 2 : 1
+  return nice * pow
+}
+
+// Largest range-ring radius (m) whose full circle + label fit on the current
+// screen, given where the boat sits. Derived from live container size, so it
+// adapts to any device/orientation/zoom/speed — the ring is always whole.
+function fitRingRadius(
+  map: L.Map,
+  pos: { lat: number; speed: number },
+  followBoat: boolean,
+  lookAhead: boolean,
+  zoom: number,
+): number {
+  const size = map.getSize()
+  const mpp = (156543 * Math.cos(pos.lat * Math.PI / 180)) / Math.pow(2, zoom)
+  const autoLookAhead = pos.speed > 2.06
+  // Boat's vertical screen position: centred when stationary, lower when leading
+  const boatY = followBoat && (lookAhead || autoLookAhead) ? 0.5 + LOOK_AHEAD_FRAC : 0.5
+  const minPx = Math.min(boatY * size.y, (1 - boatY) * size.y, 0.5 * size.x)
+  return Math.max(50, niceRound(minPx * mpp * 0.85))   // 0.85 → small margin off the edge
 }
 
 // Shortest signed angular delta from `from` to `to`, in [-180, 180]
@@ -125,6 +148,29 @@ function destPoint(lat: number, lng: number, heading: number, meters: number): L
   const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(θ))
   const λ2 = λ1 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2))
   return [φ2 * 180 / Math.PI, λ2 * 180 / Math.PI]
+}
+
+// Keep the boat on screen in follow mode, on any size/orientation. When moving
+// (or look-ahead is on) it sits low with the course ahead; otherwise centred.
+// viewHeightM is derived from the live container size, so it adapts to any
+// device — phone, tablet or desktop, portrait or landscape.
+function recenterOnBoat(
+  map: L.Map,
+  pos: { lat: number; lng: number; heading: number; speed: number },
+  lookAhead: boolean,
+  animate: boolean,
+) {
+  const autoLookAhead = pos.speed > 2.06 && pos.heading !== undefined
+  if (lookAhead || autoLookAhead) {
+    const size = map.getSize()
+    const topLL = map.containerPointToLatLng([size.x / 2, 0])
+    const botLL = map.containerPointToLatLng([size.x / 2, size.y])
+    const viewHeightM = haversineM(topLL.lat, topLL.lng, botLL.lat, botLL.lng)
+    const center = destPoint(pos.lat, pos.lng, pos.heading, viewHeightM * LOOK_AHEAD_FRAC)
+    map.panTo(center, { animate, duration: 0.5 })
+  } else {
+    map.panTo([pos.lat, pos.lng], { animate, duration: 0.5 })
+  }
 }
 
 function boatSvg(heading: number, size: number) {
@@ -265,7 +311,8 @@ export default function MapView() {
         }))
       }
       if (rangeRingRef.current && pos) {
-        const r = customR ?? ringRadius(zoom)
+        const st = useMapStore.getState()
+        const r = customR ?? fitRingRadius(map, pos, st.followBoat, st.lookAhead, zoom)
         rangeRingRef.current.setRadius(r)
         const labelPos = destPoint(pos.lat, pos.lng, (pos.heading + 270) % 360, r)
         ringLabelRef.current?.setLatLng(labelPos)
@@ -285,6 +332,34 @@ export default function MapView() {
   useEffect(() => {
     positionRef.current = position
   }, [position])
+
+  // Keep the map sized correctly and the boat on screen on ANY container change
+  // — orientation flip, tablet split-view, desktop window resize, PWA chrome.
+  // A ResizeObserver is device-agnostic (no per-device breakpoints needed).
+  useEffect(() => {
+    const map = mapRef.current
+    const el  = containerRef.current
+    if (!map || !el) return
+    let raf = 0
+    const handle = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        map.invalidateSize({ animate: false })
+        const pos = positionRef.current
+        if (pos && useMapStore.getState().followBoat) {
+          recenterOnBoat(map, pos, useMapStore.getState().lookAhead, false)
+        }
+      })
+    }
+    const ro = new ResizeObserver(handle)
+    ro.observe(el)
+    window.addEventListener('orientationchange', handle)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('orientationchange', handle)
+      cancelAnimationFrame(raf)
+    }
+  }, [])
 
   // Dark/day mode tile switch
   useEffect(() => {
@@ -341,8 +416,8 @@ export default function MapView() {
     }
     wasMovingRef.current = isMoving
     const mpp = (156543 * Math.cos(position.lat * Math.PI / 180)) / Math.pow(2, zoom)
-    const speedRadius = position.speed > 0.5 ? Math.max(100, Math.min(10000, position.speed * 120)) : ringRadius(zoom)
-    const radius = customRingRadius ?? speedRadius
+    // Auto-fit so the whole ring + label stay on screen; honour a manual override.
+    const radius = customRingRadius ?? fitRingRadius(map, position, followBoat, lookAhead, zoom)
 
     // Boat marker
     const size = boatSize(zoom)
@@ -352,21 +427,7 @@ export default function MapView() {
       map.setView(latlng, Math.max(zoom, 13), { animate: false })
     } else {
       boatMarkerRef.current.setLatLng(latlng)
-      if (followBoat) {
-        const autoLookAhead = position.speed > 2.06 && position.heading !== undefined
-        if ((lookAhead || autoLookAhead)) {
-          // Screen-vertical extent in meters — works whether or not the map is
-          // rotated (getBounds would over-report on a rotated/heading-up map).
-          const size = map.getSize()
-          const topLL = map.containerPointToLatLng([size.x / 2, 0])
-          const botLL = map.containerPointToLatLng([size.x / 2, size.y])
-          const viewHeightM = haversineM(topLL.lat, topLL.lng, botLL.lat, botLL.lng)
-          const center = destPoint(position.lat, position.lng, position.heading, viewHeightM * 0.42)
-          map.panTo(center, { animate: true, duration: 0.5 })
-        } else {
-          map.panTo(latlng, { animate: true, duration: 0.5 })
-        }
-      }
+      if (followBoat) recenterOnBoat(map, position, lookAhead, true)
     }
 
     // GPS course predictor — zoom-adaptive length (min 40% screen height, up to 5 min ahead or 100% screen height)
