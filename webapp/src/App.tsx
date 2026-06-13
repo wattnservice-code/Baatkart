@@ -33,10 +33,11 @@ export default function App() {
   const clearTrack       = useMapStore((s) => s.clearTrack)
   useCompass(compassEnabled)
 
-  // Fresh trip on launch: drop a stale track (e.g. yesterday's) so the line
-  // shows the route from this trip's start. A recent track is kept so a
-  // service-worker reload mid-trip doesn't wipe the route. Then record silently.
+  // Auto-start recording on launch — only if the user opted in (Meg → Sporing).
+  // Drops a stale track first so the line shows just this trip; a recent track
+  // is kept so a service-worker reload mid-trip doesn't wipe the route.
   useEffect(() => {
+    if (!useMapStore.getState().autoTrack) return
     const t = useMapStore.getState().track
     const last = t[t.length - 1]
     if (last && Date.now() - last.timestamp > 6 * 3600 * 1000) clearTrack()

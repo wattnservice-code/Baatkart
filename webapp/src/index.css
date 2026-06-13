@@ -205,8 +205,11 @@ html, body, #root {
 .dialog-overlay {
   position: fixed; inset: 0; z-index: 1100;  /* above the fullscreen landscape panel (1000) */
   background: rgba(0,0,0,0.6);
-  display: flex; align-items: center; justify-content: center;
-  padding: 16px;
+  display: flex; align-items: flex-start; justify-content: center;
+  /* Top-aligned so the on-screen keyboard (which covers the lower half on
+     phones/tablets) doesn't hide dialogs that have a text input. */
+  padding: max(48px, calc(env(safe-area-inset-top) + 32px)) 16px 16px;
+  overflow-y: auto;
 }
 .dialog {
   background: #1e293b;

@@ -65,6 +65,7 @@ export type RingSize = typeof RING_CYCLE[number]
 interface MapStore {
   position: Position | null
   isTracking: boolean
+  autoTrack: boolean
   track: TrackPoint[]
   savedSpots: SavedSpot[]
   mobPoint: MobPoint | null
@@ -105,6 +106,7 @@ interface MapStore {
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
   startTracking: () => void
+  toggleAutoTrack: () => void
   stopTracking: () => void
   clearTrack: () => void
   addSpot: (spot: SavedSpot) => void
@@ -210,6 +212,7 @@ function loadRingRadius(): RingSize {
 export const useMapStore = create<MapStore>((set) => ({
   position: null,
   isTracking: false,
+  autoTrack: loadBool('autoTrack', false),
   track: loadTrack(),
   savedSpots: loadSpots(),
   mobPoint: loadMob(),
@@ -266,6 +269,7 @@ export const useMapStore = create<MapStore>((set) => ({
 
   startTracking: () => set({ isTracking: true }),
   stopTracking: () => set({ isTracking: false }),
+  toggleAutoTrack: () => set((s) => { const v = !s.autoTrack; localStorage.setItem('autoTrack', String(v)); return { autoTrack: v } }),
   clearTrack: () => { saveTrack([]); return set({ track: [] }) },
 
   addSpot: (spot) =>

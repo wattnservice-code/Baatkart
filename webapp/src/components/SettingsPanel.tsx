@@ -34,6 +34,8 @@ export default function SettingsPanel({ onClose }: Props) {
   const toggleCompass  = useMapStore((s) => s.toggleCompass)
   const toggleSpeedUnit = useMapStore((s) => s.toggleSpeedUnit)
   const cycleDistUnit  = useMapStore((s) => s.cycleDistUnit)
+  const autoTrack      = useMapStore((s) => s.autoTrack)
+  const toggleAutoTrack = useMapStore((s) => s.toggleAutoTrack)
   const cycleRingRadius      = useMapStore((s) => s.cycleRingRadius)
   const aisKey               = useMapStore((s) => s.aisKey)
   const setAisKey            = useMapStore((s) => s.setAisKey)
@@ -83,6 +85,12 @@ export default function SettingsPanel({ onClose }: Props) {
           </button>
           <button className="menu-item" style={{ color: compassEnabled ? '#60a5fa' : undefined }} onClick={handleCompassToggle}>
             <Compass size={20} /><span>Kompass {compassEnabled ? '(på)' : '(av)'}</span>
+          </button>
+
+          <div className="menu-divider" />
+          <div style={subhead}>Sporing</div>
+          <button className="menu-item" style={{ color: autoTrack ? '#60a5fa' : undefined }} onClick={toggleAutoTrack}>
+            <Circle size={20} /><span>Start tur-opptak automatisk {autoTrack ? '(på)' : '(av)'}</span>
           </button>
 
           <div className="menu-divider" />
