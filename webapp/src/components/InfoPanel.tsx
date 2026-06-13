@@ -30,6 +30,7 @@ export default function InfoPanel({ onClose }: Props) {
           <li><b>Posisjon:</b> blå pil viser båten. Trykk «sentrer»-knappen for å følge.</li>
           <li><b>Dag / natt / nattsyn:</b> sol-/øye-knappen på kartet sykler mellom modusene.</li>
           <li><b>Vær og tidevann:</b> sol-/bølge-knappen på kartet viser nærmeste data.</li>
+          <li><b>Kartretning:</b> kompassknappen øverst sykler – trykk én gang for GPS kjøreretning, én til for kompassretning, én til for nord-opp.</li>
         </ul>
 
         <h3 className="info-h">Steder</h3>
@@ -41,8 +42,9 @@ export default function InfoPanel({ onClose }: Props) {
 
         <h3 className="info-h">Turer</h3>
         <ul className="info-list">
-          <li>Sporing starter automatisk når appen åpnes.</li>
-          <li>Trykk <b>REC</b> i statuslinja for å åpne Turer – lagre eller forkast.</li>
+          <li>Trykk <b>Tur</b>-knappen i statuslinja for å starte opptak direkte.</li>
+          <li>Trykk <b>REC</b> igjen for å stoppe – du kan lagre eller forkaste turen.</li>
+          <li>Vil du at opptak starter automatisk når appen åpnes, slå på <b>Start tur-opptak automatisk</b> under Meg → Sporing.</li>
           <li>Lagrede turer kan følges på nytt senere.</li>
         </ul>
 
@@ -55,7 +57,8 @@ export default function InfoPanel({ onClose }: Props) {
 
         <h3 className="info-h">AIS</h3>
         <ul className="info-list">
-          <li>Legg inn gratis API-nøkkel fra aisstream.io under Meg.</li>
+          <li>Legg inn gratis API-nøkkel fra aisstream.io under Meg → AIS.</li>
+          <li>Slå AIS av/på med Ship-knappen på kartet, eller under Meg → AIS.</li>
           <li>Andre fartøy vises på kartet med kurs og kollisjonsvarsel.</li>
         </ul>
 
