@@ -272,7 +272,7 @@ html, body, #root {
   position: fixed;
   /* Portrait: top-left, above speed badge */
   top: max(14px, calc(env(safe-area-inset-top) + 8px));
-  left: max(8px, calc(env(safe-area-inset-left) + 8px));
+  left: max(14px, calc(env(safe-area-inset-left) + 14px));
   bottom: auto;
   transform: none;
   z-index: 600;
@@ -1346,7 +1346,7 @@ html, body, #root {
   .mob-btn {
     top: auto;
     bottom: 16px;
-    left: max(10px, calc(env(safe-area-inset-left) + 10px));
+    left: max(6px, calc(env(safe-area-inset-left) + 6px));
     transform: none;
   }
   .speed-badge {

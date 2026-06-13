@@ -133,26 +133,29 @@ export default function SettingsPanel({ onClose }: Props) {
                   color: darkMode ? 'white' : '#0f172a', fontSize: 13, outline: 'none',
                 }}
               />
-              <button
-                onClick={() => setAisKey(aisKeyInput.trim())}
-                style={{
-                  padding: '8px 14px', borderRadius: 8, border: 'none',
-                  background: '#2563eb', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                }}
-              >
-                Lagre
-              </button>
-              <button
-                onClick={() => { setAisKey(''); setAisKeyInput('') }}
-                style={{
-                  padding: '8px 10px', borderRadius: 8, border: 'none',
-                  background: '#dc2626', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                  opacity: aisKey ? 1 : 0.35,
-                }}
-                title="Slett nøkkel"
-              >
-                <Trash2 size={16} />
-              </button>
+              {aisKeyInput.trim() !== aisKey && (
+                <button
+                  onClick={() => setAisKey(aisKeyInput.trim())}
+                  style={{
+                    padding: '8px 14px', borderRadius: 8, border: 'none',
+                    background: '#2563eb', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                  }}
+                >
+                  Lagre
+                </button>
+              )}
+              {aisKeyInput.trim() !== '' && (
+                <button
+                  onClick={() => { setAisKey(''); setAisKeyInput('') }}
+                  style={{
+                    padding: '8px 10px', borderRadius: 8, border: 'none',
+                    background: '#dc2626', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                  }}
+                  title="Slett nøkkel"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </div>
             {aisKey
               ? <div style={{ fontSize: 11, color: '#16a34a' }}>✓ Nøkkel lagret — bruk Ship-knappen på kartet</div>

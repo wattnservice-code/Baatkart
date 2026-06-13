@@ -215,6 +215,9 @@ export default function MapView() {
       center: [59.9, 10.7], zoom: 13, zoomControl: false,
       rotate: true, rotateControl: false, touchRotate: false, shiftKeyRotate: false, bearing: 0,
     })
+    // Move the OSM attribution to the bottom-left so it doesn't sit under the
+    // right-edge FAB menu.
+    map.attributionControl.setPosition('bottomleft')
 
     const isDark = useMapStore.getState().darkMode
     baseTileRef.current = L.tileLayer(isDark ? DARK_URL : OSM_URL, {
