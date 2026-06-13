@@ -9,15 +9,14 @@ export default function SaveTrackDialog({ onClose }: Props) {
   const saveCurrentTrack = useMapStore((s) => s.saveCurrentTrack)
   const clearTrack       = useMapStore((s) => s.clearTrack)
 
-  const [name, setName] = useState(() =>
-    new Date().toLocaleDateString('no-NO', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    })
-  )
+  const [name, setName] = useState('')
 
   const handleSave = () => {
-    if (name.trim()) saveCurrentTrack(name.trim())
+    // The date is stored as metadata regardless; fall back to it if no name given
+    const fallback = new Date().toLocaleDateString('no-NO', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    })
+    saveCurrentTrack(name.trim() || fallback)
     clearTrack()
     onClose()
   }
@@ -33,6 +32,7 @@ export default function SaveTrackDialog({ onClose }: Props) {
           className="dialog-input"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          placeholder="Navn på tur"
           autoFocus
           onKeyDown={(e) => e.key === 'Enter' && handleSave()}
         />
@@ -40,7 +40,7 @@ export default function SaveTrackDialog({ onClose }: Props) {
           <button className="btn-secondary" onClick={() => { clearTrack(); onClose() }}>
             <Trash2 size={15} /> Forkast
           </button>
-          <button className="btn-primary" onClick={handleSave} disabled={!name.trim()}>
+          <button className="btn-primary" onClick={handleSave}>
             <Save size={15} /> Lagre
           </button>
         </div>
