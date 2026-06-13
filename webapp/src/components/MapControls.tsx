@@ -7,7 +7,6 @@ import { formatDist } from './NavOverlay'
 import { useMapStore } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import SpotListPanel from './SpotListPanel'
-import SearchBar from './SearchBar'
 import SpotDialog from './SpotDialog'
 import SettingsPanel from './SettingsPanel'
 import SaveTrackDialog from './SaveTrackDialog'
@@ -221,7 +220,6 @@ export default function MapControls() {
           onAddMap={useMapPos}
         />
       )}
-      {activePanel === 'search' && <SearchBar onClose={() => setActivePanel(null)} />}
       {activePanel === 'meg' && <SettingsPanel onClose={() => setActivePanel(null)} />}
       {gpsSpot && <SpotDialog lat={gpsSpot.lat} lng={gpsSpot.lng} onClose={() => setGpsSpot(null)} />}
       {showSaveTrack && <SaveTrackDialog onClose={() => setShowSaveTrack(false)} />}

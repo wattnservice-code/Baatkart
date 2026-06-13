@@ -1,13 +1,12 @@
-import { Map, Navigation, Star, User } from 'lucide-react'
+import { Map, Star, User } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 
-type Tab = 'kart' | 'naviger' | 'steder' | 'meg'
+type Tab = 'kart' | 'steder' | 'meg'
 
 const ITEMS: { key: Tab; label: string; Icon: typeof Map }[] = [
-  { key: 'kart',    label: 'Kart',    Icon: Map },
-  { key: 'naviger', label: 'Naviger', Icon: Navigation },
-  { key: 'steder',  label: 'Steder',  Icon: Star },
-  { key: 'meg',     label: 'Meg',     Icon: User },
+  { key: 'kart',   label: 'Kart',   Icon: Map },
+  { key: 'steder', label: 'Steder', Icon: Star },
+  { key: 'meg',    label: 'Meg',    Icon: User },
 ]
 
 export default function BottomNav() {
@@ -16,16 +15,14 @@ export default function BottomNav() {
 
   // 'kart' = no panel open; the others map 1:1 to a panel id
   const active: Tab =
-    activePanel === 'search' ? 'naviger'
-    : activePanel === 'spots' ? 'steder'
-    : activePanel === 'meg'   ? 'meg'
+    activePanel === 'spots' ? 'steder'
+    : activePanel === 'meg' ? 'meg'
     : 'kart'
 
   const select = (tab: Tab) => {
     setActivePanel(
-      tab === 'naviger' ? 'search'
-      : tab === 'steder' ? 'spots'
-      : tab === 'meg'    ? 'meg'
+      tab === 'steder' ? 'spots'
+      : tab === 'meg'  ? 'meg'
       : null
     )
   }

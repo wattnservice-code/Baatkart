@@ -67,7 +67,7 @@ interface MapStore {
   mobTrack: TrackPoint[]
   followBoat: boolean
   addingSpot: boolean
-  activePanel: 'search' | 'spots' | 'meg' | null
+  activePanel: 'spots' | 'meg' | null
   compassEnabled: boolean
   darkMode: boolean
   nightVision: boolean
@@ -109,7 +109,7 @@ interface MapStore {
   clearMob: () => void
   setFollowBoat: (v: boolean) => void
   setAddingSpot: (v: boolean) => void
-  setActivePanel: (p: 'search' | 'spots' | 'meg' | null) => void
+  setActivePanel: (p: 'spots' | 'meg' | null) => void
   toggleCompass: () => void
   toggleDarkMode: () => void
   toggleNightVision: () => void
