@@ -26,6 +26,7 @@ export default function SettingsPanel({ onClose }: Props) {
   const [aisKeyInput, setAisKeyInput]     = useState('')
   const [confirmTrack, setConfirmTrack]   = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [confirmDelKey, setConfirmDelKey] = useState(false)
 
   const isOnline       = useOnline()
   const position       = useMapStore((s) => s.position)
@@ -146,7 +147,7 @@ export default function SettingsPanel({ onClose }: Props) {
               )}
               {aisKeyInput.trim() !== '' && (
                 <button
-                  onClick={() => { setAisKey(''); setAisKeyInput('') }}
+                  onClick={() => setConfirmDelKey(true)}
                   style={{
                     padding: '8px 10px', borderRadius: 8, border: 'none',
                     background: '#dc2626', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
@@ -239,6 +240,23 @@ export default function SettingsPanel({ onClose }: Props) {
             <div className="dialog-actions">
               <button className="btn-secondary" onClick={() => setConfirmDeleteId(null)}>Avbryt</button>
               <button className="btn-primary" style={{ background: '#dc2626' }} onClick={() => { deleteSavedTrack(confirmDeleteId); setConfirmDeleteId(null) }}>
+                <Trash2 size={15} /> Slett
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDelKey && (
+        <div className="dialog-overlay" onClick={() => setConfirmDelKey(false)}>
+          <div className="dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="dialog-header">Slett AIS-nøkkel</div>
+            <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 16 }}>
+              Er du sikker på at du vil slette API-nøkkelen?
+            </p>
+            <div className="dialog-actions">
+              <button className="btn-secondary" onClick={() => setConfirmDelKey(false)}>Avbryt</button>
+              <button className="btn-primary" style={{ background: '#dc2626' }} onClick={() => { setAisKey(''); setAisKeyInput(''); setConfirmDelKey(false) }}>
                 <Trash2 size={15} /> Slett
               </button>
             </div>

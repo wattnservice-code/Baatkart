@@ -30,10 +30,18 @@ export default function App() {
   const toggleWeather    = useMapStore((s) => s.toggleWeather)
   const toggleTide       = useMapStore((s) => s.toggleTide)
   const startTracking    = useMapStore((s) => s.startTracking)
+  const clearTrack       = useMapStore((s) => s.clearTrack)
   useCompass(compassEnabled)
 
-  // Auto-start track recording when the app launches
-  useEffect(() => { startTracking() }, [startTracking])
+  // Fresh trip on launch: drop a stale track (e.g. yesterday's) so the line
+  // shows the route from this trip's start. A recent track is kept so a
+  // service-worker reload mid-trip doesn't wipe the route. Then record silently.
+  useEffect(() => {
+    const t = useMapStore.getState().track
+    const last = t[t.length - 1]
+    if (last && Date.now() - last.timestamp > 6 * 3600 * 1000) clearTrack()
+    startTracking()
+  }, [startTracking, clearTrack])
 
   const wxTideActive = weatherVisible || tideVisible
   const toggleWxTide = () => {

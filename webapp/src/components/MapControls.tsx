@@ -71,7 +71,6 @@ export default function MapControls() {
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
   const setAddingSpot    = useMapStore((s) => s.setAddingSpot)
   const startTracking    = useMapStore((s) => s.startTracking)
-  const stopTracking     = useMapStore((s) => s.stopTracking)
   const darkMode         = useMapStore((s) => s.darkMode)
   const nightVision      = useMapStore((s) => s.nightVision)
   const cycleDisplayMode = useMapStore((s) => s.cycleDisplayMode)
@@ -203,14 +202,13 @@ export default function MapControls() {
         <button
           className={`fab ${isTracking ? 'fab-rec' : ''}`}
           onClick={() => {
-            if (isTracking) {
-              stopTracking()
-              if (track.length > 0) setShowSaveTrack(true)
-            } else {
-              startTracking()
-            }
+            // Recording runs continuously from trip start. Pressing offers to save
+            // the route so far; the dialog then resets it (save or discard) and
+            // recording carries on for the next leg.
+            if (!isTracking) { startTracking(); return }
+            if (track.length > 0) setShowSaveTrack(true)
           }}
-          title={isTracking ? 'Stopp sporing' : 'Start sporing'}
+          title={isTracking ? 'Lagre / nullstill tur' : 'Start sporing'}
         >
           {isTracking ? <Square size={20} /> : <Circle size={22} />}
         </button>

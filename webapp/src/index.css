@@ -1471,7 +1471,7 @@ html, body, #root {
 
 /* ── REC (tracking) FAB ── */
 /* Steady red (no pulse): tracking auto-starts on launch, so a constant blink
-   would just be ambient noise. The red square already reads as "tap to stop". */
+   would just be ambient noise. The red square reads as "recording — tap to save". */
 .fab-rec {
   background: #dc2626;
   border-color: #fca5a5;
