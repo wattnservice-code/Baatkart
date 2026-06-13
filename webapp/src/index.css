@@ -41,7 +41,7 @@ html, body, #root {
 .status-value { font-variant-numeric: tabular-nums; font-weight: 500; }
 .status-unit { color: #64748b; font-size: 11px; }
 .status-divider { width: 1px; height: 16px; background: rgba(255,255,255,0.12); }
-.status-tracking { color: #f87171; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; animation: blink 1.2s infinite; }
+.status-tracking { color: #f87171; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; }
 @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 .status-tile-source { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; }
 .status-tile-offline { color: #4ade80; }
