@@ -582,6 +582,26 @@ html, body, #root {
 .day .spot-emoji-pin { background: rgba(255,255,255,0.92); }
 .day .spot-emoji-label { background: rgba(15,23,42,0.88); }
 
+/* Info / bruksanvisning panel */
+.info-body { padding: 4px 16px 28px; }
+.info-disclaimer {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: rgba(220,38,38,0.12); border: 1px solid rgba(220,38,38,0.4);
+  border-radius: 10px; padding: 12px; margin: 10px 0 6px; color: #fca5a5;
+}
+.info-disclaimer b { color: #fecaca; }
+.info-disclaimer p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: #fda4a4; }
+.info-h { font-size: 14px; font-weight: 700; margin: 16px 0 4px; color: #e2e8f0; }
+.info-list { margin: 0; padding-left: 18px; }
+.info-list li { font-size: 13px; line-height: 1.6; color: #cbd5e1; }
+.info-list b { color: #e2e8f0; }
+.day .info-disclaimer { background: rgba(220,38,38,0.08); color: #b91c1c; }
+.day .info-disclaimer b { color: #991b1b; }
+.day .info-disclaimer p { color: #b91c1c; }
+.day .info-h { color: #0f172a; }
+.day .info-list li { color: #334155; }
+.day .info-list b { color: #0f172a; }
+
 /* Icon picker (save dialogs) */
 .icon-picker {
   display: flex; flex-wrap: wrap; gap: 6px;

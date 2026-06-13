@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
-import { X, Ship, Sun, Moon, Layers, Circle, Compass, Wind, Waves, Gauge, WifiOff, Globe, Trash2, User } from 'lucide-react'
+import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, Trash2, User, Info } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
-import { useOnline } from '../hooks/useOnline'
-import { openGoogleEarth } from '../googleEarth'
-import { getMapInstance } from '../mapInstance'
 import OfflinePanel from './OfflinePanel'
 import BoatInfoPanel from './BoatInfoPanel'
+import InfoPanel from './InfoPanel'
 
 function formatRingLabel(r: null | number): string {
   if (r === null) return 'Auto'
@@ -22,24 +20,18 @@ interface Props { onClose: () => void }
 export default function SettingsPanel({ onClose }: Props) {
   const [offlineOpen, setOfflineOpen]     = useState(false)
   const [boatInfoOpen, setBoatInfoOpen]   = useState(false)
+  const [infoOpen, setInfoOpen]           = useState(false)
   const [aisKeyInput, setAisKeyInput]     = useState('')
   const [confirmDelKey, setConfirmDelKey] = useState(false)
 
-  const isOnline       = useOnline()
-  const position       = useMapStore((s) => s.position)
   const darkMode       = useMapStore((s) => s.darkMode)
   const seamarkVisible = useMapStore((s) => s.seamarkVisible)
   const compassEnabled = useMapStore((s) => s.compassEnabled)
-  const weatherVisible = useMapStore((s) => s.weatherVisible)
-  const tideVisible    = useMapStore((s) => s.tideVisible)
   const speedUnit      = useMapStore((s) => s.speedUnit)
   const distUnit       = useMapStore((s) => s.distUnit)
   const customRingRadius = useMapStore((s) => s.customRingRadius)
-  const toggleDarkMode = useMapStore((s) => s.toggleDarkMode)
   const toggleSeamark  = useMapStore((s) => s.toggleSeamark)
   const toggleCompass  = useMapStore((s) => s.toggleCompass)
-  const toggleWeather  = useMapStore((s) => s.toggleWeather)
-  const toggleTide     = useMapStore((s) => s.toggleTide)
   const toggleSpeedUnit = useMapStore((s) => s.toggleSpeedUnit)
   const cycleDistUnit  = useMapStore((s) => s.cycleDistUnit)
   const cycleRingRadius      = useMapStore((s) => s.cycleRingRadius)
@@ -61,11 +53,6 @@ export default function SettingsPanel({ onClose }: Props) {
     toggleCompass()
   }
 
-  const showEarth = () => {
-    const c = position ?? getMapInstance()?.getCenter() ?? { lat: 59.9, lng: 10.7 }
-    openGoogleEarth(c.lat, c.lng)
-  }
-
   return (
     <>
       <div className="settings-sheet">
@@ -82,24 +69,11 @@ export default function SettingsPanel({ onClose }: Props) {
 
           <div className="menu-divider" />
           <div style={subhead}>Kartvisning</div>
-          <button className="menu-item" onClick={toggleDarkMode}>
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-            <span>{darkMode ? 'Dagmodus' : 'Nattmodus'}</span>
-          </button>
           <button className="menu-item" style={{ color: seamarkVisible ? '#60a5fa' : undefined }} onClick={toggleSeamark}>
             <Layers size={20} /><span>Sjømerke {seamarkVisible ? '(på)' : '(av)'}</span>
           </button>
           <button className="menu-item" onClick={cycleRingRadius}>
             <Circle size={20} /><span>Avstandsring: {formatRingLabel(customRingRadius)}</span>
-          </button>
-
-          <div className="menu-divider" />
-          <div style={subhead}>Vær og sensorer</div>
-          <button className="menu-item" style={{ color: weatherVisible ? '#60a5fa' : undefined }} onClick={toggleWeather}>
-            <Wind size={20} /><span>Vær og vind {weatherVisible ? '(på)' : '(av)'}</span>
-          </button>
-          <button className="menu-item" style={{ color: tideVisible ? '#60a5fa' : undefined }} onClick={toggleTide}>
-            <Waves size={20} /><span>Tidevann {tideVisible ? '(på)' : '(av)'}</span>
           </button>
           <button className="menu-item" style={{ color: compassEnabled ? '#60a5fa' : undefined }} onClick={handleCompassToggle}>
             <Compass size={20} /><span>Kompass {compassEnabled ? '(på)' : '(av)'}</span>
@@ -164,21 +138,23 @@ export default function SettingsPanel({ onClose }: Props) {
           </button>
 
           <div className="menu-divider" />
-          <div style={subhead}>Kart og 3D</div>
+          <div style={subhead}>Kart</div>
           <button className="menu-item" onClick={() => setOfflineOpen(true)}>
             <WifiOff size={20} /><span>Kart uten nett</span>
           </button>
-          {isOnline && (
-            <button className="menu-item" style={{ color: '#34d399' }} onClick={showEarth}>
-              <Globe size={20} /><span>Vis i Google Earth (3D)</span>
-            </button>
-          )}
+
+          <div className="menu-divider" />
+          <div style={subhead}>Hjelp</div>
+          <button className="menu-item" onClick={() => setInfoOpen(true)}>
+            <Info size={20} /><span>Bruksanvisning og forbehold</span>
+          </button>
 
         </div>
       </div>
 
       {offlineOpen && <OfflinePanel onClose={() => setOfflineOpen(false)} />}
       {boatInfoOpen && <BoatInfoPanel onClose={() => setBoatInfoOpen(false)} />}
+      {infoOpen && <InfoPanel onClose={() => setInfoOpen(false)} />}
 
       {confirmDelKey && (
         <div className="dialog-overlay" onClick={() => setConfirmDelKey(false)}>
