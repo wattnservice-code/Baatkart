@@ -203,7 +203,9 @@ export function useAIS() {
       if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null }
       try { wsRef.current?.close() } catch { /* already closing */ }
       attempt += 1
-      const delayMs = fixedDelay ?? Math.min(4000 * attempt, 30000)
+      // Gentle backoff: two quick tries, then back right off to 60s so we don't
+      // hammer aisstream (which can get the account throttled and cause 1006).
+      const delayMs = fixedDelay ?? (attempt <= 2 ? 4000 * attempt : 60000)
       if (attempt >= 3) {
         // Persistent failure. Show the real close code/reason instead of a guess.
         const tail = detail ? ` (${detail})` : ''
