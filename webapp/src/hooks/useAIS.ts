@@ -196,23 +196,21 @@ export function useAIS() {
     }
 
     // Single place that schedules a reconnect. Guarded so overlapping triggers
-    // (onclose + error + watchdog) can't stack into a reconnect storm.
-    const scheduleReconnect = (reason: string, fixedDelay?: number) => {
+    // (onclose + error + watchdog) can't stack into a reconnect storm. `detail`
+    // carries the WebSocket close code/reason so the cause is visible in-app.
+    const scheduleReconnect = (reason: string, fixedDelay?: number, detail?: string) => {
       if (cancelled || reconnectRef.current) return
       if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null }
       try { wsRef.current?.close() } catch { /* already closing */ }
       attempt += 1
       const delayMs = fixedDelay ?? Math.min(4000 * attempt, 30000)
-      const secs = Math.round(delayMs / 1000)
-      if (reason) {
-        const msg = attempt >= 3
-          ? `AIS opptatt – er appen åpen et annet sted? (forsøk ${attempt})`
-          : reason
-        setAisStatus({ state: attempt >= 3 ? 'error' : 'connecting', count: markersRef.current.size, message: msg })
-      } else if (attempt >= 3) {
-        setAisStatus({ state: 'error', count: markersRef.current.size, message: `AIS opptatt – er appen åpen et annet sted? (forsøk ${attempt})` })
+      if (attempt >= 3) {
+        // Persistent failure. Show the real close code/reason instead of a guess.
+        const tail = detail ? ` (${detail})` : ''
+        setAisStatus({ state: 'error', count: markersRef.current.size, message: `AIS får ikke kontakt${tail} – sjekk nøkkel/konto` })
+      } else if (reason) {
+        setAisStatus({ state: 'connecting', count: markersRef.current.size, message: reason })
       }
-      void secs
       reconnectRef.current = setTimeout(() => { reconnectRef.current = null; connect() }, delayMs)
     }
 
@@ -368,11 +366,11 @@ export function useAIS() {
       ws.onclose = (ev) => {
         if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null }
         if (cancelled || ev.code === 1000) return   // intentional shutdown
-        // Unexpected close — most often aisstream's single-connection limit (the
-        // same app open on another device/tab) or a transient drop. Retry with
-        // backoff; after a few tries say it's likely a competing connection.
+        // Surface the real close code/reason so we stop guessing. 1006 = server
+        // dropped the socket with no frame (usually auth/limit); 1008 = policy.
+        const detail = ev.reason ? `${ev.code}: ${ev.reason}` : `kode ${ev.code}`
         const delayMs = Math.min(4000 * (attempt + 1), 30000)
-        scheduleReconnect(`Frakoblet – nytt forsøk om ${Math.round(delayMs / 1000)}s…`)
+        scheduleReconnect(`Frakoblet (${detail}) – nytt forsøk om ${Math.round(delayMs / 1000)}s…`, undefined, detail)
       }
     }
 
