@@ -62,6 +62,12 @@ export default function SettingsPanel({ onClose }: Props) {
         </div>
 
         <div className="settings-body">
+          <div style={subhead}>Kart</div>
+          <button className="menu-item" onClick={() => setOfflineOpen(true)}>
+            <WifiOff size={20} /><span>Offline kart</span>
+          </button>
+
+          <div className="menu-divider" />
           <div style={subhead}>Båt</div>
           <button className="menu-item" onClick={() => setBoatInfoOpen(true)}>
             <Ship size={20} /><span>Båtinfo</span>
@@ -135,12 +141,6 @@ export default function SettingsPanel({ onClose }: Props) {
           </button>
           <button className="menu-item" onClick={cycleDistUnit}>
             <Gauge size={20} /><span>Avstand: {distUnit === 'nm' ? 'nm → m' : distUnit === 'm' ? 'm → km' : 'km → nm'}</span>
-          </button>
-
-          <div className="menu-divider" />
-          <div style={subhead}>Kart</div>
-          <button className="menu-item" onClick={() => setOfflineOpen(true)}>
-            <WifiOff size={20} /><span>Kart uten nett</span>
           </button>
 
           <div className="menu-divider" />
