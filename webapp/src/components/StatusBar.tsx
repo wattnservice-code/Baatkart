@@ -10,6 +10,7 @@ function headingLabel(deg: number): string {
 export default function StatusBar() {
   const position          = useMapStore((s) => s.position)
   const isTracking        = useMapStore((s) => s.isTracking)
+  const setActivePanel    = useMapStore((s) => s.setActivePanel)
   const offlineOnly       = useMapStore((s) => s.offlineOnly)
   const toggleOfflineOnly = useMapStore((s) => s.toggleOfflineOnly)
   const setOfflineOnly    = useMapStore((s) => s.setOfflineOnly)
@@ -75,12 +76,15 @@ export default function StatusBar() {
         {offlineOnly && <span className="status-offline-label">Offline</span>}
       </button>
 
-      {isTracking && (
-        <>
-          <div className="status-divider" />
-          <div className="status-tracking">● REC</div>
-        </>
-      )}
+      <div className="status-divider" />
+      {/* Trips: tap to open the Turer panel (record/stop + saved trips) */}
+      <button
+        className={`status-tracking-btn ${isTracking ? 'status-tracking-on' : ''}`}
+        onClick={() => setActivePanel('turer')}
+        title="Turer – ta opp og se lagrede turer"
+      >
+        {isTracking ? '● REC' : '⦿ Tur'}
+      </button>
     </div>
   )
 }

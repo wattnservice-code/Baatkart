@@ -41,7 +41,15 @@ html, body, #root {
 .status-value { font-variant-numeric: tabular-nums; font-weight: 500; }
 .status-unit { color: #64748b; font-size: 11px; }
 .status-divider { width: 1px; height: 16px; background: rgba(255,255,255,0.12); }
-.status-tracking { color: #f87171; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; }
+.status-tracking-btn {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  color: #94a3b8; font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+  border-radius: 6px; padding: 3px 8px; cursor: pointer;
+}
+.status-tracking-btn:active { opacity: 0.7; }
+.status-tracking-on { color: #f87171; border-color: rgba(248,113,113,0.4); }
+.day .status-tracking-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.12); color: #475569; }
+.day .status-tracking-on { color: #dc2626; border-color: rgba(220,38,38,0.4); }
 @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 .status-tile-source { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; }
 .status-tile-offline { color: #4ade80; }
@@ -753,6 +761,25 @@ html, body, #root {
 .saved-track-stop { background: rgba(248,113,113,0.15); color: #f87171; border-color: #ef4444; }
 .saved-track-del { background: transparent; color: #64748b; padding: 5px 8px; }
 .saved-track-del:hover { color: #f87171; }
+/* Active-trip card in the Turer panel */
+.trip-current { padding: 4px 16px 12px; display: flex; flex-direction: column; gap: 10px; }
+.trip-current-info { display: flex; align-items: baseline; gap: 10px; }
+.trip-rec-dot { color: #f87171; font-size: 14px; animation: blink 1.4s infinite; }
+.trip-current-stat { font-size: 24px; font-weight: 800; color: #e2e8f0; }
+.trip-current-sub { font-size: 12px; color: #64748b; }
+.trip-current-btns { display: flex; gap: 8px; }
+.trip-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 11px 14px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
+  border: 1px solid transparent;
+}
+.trip-btn-start  { flex: 1; background: #dc2626; color: white; }
+.trip-btn-stop   { flex: 1; background: #dc2626; color: white; }
+.trip-btn-discard { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #94a3b8; }
+.trip-btn-discard:disabled { opacity: 0.4; cursor: default; }
+.day .trip-current-stat { color: #0f172a; }
+.day .trip-btn-discard { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.15); color: #475569; }
+
 .day .saved-track-row { border-bottom-color: rgba(0,0,0,0.06); }
 .day .saved-track-name { color: #0f172a; }
 .day .saved-track-btn { border-color: rgba(0,0,0,0.12); background: rgba(0,0,0,0.03); }
@@ -768,7 +795,6 @@ html, body, #root {
 }
 .day .status-icon { color: #475569; }
 .day .status-divider { background: rgba(0,0,0,0.15); }
-.day .status-tracking { color: #dc2626; }
 .day .status-tile-offline { color: #16a34a; }
 .day .status-tile-online  { color: #475569; }
 .day .status-net-on  { color: #16a34a; }

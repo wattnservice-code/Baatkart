@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, X, Plus, Minus, LocateFixed, Circle, Square, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye } from 'lucide-react'
+import { Navigation, X, Plus, Minus, LocateFixed, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -7,9 +7,9 @@ import { formatDist } from './NavOverlay'
 import { useMapStore } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import SpotListPanel from './SpotListPanel'
+import TripsPanel from './TripsPanel'
 import SpotDialog from './SpotDialog'
 import SettingsPanel from './SettingsPanel'
-import SaveTrackDialog from './SaveTrackDialog'
 
 function distanceM(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const R = 6371000
@@ -56,7 +56,6 @@ function CompassBtn({ active }: { active: boolean }) {
 
 export default function MapControls() {
   const [gpsSpot, setGpsSpot]           = useState<{ lat: number; lng: number } | null>(null)
-  const [showSaveTrack, setShowSaveTrack] = useState(false)
 
   const isOnline         = useOnline()
   const headingUp        = useMapStore((s) => s.headingUp)
@@ -65,12 +64,9 @@ export default function MapControls() {
   const toggleCompass    = useMapStore((s) => s.toggleCompass)
   const followBoat       = useMapStore((s) => s.followBoat)
   const addingSpot       = useMapStore((s) => s.addingSpot)
-  const isTracking       = useMapStore((s) => s.isTracking)
   const position         = useMapStore((s) => s.position)
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
   const setAddingSpot    = useMapStore((s) => s.setAddingSpot)
-  const startTracking    = useMapStore((s) => s.startTracking)
-  const stopTracking     = useMapStore((s) => s.stopTracking)
   const darkMode         = useMapStore((s) => s.darkMode)
   const nightVision      = useMapStore((s) => s.nightVision)
   const cycleDisplayMode = useMapStore((s) => s.cycleDisplayMode)
@@ -88,7 +84,6 @@ export default function MapControls() {
   const setNavPreview    = useMapStore((s) => s.setNavPreview)
   const setSearchPin     = useMapStore((s) => s.setSearchPin)
   const removeSpot       = useMapStore((s) => s.removeSpot)
-  const track            = useMapStore((s) => s.track)
 
   // Close the card. For a dropped/search pin (no saved id) also remove the
   // blue pin from the map; for a saved spot just close (keep its yellow pin).
@@ -199,23 +194,6 @@ export default function MapControls() {
         >
           <LocateFixed size={22} />
         </button>
-        <button
-          className={`fab ${isTracking ? 'fab-rec' : ''}`}
-          onClick={() => {
-            // Tracking auto-starts on launch. Pressing stops it and offers to save
-            // the route; once stopped the REC indicator disappears. Press again to
-            // start a new trip.
-            if (isTracking) {
-              stopTracking()
-              if (track.length > 0) setShowSaveTrack(true)
-            } else {
-              startTracking()
-            }
-          }}
-          title={isTracking ? 'Stopp og lagre tur' : 'Start sporing'}
-        >
-          {isTracking ? <Square size={20} /> : <Circle size={22} />}
-        </button>
       </div>
 
       {activePanel === 'spots' && (
@@ -225,9 +203,9 @@ export default function MapControls() {
           onAddMap={useMapPos}
         />
       )}
+      {activePanel === 'turer' && <TripsPanel onClose={() => setActivePanel(null)} />}
       {activePanel === 'meg' && <SettingsPanel onClose={() => setActivePanel(null)} />}
       {gpsSpot && <SpotDialog lat={gpsSpot.lat} lng={gpsSpot.lng} onClose={() => setGpsSpot(null)} />}
-      {showSaveTrack && <SaveTrackDialog onClose={() => setShowSaveTrack(false)} />}
 
       {spotMenu && <div className="spot-action-backdrop" onClick={closeSpotMenu} />}
       {spotMenu && (

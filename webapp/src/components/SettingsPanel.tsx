@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { X, Ship, Sun, Moon, Layers, Circle, Compass, Wind, Waves, Gauge, WifiOff, Globe, Trash2, User, Play } from 'lucide-react'
+import { X, Ship, Sun, Moon, Layers, Circle, Compass, Wind, Waves, Gauge, WifiOff, Globe, Trash2, User } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
-import { formatDist } from './NavOverlay'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth } from '../googleEarth'
 import { getMapInstance } from '../mapInstance'
@@ -24,14 +23,10 @@ export default function SettingsPanel({ onClose }: Props) {
   const [offlineOpen, setOfflineOpen]     = useState(false)
   const [boatInfoOpen, setBoatInfoOpen]   = useState(false)
   const [aisKeyInput, setAisKeyInput]     = useState('')
-  const [confirmTrack, setConfirmTrack]   = useState(false)
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [confirmDelKey, setConfirmDelKey] = useState(false)
 
   const isOnline       = useOnline()
   const position       = useMapStore((s) => s.position)
-  const track          = useMapStore((s) => s.track)
-  const clearTrack     = useMapStore((s) => s.clearTrack)
   const darkMode       = useMapStore((s) => s.darkMode)
   const seamarkVisible = useMapStore((s) => s.seamarkVisible)
   const compassEnabled = useMapStore((s) => s.compassEnabled)
@@ -51,11 +46,6 @@ export default function SettingsPanel({ onClose }: Props) {
   const aisKey               = useMapStore((s) => s.aisKey)
   const setAisKey            = useMapStore((s) => s.setAisKey)
   useEffect(() => { setAisKeyInput(aisKey) }, [aisKey])
-  const savedTracks          = useMapStore((s) => s.savedTracks)
-  const followingTrack       = useMapStore((s) => s.followingTrack)
-  const deleteSavedTrack     = useMapStore((s) => s.deleteSavedTrack)
-  const startFollowingTrack  = useMapStore((s) => s.startFollowingTrack)
-  const stopFollowingTrack   = useMapStore((s) => s.stopFollowingTrack)
 
   const handleCompassToggle = async () => {
     if (!compassEnabled) {
@@ -184,68 +174,11 @@ export default function SettingsPanel({ onClose }: Props) {
             </button>
           )}
 
-          {track.length > 0 && (
-            <>
-              <div className="menu-divider" />
-              <div style={subhead}>Aktivt spor</div>
-              <button className="menu-item" style={{ color: '#f87171' }} onClick={() => setConfirmTrack(true)}>
-                <Trash2 size={20} /><span>Slett aktivt spor ({track.length} pkt)</span>
-              </button>
-            </>
-          )}
-
-          {savedTracks.length > 0 && (
-            <>
-              <div className="menu-divider" />
-              <div style={subhead}>Lagrede turer ({savedTracks.length})</div>
-              {savedTracks.map((t) => (
-                <div key={t.id} className="saved-track-row">
-                  <div className="saved-track-info">
-                    <span className="saved-track-name">{t.name}</span>
-                    <span className="saved-track-meta">
-                      {formatDist(t.distanceM, distUnit)} · {new Date(t.date).toLocaleDateString('no-NO')}
-                    </span>
-                  </div>
-                  <div className="saved-track-btns">
-                    {followingTrack?.id === t.id ? (
-                      <button className="saved-track-btn saved-track-stop" onClick={() => { stopFollowingTrack(); onClose() }}>
-                        Stopp
-                      </button>
-                    ) : (
-                      <button className="saved-track-btn saved-track-follow" onClick={() => { startFollowingTrack(t); onClose() }}>
-                        <Play size={14} /> Følg
-                      </button>
-                    )}
-                    <button className="saved-track-btn saved-track-del" onClick={() => setConfirmDeleteId(t.id)}>
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
         </div>
       </div>
 
       {offlineOpen && <OfflinePanel onClose={() => setOfflineOpen(false)} />}
       {boatInfoOpen && <BoatInfoPanel onClose={() => setBoatInfoOpen(false)} />}
-
-      {confirmDeleteId && (
-        <div className="dialog-overlay" onClick={() => setConfirmDeleteId(null)}>
-          <div className="dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="dialog-header">Slett tur</div>
-            <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 16 }}>
-              Slette «{savedTracks.find((t) => t.id === confirmDeleteId)?.name}»?
-            </p>
-            <div className="dialog-actions">
-              <button className="btn-secondary" onClick={() => setConfirmDeleteId(null)}>Avbryt</button>
-              <button className="btn-primary" style={{ background: '#dc2626' }} onClick={() => { deleteSavedTrack(confirmDeleteId); setConfirmDeleteId(null) }}>
-                <Trash2 size={15} /> Slett
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {confirmDelKey && (
         <div className="dialog-overlay" onClick={() => setConfirmDelKey(false)}>
@@ -264,22 +197,6 @@ export default function SettingsPanel({ onClose }: Props) {
         </div>
       )}
 
-      {confirmTrack && (
-        <div className="dialog-overlay" onClick={() => setConfirmTrack(false)}>
-          <div className="dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="dialog-header">Slett spor</div>
-            <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 16 }}>
-              Slette sporet ({track.length} punkter)?
-            </p>
-            <div className="dialog-actions">
-              <button className="btn-secondary" onClick={() => setConfirmTrack(false)}>Avbryt</button>
-              <button className="btn-primary" style={{ background: '#dc2626' }} onClick={() => { clearTrack(); setConfirmTrack(false) }}>
-                <Trash2 size={15} /> Slett
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }
