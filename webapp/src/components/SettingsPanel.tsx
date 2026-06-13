@@ -128,7 +128,7 @@ export default function SettingsPanel({ onClose }: Props) {
                 value={aisKeyInput}
                 onChange={(e) => setAisKeyInput(e.target.value)}
                 style={{
-                  flex: 1, padding: '8px 10px', borderRadius: 8,
+                  flex: 1, minWidth: 0, padding: '8px 10px', borderRadius: 8,
                   background: darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
                   border: darkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.15)',
                   color: darkMode ? 'white' : '#0f172a', fontSize: 13, outline: 'none',
@@ -138,7 +138,7 @@ export default function SettingsPanel({ onClose }: Props) {
                 <button
                   onClick={() => setAisKey(aisKeyInput.trim())}
                   style={{
-                    padding: '8px 14px', borderRadius: 8, border: 'none',
+                    flexShrink: 0, padding: '8px 14px', borderRadius: 8, border: 'none',
                     background: '#2563eb', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
                   }}
                 >
@@ -149,7 +149,7 @@ export default function SettingsPanel({ onClose }: Props) {
                 <button
                   onClick={() => setConfirmDelKey(true)}
                   style={{
-                    padding: '8px 10px', borderRadius: 8, border: 'none',
+                    flexShrink: 0, padding: '8px 10px', borderRadius: 8, border: 'none',
                     background: '#dc2626', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
                   }}
                   title="Slett nøkkel"
