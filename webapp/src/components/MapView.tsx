@@ -731,7 +731,7 @@ export default function MapView() {
       const isActive = spot.id === activeSpotId
       const emoji = iconEmoji(spot.icon)
       const html = `<div class="spot-emoji-pin ${isActive ? 'spot-emoji-pin-active' : ''}"><span class="spot-emoji-glyph">${emoji}</span>${isActive ? `<div class="spot-emoji-label">${spot.name}</div>` : ''}</div>`
-      const icon = L.divIcon({ className: '', html, iconSize: [30, 30], iconAnchor: [15, 15] })
+      const icon = L.divIcon({ className: '', html, iconSize: [40, 40], iconAnchor: [20, 20] })
       if (spotMarkersRef.current.has(spot.id)) {
         spotMarkersRef.current.get(spot.id)!.setLatLng([spot.lat, spot.lng]).setIcon(icon)
       } else {
