@@ -29,15 +29,17 @@ function formatEta(distM: number, speedMs: number): string | null {
   return `${h} t ${m} min`
 }
 
-function CompassBtn({ active }: { active: boolean }) {
+type NordMode = 'off' | 'gps' | 'krs'
+
+function CompassBtn({ mode }: { mode: NordMode }) {
   const elRef  = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number | null>(null)
+  const active = mode !== 'off'
 
   useEffect(() => {
     const el = elRef.current
     if (!el) return
     const loop = () => {
-      // Rotate N to always point true north when kurs-opp is active
       el.style.transform = active ? `rotate(${-getCurrentBearing()}deg)` : ''
       rafRef.current = requestAnimationFrame(loop)
     }
@@ -49,7 +51,8 @@ function CompassBtn({ active }: { active: boolean }) {
     <div ref={elRef} className={`cmps-rose ${!active ? 'cmps-off' : ''}`}>
       <span className="cmps-n">N</span>
       <div className="cmps-needle" />
-      {active && <span className="cmps-label">KRS</span>}
+      {mode === 'gps' && <span className="cmps-label">GPS</span>}
+      {mode === 'krs' && <span className="cmps-label">KRS</span>}
     </div>
   )
 }
@@ -95,17 +98,24 @@ export default function MapControls() {
   const useGpsPos = () => { if (position) setGpsSpot({ lat: position.lat, lng: position.lng }) }
   const useMapPos = () => { setAddingSpot(true) }
 
-  // 2-state toggle: OFF ↔ kurs-opp (compass on + heading-up)
+  // 3-state cycle: nord-opp → GPS kjøreretning → kompassretning → nord-opp
+  const nordMode: NordMode = compassEnabled ? 'krs' : headingUp ? 'gps' : 'off'
+
   const handleCompassBtn = async () => {
-    if (!compassEnabled) {
+    if (nordMode === 'off') {
+      // → GPS kjøreretning (headingUp on, compass off)
+      if (!headingUp) toggleHeadingUp()
+      if (compassEnabled) toggleCompass()
+    } else if (nordMode === 'gps') {
+      // → Kompassretning (headingUp on, compass on) — request permission on iOS
       const DevOr = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
       if (typeof DevOr.requestPermission === 'function') {
         try { if (await DevOr.requestPermission() !== 'granted') return } catch { return }
       }
-      toggleCompass()
       if (!headingUp) toggleHeadingUp()
+      toggleCompass()
     } else {
-      // Turn everything off
+      // krs → off: slå av begge
       if (headingUp) toggleHeadingUp()
       toggleCompass()
     }
@@ -150,11 +160,11 @@ export default function MapControls() {
 
       <div className="map-controls">
         <button
-          className={`fab compass-fab ${compassEnabled ? 'cmps-btn-krs' : ''}`}
+          className={`fab compass-fab ${nordMode !== 'off' ? 'cmps-btn-krs' : ''}`}
           onClick={handleCompassBtn}
-          title={compassEnabled ? 'Kurs opp aktiv – trykk for å slå av' : 'Trykk for kurs opp'}
+          title={nordMode === 'krs' ? 'Kompassretning – trykk for nord-opp' : nordMode === 'gps' ? 'GPS kjøreretning – trykk for kompass' : 'Nord-opp – trykk for kjøreretning'}
         >
-          <CompassBtn active={compassEnabled} />
+          <CompassBtn mode={nordMode} />
         </button>
         {aisKey && (
           <button

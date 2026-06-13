@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { MapPin, Compass, WifiOff, Wifi, Copy, Check } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
+import { Circle } from 'lucide-react'
 
 function headingLabel(deg: number): string {
   const dirs = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV']
@@ -10,6 +11,7 @@ function headingLabel(deg: number): string {
 export default function StatusBar() {
   const position          = useMapStore((s) => s.position)
   const isTracking        = useMapStore((s) => s.isTracking)
+  const startTracking     = useMapStore((s) => s.startTracking)
   const setActivePanel    = useMapStore((s) => s.setActivePanel)
   const offlineOnly       = useMapStore((s) => s.offlineOnly)
   const toggleOfflineOnly = useMapStore((s) => s.toggleOfflineOnly)
@@ -77,13 +79,16 @@ export default function StatusBar() {
       </button>
 
       <div className="status-divider" />
-      {/* Trips: tap to open the Turer panel (record/stop + saved trips) */}
+      {/* Tur-knapp: direkte start om ikke recording, åpner panel for å stoppe/lagre */}
       <button
         className={`status-tracking-btn ${isTracking ? 'status-tracking-on' : ''}`}
-        onClick={() => setActivePanel('turer')}
-        title="Turer – ta opp og se lagrede turer"
+        onClick={() => isTracking ? setActivePanel('turer') : startTracking()}
+        title={isTracking ? 'Stopp/lagre tur' : 'Start tur-opptak'}
       >
-        {isTracking ? '● REC' : '⦿ Tur'}
+        {isTracking
+          ? <><Circle size={13} style={{ fill: '#f87171', marginRight: 4 }} />REC</>
+          : <><Circle size={13} style={{ marginRight: 4 }} />Tur</>
+        }
       </button>
     </div>
   )

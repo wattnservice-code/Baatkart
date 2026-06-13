@@ -43,8 +43,9 @@ html, body, #root {
 .status-divider { width: 1px; height: 16px; background: rgba(255,255,255,0.12); }
 .status-tracking-btn {
   background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
-  color: #94a3b8; font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
-  border-radius: 6px; padding: 3px 8px; cursor: pointer;
+  color: #94a3b8; font-size: 13px; font-weight: 700; letter-spacing: 0.05em;
+  border-radius: 8px; padding: 5px 12px; cursor: pointer;
+  display: flex; align-items: center;
 }
 .status-tracking-btn:active { opacity: 0.7; }
 .status-tracking-on { color: #f87171; border-color: rgba(248,113,113,0.4); }
