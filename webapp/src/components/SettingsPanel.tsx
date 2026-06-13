@@ -39,6 +39,8 @@ export default function SettingsPanel({ onClose }: Props) {
   const cycleRingRadius      = useMapStore((s) => s.cycleRingRadius)
   const aisKey               = useMapStore((s) => s.aisKey)
   const setAisKey            = useMapStore((s) => s.setAisKey)
+  const aisVisible           = useMapStore((s) => s.aisVisible)
+  const toggleAis            = useMapStore((s) => s.toggleAis)
   useEffect(() => { setAisKeyInput(aisKey) }, [aisKey])
 
   const handleCompassToggle = async () => {
@@ -95,6 +97,11 @@ export default function SettingsPanel({ onClose }: Props) {
 
           <div className="menu-divider" />
           <div style={subhead}>AIS – fartøy på kartet</div>
+          {aisKey && (
+            <button className="menu-item" style={{ color: aisVisible ? '#60a5fa' : undefined }} onClick={toggleAis}>
+              <Ship size={20} /><span>Vis AIS-fartøy {aisVisible ? '(på)' : '(av)'}</span>
+            </button>
+          )}
           <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ fontSize: 12, color: darkMode ? '#94a3b8' : '#475569' }}>
               Gratis nøkkel: <b style={{ color: '#38bdf8' }}>aisstream.io</b>
