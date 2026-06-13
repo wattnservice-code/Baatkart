@@ -642,8 +642,14 @@ export default function MapView() {
     if (position) {
       const dist = haversineM(position.lat, position.lng, navTarget.lat, navTarget.lng)
       if (dist < 800) {
-        // Close: show both boat and target
-        mapRef.current.fitBounds(L.latLngBounds([from, targetLL]), { padding: [100, 100], maxZoom: 16, animate: true })
+        // Close: show both boat and target. Bias toward bottom-right so the
+        // alarm/overlay (top in portrait, left in landscape) doesn't cover them.
+        const isMob = navTarget.name === 'MOB'
+        mapRef.current.fitBounds(L.latLngBounds([from, targetLL]), {
+          paddingTopLeft: isMob ? [150, 90] : [100, 100],
+          paddingBottomRight: [70, 70],
+          maxZoom: 17, animate: true,
+        })
       } else {
         // Far: center on boat, zoom to show direction — not the full route
         const zoom = dist < 4000 ? 14 : 13

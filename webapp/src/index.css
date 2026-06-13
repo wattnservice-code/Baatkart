@@ -1347,18 +1347,27 @@ html, body, #root {
     max-height: calc(100% - 24px);
   }
 
-  /* Landscape: MOB in bottom-left, speed badge top-left. The wx toggle stays
-     top-right but to the LEFT of the FAB column (which fills the right edge),
-     so it never overlaps even on short phones where the column reaches the top. */
+  /* Landscape: MOB lives mid-left of the MAP area (clear of the status column
+     and out of the bottom corner). Speed badge top-left, wx toggle top-right
+     (left of the FAB column). */
   .mob-btn {
-    top: auto;
-    bottom: 16px;
-    left: max(6px, calc(env(safe-area-inset-left) + 6px));
-    transform: none;
+    top: 50%;
+    bottom: auto;
+    left: calc(max(76px, env(safe-area-inset-left) + 56px) + 8px);
+    transform: translateY(-50%);
   }
   .speed-badge {
     top: max(14px, calc(env(safe-area-inset-top) + 8px));
     left: max(4px, env(safe-area-inset-left));
+  }
+  /* MOB alarm: narrow card on the left so the map centre (pin + boat) stays
+     fully visible on a short landscape screen, instead of a wide top banner. */
+  .mob-overlay {
+    top: max(10px, env(safe-area-inset-top));
+    left: calc(max(76px, env(safe-area-inset-left) + 56px) + 8px);
+    transform: none;
+    min-width: 0;
+    max-width: 240px;
   }
   .wx-tide-toggle {
     top: max(14px, calc(env(safe-area-inset-top) + 8px));

@@ -12,8 +12,9 @@ export default function MobButton() {
     setMob({ lat: position.lat, lng: position.lng })
   }
 
-  // Only show on the map view — hide while a panel (Naviger/Steder/Meg) is open
-  if (activePanel) return null
+  // Only show on the map view, and only while idle — once MOB is triggered the
+  // alarm overlay takes over as the indicator, so the trigger button hides.
+  if (activePanel || mobPoint) return null
 
   return (
     <button
