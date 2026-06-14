@@ -700,7 +700,8 @@ html, body, #root {
 
 /* ── Quick pin bar (list panel) ── */
 .quickpin-bar {
-  position: absolute; bottom: 56px; left: 8px; right: 72px;
+  position: absolute; bottom: 56px; left: 8px;
+  width: 220px;
   background: rgba(20,28,46,0.95); backdrop-filter: blur(10px);
   border: 1px solid rgba(249,115,22,0.4);
   color: white; border-radius: 10px;

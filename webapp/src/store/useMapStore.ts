@@ -408,6 +408,9 @@ export const useMapStore = create<MapStore>((set) => ({
   toggleHeadingUp: () => set((s) => { const v = !s.headingUp; localStorage.setItem('headingUp', String(v)); return { headingUp: v } }),
   toggleSpotsVisible: () => set((s) => { const v = !s.spotsVisible; localStorage.setItem('spotsVisible', String(v)); return { spotsVisible: v } }),
   addQuickPin: (p) => set((s) => {
+    // Skip if there's already a pin within 20 m (double-tap guard)
+    const tooClose = s.quickPins.some((q) => _haversineM(q.lat, q.lng, p.lat, p.lng) < 20)
+    if (tooClose) return {}
     const label = new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
     const pin: QuickPin = { id: Date.now().toString(), ...p, timestamp: Date.now(), label }
     const pins = [...s.quickPins, pin]
