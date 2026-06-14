@@ -53,10 +53,10 @@ function vesselColor(sog: number): string {
 }
 
 function vesselSize(zoom: number): number {
-  if (zoom >= 16) return 36
-  if (zoom >= 14) return 30
-  if (zoom >= 12) return 26
-  return 22
+  if (zoom >= 16) return 30
+  if (zoom >= 14) return 24
+  if (zoom >= 12) return 20
+  return 17
 }
 
 function navStatusLabel(code: number): string | undefined {
@@ -130,10 +130,10 @@ function vesselIcon(vessel: AISVessel, danger: boolean, zoom: number): L.DivIcon
     <div style="
       width:${sz}px;height:${sz}px;
       transform:rotate(${hdg}deg);
-      filter:drop-shadow(0 0 4px rgba(0,0,0,1)) drop-shadow(0 2px 6px rgba(0,0,0,0.9));
+      filter:drop-shadow(0 0 3px rgba(255,255,255,0.7)) drop-shadow(0 0 6px rgba(0,0,0,1));
     ">
       <svg width="${sz}" height="${sz}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="12,2 21,22 12,17 3,22" fill="${color}" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round"/>
+        <polygon points="12,2 21,22 12,17 3,22" fill="${color}" stroke="#0f172a" stroke-width="2" stroke-linejoin="round"/>
       </svg>
     </div>
   </div>`
