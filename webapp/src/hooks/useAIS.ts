@@ -23,6 +23,8 @@ interface AISVessel {
   destination: string
   callSign: string
   imo: number
+  msgtime: string
+  eta: string
 }
 
 // Raw Barentswatch /v1/latest/combined response fields.
@@ -45,6 +47,8 @@ interface BwRaw {
   destination?: string
   callSign?: string
   imoNumber?: number
+  msgtime?: string
+  eta?: string
   // Some responses use lowercase field names — accept both
   sog?: number; cog?: number; heading?: number; navStatus?: number; rot?: number
   imo?: number; iMONumber?: number; imoNr?: number
@@ -69,10 +73,64 @@ function bwToVessel(r: BwRaw): AISVessel {
     destination: r.destination ?? '',
     callSign:    r.callSign ?? '',
     imo:         r.imoNumber ?? r.iMONumber ?? r.imoNr ?? r.imo ?? 0,
+    msgtime:     r.msgtime ?? '',
+    eta:         r.eta ?? '',
   }
 }
 
 // ── Visuals ───────────────────────────────────────────────────────────────────
+
+// Ship type → icon color (overridden to red when danger)
+function vesselTypeColor(t: number): string {
+  if (t >= 80 && t <= 89) return '#fb923c'  // tanker — oransje
+  if (t >= 70 && t <= 79) return '#4ade80'  // last — grønn
+  if (t >= 60 && t <= 69) return '#60a5fa'  // passasjer — blå
+  if (t >= 40 && t <= 49) return '#f97316'  // hurtigbåt — dyp oransje
+  if (t === 30)            return '#facc15'  // fiske — gul
+  if (t === 36)            return '#c084fc'  // seil — lilla
+  if (t === 37)            return '#34d399'  // fritid — teal
+  if (t === 31 || t === 32 || (t >= 50 && t <= 55)) return '#a78bfa' // slep/tjeneste — lys lilla
+  if (t === 35)            return '#ef4444'  // militær — rød
+  return '#38bdf8'                           // ukjent/annet — cyan
+}
+
+// MID (first 3 digits of MMSI) → flag emoji
+function mmsiFlag(mmsi: number): string {
+  const mid = Math.floor(mmsi / 1_000_000)
+  const f: Record<number, string> = {
+    201:'🇦🇱',203:'🇦🇹',209:'🇨🇾',210:'🇨🇾',211:'🇩🇪',212:'🇨🇾',
+    213:'🇬🇪',214:'🇲🇩',215:'🇲🇹',218:'🇩🇪',219:'🇩🇰',220:'🇩🇰',
+    224:'🇪🇸',225:'🇪🇸',226:'🇫🇷',227:'🇫🇷',228:'🇫🇷',229:'🇲🇹',
+    230:'🇫🇮',231:'🇫🇴',232:'🇬🇧',233:'🇬🇧',234:'🇬🇧',235:'🇬🇧',
+    236:'🇬🇮',237:'🇬🇷',238:'🇭🇷',239:'🇬🇷',240:'🇬🇷',241:'🇬🇷',
+    242:'🇲🇦',243:'🇭🇺',244:'🇳🇱',245:'🇳🇱',246:'🇳🇱',247:'🇮🇹',
+    248:'🇲🇹',249:'🇲🇹',250:'🇮🇪',251:'🇮🇸',252:'🇱🇮',253:'🇱🇺',
+    254:'🇲🇨',255:'🇵🇹',256:'🇲🇹',257:'🇳🇴',258:'🇳🇴',259:'🇳🇴',
+    261:'🇵🇱',262:'🇲🇪',263:'🇵🇹',264:'🇷🇴',265:'🇸🇪',266:'🇸🇪',
+    267:'🇸🇰',268:'🇸🇲',269:'🇨🇭',270:'🇪🇪',271:'🇱🇹',272:'🇺🇦',
+    273:'🇷🇺',274:'🇱🇻',275:'🇱🇻',276:'🇱🇹',277:'🇧🇾',278:'🇧🇬',
+    279:'🇷🇺',305:'🇦🇬',306:'🇦🇼',308:'🇧🇸',309:'🇧🇸',310:'🇧🇲',
+    311:'🇦🇳',316:'🇨🇦',319:'🇰🇾',338:'🇺🇸',339:'🇵🇷',351:'🇵🇦',
+    352:'🇵🇦',353:'🇵🇦',354:'🇵🇦',355:'🇵🇦',356:'🇵🇦',357:'🇵🇦',
+    366:'🇺🇸',367:'🇺🇸',368:'🇺🇸',369:'🇺🇸',370:'🇵🇦',371:'🇵🇦',
+    372:'🇵🇦',373:'🇵🇦',374:'🇵🇦',378:'🇻🇬',379:'🇵🇦',
+    431:'🇯🇵',432:'🇯🇵',440:'🇰🇷',441:'🇰🇷',477:'🇭🇰',
+    503:'🇦🇺',518:'🇨🇰',525:'🇮🇩',538:'🇲🇭',553:'🇵🇬',
+    572:'🇵🇼',574:'🇻🇳',577:'🇵🇭',
+    620:'🇸🇴',636:'🇱🇷',654:'🇹🇿',657:'🇸🇱',667:'🇸🇱',
+  }
+  return f[mid] ?? ''
+}
+
+// Human-readable age of AIS position fix
+function dataAge(msgtime: string): string {
+  if (!msgtime) return ''
+  const secs = (Date.now() - new Date(msgtime).getTime()) / 1000
+  if (secs < 0 || isNaN(secs)) return ''
+  if (secs < 90)   return `${Math.round(secs)}s`
+  if (secs < 3600) return `${Math.round(secs / 60)} min`
+  return `${Math.round(secs / 3600)}t`
+}
 
 function shipTypeLabel(code: number): string | undefined {
   if (!code) return undefined
@@ -90,10 +148,6 @@ function shipTypeLabel(code: number): string | undefined {
   if (code >= 70 && code <= 79) return 'Lasteskip'
   if (code >= 80 && code <= 89) return 'Tankskip'
   return undefined
-}
-
-function vesselColor(sog: number): string {
-  return sog < 5 ? '#38bdf8' : '#4ade80'
 }
 
 function vesselSize(zoom: number): number {
@@ -127,7 +181,7 @@ function destPointAIS(lat: number, lng: number, headingDeg: number, meters: numb
 function vesselIcon(vessel: AISVessel, danger: boolean, zoom: number): L.DivIcon {
   const sz = vesselSize(zoom)
   const hdg = vessel.heading > 0 && vessel.heading < 360 ? vessel.heading : vessel.cog
-  const color = danger ? '#ef4444' : vesselColor(vessel.sog)
+  const color = danger ? '#ef4444' : vesselTypeColor(vessel.shipType)
   const wrapCls = danger ? 'ais-danger-wrap' : ''
   const html = `<div class="${wrapCls}" style="width:${sz}px;height:${sz}px;">
     <div style="width:${sz}px;height:${sz}px;transform:rotate(${hdg}deg);
@@ -174,9 +228,14 @@ function isDanger(cpa: CpaInfo | null): boolean {
 // ── Popup ─────────────────────────────────────────────────────────────────────
 
 function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean): string {
-  const sog = v.sog > 0 ? `${v.sog.toFixed(1)} kn` : ''
-  const hdg = v.heading > 0 && v.heading < 360 ? `${Math.round(v.heading)}° (stavn)` : ''
-  const cogStr = v.cog > 0 && v.cog < 360 ? `${Math.round(v.cog)}° (kurs)` : ''
+  const flag    = mmsiFlag(v.mmsi)
+  const age     = dataAge(v.msgtime)
+  const typeClr = danger ? '#ef4444' : vesselTypeColor(v.shipType)
+  const typeLabel = shipTypeLabel(v.shipType)
+
+  const sog    = v.sog > 0 ? `${v.sog.toFixed(1)} kn` : ''
+  const hdg    = v.heading > 0 && v.heading < 360 ? `${Math.round(v.heading)}° stavn` : ''
+  const cogStr = v.cog > 0 && v.cog < 360 ? `${Math.round(v.cog)}° kurs` : ''
   const showCog = cogStr && hdg && Math.abs(v.cog - v.heading) > 5
   const navStat = navStatusLabel(v.navStatus)
   const turning = v.rot !== -128 && Math.abs(v.rot) > 15
@@ -186,26 +245,29 @@ function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean): strin
   if (cpa && cpa.tcpaMin > 0 && isFinite(cpa.tcpaMin)) {
     const nm = (cpa.cpaM / 1852).toFixed(2), min = Math.round(cpa.tcpaMin)
     cpaLine = danger
-      ? `<div style="margin-top:4px;color:#ef4444;font-weight:700">⚠ Kollisjonskurs<br/>Passerer ${nm} nm om ${min} min</div>`
-      : `<div style="margin-top:4px;color:#94a3b8;font-size:12px">Nærmeste: ${nm} nm om ${min} min</div>`
+      ? `<div style="margin-top:6px;padding:4px 6px;background:rgba(239,68,68,0.15);border-radius:4px;color:#ef4444;font-weight:700;font-size:12px">⚠ Kollisjonskurs · Passerer ${nm} nm om ${min} min</div>`
+      : `<div style="margin-top:4px;color:#94a3b8;font-size:11px">CPA ${nm} nm om ${min} min</div>`
   }
 
-  const rows: string[] = []
-  const typeLabel = shipTypeLabel(v.shipType)
-  if (typeLabel) rows.push(typeLabel)
-  if (v.length) rows.push(`${Math.round(v.length)}${v.beam ? `×${Math.round(v.beam)}` : ''} m`)
-  if (v.draught) rows.push(`dypg. ${v.draught.toFixed(1)} m`)
-  const staticLine = rows.length ? `<div style="color:#94a3b8;font-size:12px;margin-top:2px">${rows.join(' · ')}</div>` : ''
-  const dest = v.destination ? `<div style="color:#94a3b8;font-size:12px">→ ${v.destination}</div>` : ''
-  const imoLine = v.imo ? `<div style="color:#64748b;font-size:11px">IMO ${v.imo}</div>` : ''
+  const dimParts: string[] = []
+  if (v.length) dimParts.push(`${Math.round(v.length)}${v.beam ? `×${Math.round(v.beam)}` : ''} m`)
+  if (v.draught) dimParts.push(`dypg. ${v.draught.toFixed(1)} m`)
+  const dimLine  = dimParts.length ? `<div style="color:#94a3b8;font-size:11px">${dimParts.join(' · ')}</div>` : ''
+  const destLine = v.destination ? `<div style="color:#94a3b8;font-size:11px">→ ${v.destination}${v.eta ? ` (ETA ${v.eta})` : ''}</div>` : ''
+  const imoLine  = v.imo ? `<div style="color:#475569;font-size:10px">IMO ${v.imo}</div>` : ''
+  const ageLine  = age ? `<span style="color:#475569;font-size:10px">· ${age} siden</span>` : ''
 
-  return `<div style="min-width:160px">
-    <div style="font-weight:700;font-size:14px;margin-bottom:4px">${v.name || `MMSI ${v.mmsi}`}</div>
-    <div style="color:#94a3b8;font-size:13px">${[sog, hdg, showCog ? cogStr : ''].filter(Boolean).join(' · ')}</div>
-    ${navStat ? `<div style="margin-top:2px;color:#fbbf24;font-size:12px">${navStat}</div>` : ''}
-    ${turning ? `<div style="color:#94a3b8;font-size:12px">${turning}</div>` : ''}
-    ${staticLine}${dest}
-    <div style="color:#64748b;font-size:11px;margin-top:2px">MMSI ${v.mmsi}${v.callSign ? ` · ${v.callSign}` : ''}</div>
+  return `<div style="min-width:170px;font-family:system-ui,sans-serif">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      ${flag ? `<span style="font-size:16px">${flag}</span>` : ''}
+      <span style="font-weight:700;font-size:14px;flex:1">${v.name || `MMSI ${v.mmsi}`}</span>
+    </div>
+    ${typeLabel ? `<div style="display:inline-block;padding:1px 6px;border-radius:10px;background:${typeClr}22;color:${typeClr};font-size:11px;font-weight:600;margin-bottom:4px">${typeLabel}</div>` : ''}
+    <div style="color:#94a3b8;font-size:12px">${[sog, hdg, showCog ? cogStr : ''].filter(Boolean).join(' · ')}</div>
+    ${navStat ? `<div style="color:#fbbf24;font-size:11px">${navStat}</div>` : ''}
+    ${turning  ? `<div style="color:#94a3b8;font-size:11px">${turning}</div>` : ''}
+    ${dimLine}${destLine}
+    <div style="color:#475569;font-size:10px;margin-top:3px">MMSI ${v.mmsi}${v.callSign ? ` · ${v.callSign}` : ''} ${ageLine}</div>
     ${imoLine}
     ${cpaLine}
   </div>`
@@ -335,7 +397,7 @@ export function useAIS() {
           const lineDir = cog > 0 ? cog : heading
           const lineM   = Math.max(150, Math.min(sog * KN_TO_MS * 120, 1500))
           const lineEnd = destPointAIS(lat, lng, lineDir, lineM)
-          const lineColor = danger ? '#ef4444' : vesselColor(sog)
+          const lineColor = danger ? '#ef4444' : vesselTypeColor(vessel.shipType)
 
           const existing = markersRef.current.get(mmsi)
           if (existing) {
