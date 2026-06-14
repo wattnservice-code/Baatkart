@@ -21,7 +21,16 @@ export default function StatusBar() {
   // speed is shown in the floating badge (MapControls) — not duplicated here
 
   const [isOnline, setIsOnline] = useState(navigator.onLine)
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied]     = useState(false)
+  const [now, setNow]           = useState(Date.now())
+
+  // Tick every 3 s to detect stale GPS (position.timestamp not updated)
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 3000)
+    return () => clearInterval(id)
+  }, [])
+
+  const gpsStale = !!position && (now - position.timestamp) > 8000
 
   useEffect(() => {
     const on = () => setIsOnline(true)
@@ -47,14 +56,20 @@ export default function StatusBar() {
   return (
     <div className="status-bar">
       {/* Coordinates — tap to copy */}
-      <button className={`status-item status-coords-btn ${copied ? 'status-coords-copied' : ''}`} onClick={copyCoords} title="Trykk for å kopiere">
+      <button
+        className={`status-item status-coords-btn ${copied ? 'status-coords-copied' : ''} ${gpsStale ? 'status-gps-stale' : ''}`}
+        onClick={copyCoords}
+        title={gpsStale ? 'GPS-signal mistet' : 'Trykk for å kopiere'}
+      >
         <MapPin size={16} className="status-icon" />
         <span className="status-value">
-          {position
-            ? `${position.lat.toFixed(4)}°N ${position.lng.toFixed(4)}°E`
-            : 'Ingen GPS'}
+          {!position
+            ? 'Ingen GPS'
+            : gpsStale
+            ? 'GPS mistet'
+            : `${position.lat.toFixed(4)}°N ${position.lng.toFixed(4)}°E`}
         </span>
-        {position && (copied
+        {position && !gpsStale && (copied
           ? <Check size={12} style={{ color: '#4ade80', marginLeft: 3 }} />
           : <Copy size={11} style={{ color: '#64748b', marginLeft: 3 }} />
         )}

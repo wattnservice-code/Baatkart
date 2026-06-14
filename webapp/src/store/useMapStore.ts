@@ -186,6 +186,18 @@ function saveTrack(track: TrackPoint[]) {
   localStorage.setItem('currentTrack', JSON.stringify(track))
 }
 
+// Batch track writes — at most once per 5 s while recording.
+// Immediate flush on clear/stop so restart always reads fresh data.
+let _trackSaveTimer: ReturnType<typeof setTimeout> | null = null
+function saveTrackDebounced(track: TrackPoint[]) {
+  if (_trackSaveTimer) clearTimeout(_trackSaveTimer)
+  _trackSaveTimer = setTimeout(() => { saveTrack(track); _trackSaveTimer = null }, 5000)
+}
+function flushTrackSave(track: TrackPoint[]) {
+  if (_trackSaveTimer) { clearTimeout(_trackSaveTimer); _trackSaveTimer = null }
+  saveTrack(track)
+}
+
 function loadMob(): MobPoint | null {
   try { return JSON.parse(localStorage.getItem('mobPoint') || 'null') } catch { return null }
 }
@@ -280,7 +292,7 @@ export const useMapStore = create<MapStore>((set) => ({
       const updates: Partial<MapStore> = { position: pos }
       if (state.isTracking) {
         const track = [...state.track, { lat: pos.lat, lng: pos.lng, timestamp: pos.timestamp }]
-        saveTrack(track)
+        saveTrackDebounced(track)
         updates.track = track
         if (state.track.length > 0) {
           const prev = state.track[state.track.length - 1]
@@ -303,9 +315,9 @@ export const useMapStore = create<MapStore>((set) => ({
       d += _haversineM(s.track[i-1].lat, s.track[i-1].lng, s.track[i].lat, s.track[i].lng)
     return { isTracking: true, trackDistanceM: d, trackMaxSpeed: 0 }
   }),
-  stopTracking: () => set({ isTracking: false }),
+  stopTracking: () => set((s) => { flushTrackSave(s.track); return { isTracking: false } }),
   toggleAutoTrack: () => set((s) => { const v = !s.autoTrack; localStorage.setItem('autoTrack', String(v)); return { autoTrack: v } }),
-  clearTrack: () => { saveTrack([]); return set({ track: [] }) },
+  clearTrack: () => { flushTrackSave([]); return set({ track: [] }) },
 
   addSpot: (spot) =>
     set((state) => {
