@@ -272,7 +272,7 @@ export const useMapStore = create<MapStore>((set) => ({
   followingTrack: null,
   trackDistanceM: 0,
   trackMaxSpeed: 0,
-  spotsVisible: loadBool('spotsVisible', false),
+  spotsVisible: loadBool('spotsVisible', true),
   quickPins: loadQuickPins(),
 
   setPosition: (pos) =>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, X, Plus, Minus, LocateFixed, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye, Star, Crosshair } from 'lucide-react'
+import { Navigation, X, Plus, Minus, LocateFixed, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye, Crosshair } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -77,8 +77,6 @@ export default function MapControls() {
   const aisKey           = useMapStore((s) => s.aisKey)
   const toggleAis        = useMapStore((s) => s.toggleAis)
   const aisStatus        = useMapStore((s) => s.aisStatus)
-  const spotsVisible     = useMapStore((s) => s.spotsVisible)
-  const toggleSpotsVisible = useMapStore((s) => s.toggleSpotsVisible)
   const quickPins        = useMapStore((s) => s.quickPins)
   const addQuickPin      = useMapStore((s) => s.addQuickPin)
   const speedUnit        = useMapStore((s) => s.speedUnit)
@@ -209,13 +207,6 @@ export default function MapControls() {
           <LocateFixed size={22} />
         </button>
         <div className="fab-divider" />
-        <button
-          className={`fab ${spotsVisible ? 'fab-active' : ''}`}
-          onClick={toggleSpotsVisible}
-          title={spotsVisible ? 'Skjul lagrede steder' : 'Vis lagrede steder'}
-        >
-          <Star size={20} fill={spotsVisible ? 'currentColor' : 'none'} />
-        </button>
         <button
           className={`fab ${quickPins.length > 0 ? 'fab-quickpin' : ''}`}
           onClick={() => position && addQuickPin({ lat: position.lat, lng: position.lng })}

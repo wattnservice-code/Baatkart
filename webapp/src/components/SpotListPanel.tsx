@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, Trash2, Navigation, LocateFixed, MapPin, Globe, Bookmark, BookmarkCheck } from 'lucide-react'
+import { X, Trash2, Navigation, LocateFixed, MapPin, Globe, Bookmark, BookmarkCheck, Eye, EyeOff } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth } from '../googleEarth'
@@ -19,15 +19,17 @@ interface Props {
 }
 
 export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
-  const savedSpots    = useMapStore((s) => s.savedSpots)
-  const position      = useMapStore((s) => s.position)
-  const removeSpot    = useMapStore((s) => s.removeSpot)
-  const addSpot       = useMapStore((s) => s.addSpot)
-  const setFlyTo      = useMapStore((s) => s.setFlyTo)
-  const setSearchPin  = useMapStore((s) => s.setSearchPin)
-  const setNavPreview = useMapStore((s) => s.setNavPreview)
-  const activeSpotId  = useMapStore((s) => s.activeSpotId)
-  const setActiveSpot = useMapStore((s) => s.setActiveSpot)
+  const savedSpots        = useMapStore((s) => s.savedSpots)
+  const position          = useMapStore((s) => s.position)
+  const removeSpot        = useMapStore((s) => s.removeSpot)
+  const addSpot           = useMapStore((s) => s.addSpot)
+  const setFlyTo          = useMapStore((s) => s.setFlyTo)
+  const setSearchPin      = useMapStore((s) => s.setSearchPin)
+  const setNavPreview     = useMapStore((s) => s.setNavPreview)
+  const activeSpotId      = useMapStore((s) => s.activeSpotId)
+  const setActiveSpot     = useMapStore((s) => s.setActiveSpot)
+  const spotsVisible      = useMapStore((s) => s.spotsVisible)
+  const toggleSpotsVisible = useMapStore((s) => s.toggleSpotsVisible)
 
   const isOnline = useOnline()
 
@@ -80,6 +82,13 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
       <div className="settings-sheet">
         <div className="settings-head">
           <span className="settings-title">Steder</span>
+          <button
+            className={`settings-head-icon-btn ${spotsVisible ? 'settings-head-icon-btn-active' : ''}`}
+            onClick={toggleSpotsVisible}
+            title={spotsVisible ? 'Skjul på kart' : 'Vis på kart'}
+          >
+            {spotsVisible ? <Eye size={18} /> : <EyeOff size={18} />}
+          </button>
           <button className="settings-close" onClick={onClose}><X size={20} /></button>
         </div>
 
