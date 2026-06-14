@@ -48,7 +48,10 @@ export interface SavedTrack {
   date: string
   points: { lat: number; lng: number }[]
   distanceM: number
-  icon?: string   // category key from spotIcons
+  durationS?: number     // total recording time in seconds
+  maxSpeedMs?: number    // peak speed in m/s
+  avgSpeedMs?: number    // average moving speed in m/s
+  icon?: string          // category key from spotIcons
 }
 
 function _haversineM(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -102,6 +105,8 @@ interface MapStore {
   headingUp: boolean
   savedTracks: SavedTrack[]
   followingTrack: SavedTrack | null
+  trackDistanceM: number   // running distance for current trip
+  trackMaxSpeed: number    // peak speed m/s for current trip
 
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
@@ -249,6 +254,8 @@ export const useMapStore = create<MapStore>((set) => ({
   headingUp: loadBool('headingUp', false),
   savedTracks: loadSavedTracks(),
   followingTrack: null,
+  trackDistanceM: 0,
+  trackMaxSpeed: 0,
 
   setPosition: (pos) =>
     set((state) => {
@@ -257,6 +264,11 @@ export const useMapStore = create<MapStore>((set) => ({
         const track = [...state.track, { lat: pos.lat, lng: pos.lng, timestamp: pos.timestamp }]
         saveTrack(track)
         updates.track = track
+        if (state.track.length > 0) {
+          const prev = state.track[state.track.length - 1]
+          updates.trackDistanceM = state.trackDistanceM + _haversineM(prev.lat, prev.lng, pos.lat, pos.lng)
+        }
+        if (pos.speed > state.trackMaxSpeed) updates.trackMaxSpeed = pos.speed
       }
       if (state.mobPoint) {
         updates.mobTrack = [...state.mobTrack, { lat: pos.lat, lng: pos.lng, timestamp: pos.timestamp }]
@@ -267,7 +279,12 @@ export const useMapStore = create<MapStore>((set) => ({
   setHeading: (heading) =>
     set((s) => ({ position: s.position ? { ...s.position, heading } : s.position })),
 
-  startTracking: () => set({ isTracking: true }),
+  startTracking: () => set((s) => {
+    let d = 0
+    for (let i = 1; i < s.track.length; i++)
+      d += _haversineM(s.track[i-1].lat, s.track[i-1].lng, s.track[i].lat, s.track[i].lng)
+    return { isTracking: true, trackDistanceM: d, trackMaxSpeed: 0 }
+  }),
   stopTracking: () => set({ isTracking: false }),
   toggleAutoTrack: () => set((s) => { const v = !s.autoTrack; localStorage.setItem('autoTrack', String(v)); return { autoTrack: v } }),
   clearTrack: () => { saveTrack([]); return set({ track: [] }) },
@@ -375,11 +392,18 @@ export const useMapStore = create<MapStore>((set) => ({
   saveCurrentTrack: (name, icon) => set((s) => {
     if (s.track.length < 2) return {}
     const pts = s.track.map((p) => ({ lat: p.lat, lng: p.lng }))
-    const dist = pts.reduce((acc, pt, i) => {
-      if (i === 0) return 0
-      return acc + _haversineM(pts[i - 1].lat, pts[i - 1].lng, pt.lat, pt.lng)
-    }, 0)
-    const saved: SavedTrack = { id: Date.now().toString(), name, date: new Date().toISOString(), points: pts, distanceM: dist, icon }
+    const durationS = (s.track[s.track.length - 1].timestamp - s.track[0].timestamp) / 1000
+    const saved: SavedTrack = {
+      id: Date.now().toString(),
+      name,
+      date: new Date().toISOString(),
+      points: pts,
+      distanceM: s.trackDistanceM,
+      durationS: Math.round(durationS),
+      maxSpeedMs: s.trackMaxSpeed,
+      avgSpeedMs: durationS > 0 ? s.trackDistanceM / durationS : 0,
+      icon,
+    }
     const tracks = [...s.savedTracks, saved]
     persistSavedTracks(tracks)
     return { savedTracks: tracks }

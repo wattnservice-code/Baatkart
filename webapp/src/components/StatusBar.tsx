@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { MapPin, Compass, WifiOff, Wifi, Copy, Check } from 'lucide-react'
+import { MapPin, Compass, WifiOff, Wifi, Copy, Check, Circle } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
-import { Circle } from 'lucide-react'
+import { formatDist } from './NavOverlay'
 
 function headingLabel(deg: number): string {
   const dirs = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV']
@@ -13,6 +13,8 @@ export default function StatusBar() {
   const isTracking        = useMapStore((s) => s.isTracking)
   const startTracking     = useMapStore((s) => s.startTracking)
   const setActivePanel    = useMapStore((s) => s.setActivePanel)
+  const trackDistanceM    = useMapStore((s) => s.trackDistanceM)
+  const distUnit          = useMapStore((s) => s.distUnit)
   const offlineOnly       = useMapStore((s) => s.offlineOnly)
   const toggleOfflineOnly = useMapStore((s) => s.toggleOfflineOnly)
   const setOfflineOnly    = useMapStore((s) => s.setOfflineOnly)
@@ -86,7 +88,7 @@ export default function StatusBar() {
         title={isTracking ? 'Stopp/lagre tur' : 'Start tur-opptak'}
       >
         {isTracking
-          ? <><Circle size={13} style={{ fill: '#f87171', marginRight: 4 }} />REC</>
+          ? <><Circle size={13} style={{ fill: '#f87171', marginRight: 4 }} />REC {formatDist(trackDistanceM, distUnit)}</>
           : <><Circle size={13} style={{ marginRight: 4 }} />Tur</>
         }
       </button>
