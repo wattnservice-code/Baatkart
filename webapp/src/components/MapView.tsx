@@ -222,6 +222,7 @@ export default function MapView() {
   const resumeFollowRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wasMovingRef    = useRef(false)
   const spotMarkersRef      = useRef<Map<string, L.Marker>>(new Map())
+  const quickPinRef         = useRef<L.Marker | null>(null)
   const followTrackLineRef  = useRef<L.Polyline | null>(null)
 
   const [pendingSpot, setPendingSpot]       = useState<{ lat: number; lng: number } | null>(null)
@@ -243,6 +244,8 @@ export default function MapView() {
   const navTarget        = useMapStore((s) => s.navTarget)
   const savedSpots       = useMapStore((s) => s.savedSpots)
   const activeSpotId     = useMapStore((s) => s.activeSpotId)
+  const spotsVisible     = useMapStore((s) => s.spotsVisible)
+  const quickPin         = useMapStore((s) => s.quickPin)
   const compassEnabled   = useMapStore((s) => s.compassEnabled)
   const compassHeading   = useMapStore((s) => s.compassHeading)
   const darkMode         = useMapStore((s) => s.darkMode)
@@ -717,21 +720,22 @@ export default function MapView() {
     }
   }, [mobPoint])
 
-  // Saved spot markers
+  // Saved spot markers — only when spotsVisible
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
 
-    const currentIds = new Set(savedSpots.map((s) => s.id))
+    const currentIds = new Set(spotsVisible ? savedSpots.map((s) => s.id) : [])
     spotMarkersRef.current.forEach((marker, id) => {
       if (!currentIds.has(id)) { marker.remove(); spotMarkersRef.current.delete(id) }
     })
+    if (!spotsVisible) return
 
     savedSpots.forEach((spot) => {
       const isActive = spot.id === activeSpotId
       const emoji = iconEmoji(spot.icon)
       const html = `<div class="spot-emoji-pin ${isActive ? 'spot-emoji-pin-active' : ''}"><span class="spot-emoji-glyph">${emoji}</span>${isActive ? `<div class="spot-emoji-label">${spot.name}</div>` : ''}</div>`
-      const icon = L.divIcon({ className: '', html, iconSize: [40, 40], iconAnchor: [20, 20] })
+      const icon = L.divIcon({ className: '', html, iconSize: [28, 28], iconAnchor: [14, 14] })
       if (spotMarkersRef.current.has(spot.id)) {
         spotMarkersRef.current.get(spot.id)!.setLatLng([spot.lat, spot.lng]).setIcon(icon)
       } else {
@@ -744,7 +748,25 @@ export default function MapView() {
         spotMarkersRef.current.set(spot.id, marker)
       }
     })
-  }, [savedSpots, activeSpotId])
+  }, [savedSpots, activeSpotId, spotsVisible])
+
+  // Quick pin marker — temporary navigation pin
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    if (!quickPin) {
+      quickPinRef.current?.remove()
+      quickPinRef.current = null
+      return
+    }
+    const html = `<div class="quick-pin-marker"></div>`
+    const icon = L.divIcon({ className: '', html, iconSize: [28, 28], iconAnchor: [14, 14] })
+    if (quickPinRef.current) {
+      quickPinRef.current.setLatLng([quickPin.lat, quickPin.lng]).setIcon(icon)
+    } else {
+      quickPinRef.current = L.marker([quickPin.lat, quickPin.lng], { icon, zIndexOffset: 900 }).addTo(map)
+    }
+  }, [quickPin])
 
   // Click to add spot, or tap anywhere to drop a pin
   useEffect(() => {

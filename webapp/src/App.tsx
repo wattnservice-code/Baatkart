@@ -9,6 +9,7 @@ import NavOverlay from './components/NavOverlay'
 import TrackFollowOverlay from './components/TrackFollowOverlay'
 import MobButton from './components/MobButton'
 import NavPreviewBar from './components/NavPreviewBar'
+import QuickPinBar from './components/QuickPinBar'
 import WeatherOverlay from './components/WeatherOverlay'
 import TideOverlay from './components/TideOverlay'
 import { useGPS } from './hooks/useGPS'
@@ -79,6 +80,7 @@ export default function App() {
         </div>
         <MobOverlay />
         <NavPreviewBar />
+        <QuickPinBar />
         <TrackFollowOverlay />
         <NavOverlay />
       </div>

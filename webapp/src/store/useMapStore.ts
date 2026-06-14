@@ -103,8 +103,10 @@ interface MapStore {
   headingUp: boolean
   savedTracks: SavedTrack[]
   followingTrack: SavedTrack | null
-  trackDistanceM: number   // running distance for current trip
-  trackMaxSpeed: number    // peak speed m/s for current trip
+  trackDistanceM: number
+  trackMaxSpeed: number
+  spotsVisible: boolean
+  quickPin: { lat: number; lng: number; timestamp: number } | null
 
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
@@ -152,6 +154,8 @@ interface MapStore {
   setBoatInfo: (info: Partial<BoatInfo>) => void
   toggleLookAhead: () => void
   toggleHeadingUp: () => void
+  toggleSpotsVisible: () => void
+  setQuickPin: (p: { lat: number; lng: number } | null) => void
   saveCurrentTrack: (name: string, icon?: string) => void
   deleteSavedTrack: (id: string) => void
   startFollowingTrack: (track: SavedTrack) => void
@@ -191,6 +195,10 @@ function loadSavedTracks(): SavedTrack[] {
 }
 function persistSavedTracks(tracks: SavedTrack[]) {
   localStorage.setItem('savedTracks', JSON.stringify(tracks))
+}
+
+function loadQuickPin(): { lat: number; lng: number; timestamp: number } | null {
+  try { return JSON.parse(localStorage.getItem('quickPin') || 'null') } catch { return null }
 }
 
 function loadBool(key: string, def: boolean): boolean {
@@ -254,6 +262,8 @@ export const useMapStore = create<MapStore>((set) => ({
   followingTrack: null,
   trackDistanceM: 0,
   trackMaxSpeed: 0,
+  spotsVisible: loadBool('spotsVisible', false),
+  quickPin: loadQuickPin(),
 
   setPosition: (pos) =>
     set((state) => {
@@ -386,6 +396,12 @@ export const useMapStore = create<MapStore>((set) => ({
   setAisStatus: (s) => set({ aisStatus: s }),
   toggleLookAhead: () => set((s) => { const v = !s.lookAhead; localStorage.setItem('lookAhead', String(v)); return { lookAhead: v } }),
   toggleHeadingUp: () => set((s) => { const v = !s.headingUp; localStorage.setItem('headingUp', String(v)); return { headingUp: v } }),
+  toggleSpotsVisible: () => set((s) => { const v = !s.spotsVisible; localStorage.setItem('spotsVisible', String(v)); return { spotsVisible: v } }),
+  setQuickPin: (p) => {
+    const pin = p ? { ...p, timestamp: Date.now() } : null
+    localStorage.setItem('quickPin', JSON.stringify(pin))
+    set({ quickPin: pin })
+  },
 
   saveCurrentTrack: (name, icon) => set((s) => {
     if (s.track.length < 2) return {}

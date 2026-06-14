@@ -563,13 +563,13 @@ html, body, #root {
 /* ── Saved spot pin markers ── */
 /* Emoji category pin for saved spots */
 .spot-emoji-pin {
-  width: 40px; height: 40px; border-radius: 50%;
+  width: 28px; height: 28px; border-radius: 50%;
   background: rgba(15,23,42,0.82);
   border: 2.5px solid #f59e0b;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 1px 5px rgba(0,0,0,0.55);
 }
-.spot-emoji-glyph { font-size: 22px; line-height: 1; }
+.spot-emoji-glyph { font-size: 16px; line-height: 1; }
 .spot-emoji-pin-active {
   border-color: #ef4444;
   box-shadow: 0 0 0 3px rgba(239,68,68,0.35), 0 2px 6px rgba(0,0,0,0.5);
@@ -668,6 +668,44 @@ html, body, #root {
   border: 5px solid transparent;
   border-top-color: rgba(15,23,42,0.92);
 }
+
+/* ── Quick pin (temporary waypoint) ── */
+.quick-pin-marker {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #f97316;
+  border: 3px solid white;
+  box-shadow: 0 0 0 0 rgba(249,115,22,0.6), 0 2px 6px rgba(0,0,0,0.5);
+  animation: quickpin-pulse 1.8s infinite;
+}
+@keyframes quickpin-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(249,115,22,0.6), 0 2px 6px rgba(0,0,0,0.5); }
+  60%  { box-shadow: 0 0 0 10px rgba(249,115,22,0), 0 2px 6px rgba(0,0,0,0.5); }
+  100% { box-shadow: 0 0 0 0 rgba(249,115,22,0), 0 2px 6px rgba(0,0,0,0.5); }
+}
+.fab-quickpin { color: #f97316 !important; border-color: rgba(249,115,22,0.5) !important; }
+
+/* ── Quick pin bar (distance/nav banner) ── */
+.quickpin-bar {
+  position: absolute; bottom: 56px; left: 50%; translate: -50% 0;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(249,115,22,0.92); backdrop-filter: blur(8px);
+  color: white; border-radius: 24px; padding: 6px 10px 6px 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  font-size: 13px; font-weight: 700; z-index: 600;
+  white-space: nowrap;
+}
+.quickpin-icon { font-size: 16px; }
+.quickpin-coords { background: none; border: none; color: inherit; font: inherit; cursor: pointer; padding: 0; }
+.quickpin-nav {
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(255,255,255,0.25); border: none; color: white;
+  border-radius: 16px; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.quickpin-clear {
+  display: flex; align-items: center;
+  background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; padding: 2px;
+}
+.quickpin-clear:active { opacity: 0.6; }
 
 /* ── Search result pin ── */
 .search-pin {

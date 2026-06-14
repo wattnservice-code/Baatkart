@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, X, Plus, Minus, LocateFixed, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye } from 'lucide-react'
+import { Navigation, X, Plus, Minus, LocateFixed, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye, Star, Crosshair } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -77,6 +77,10 @@ export default function MapControls() {
   const aisKey           = useMapStore((s) => s.aisKey)
   const toggleAis        = useMapStore((s) => s.toggleAis)
   const aisStatus        = useMapStore((s) => s.aisStatus)
+  const spotsVisible     = useMapStore((s) => s.spotsVisible)
+  const toggleSpotsVisible = useMapStore((s) => s.toggleSpotsVisible)
+  const quickPin         = useMapStore((s) => s.quickPin)
+  const setQuickPin      = useMapStore((s) => s.setQuickPin)
   const speedUnit        = useMapStore((s) => s.speedUnit)
   const toggleSpeedUnit  = useMapStore((s) => s.toggleSpeedUnit)
   const distUnit         = useMapStore((s) => s.distUnit)
@@ -203,6 +207,21 @@ export default function MapControls() {
           title={followBoat ? 'Følger båten' : 'Tilbake til båten'}
         >
           <LocateFixed size={22} />
+        </button>
+        <div className="fab-divider" />
+        <button
+          className={`fab ${spotsVisible ? 'fab-active' : ''}`}
+          onClick={toggleSpotsVisible}
+          title={spotsVisible ? 'Skjul lagrede steder' : 'Vis lagrede steder'}
+        >
+          <Star size={20} fill={spotsVisible ? 'currentColor' : 'none'} />
+        </button>
+        <button
+          className={`fab ${quickPin ? 'fab-quickpin' : ''}`}
+          onClick={() => position ? setQuickPin({ lat: position.lat, lng: position.lng }) : undefined}
+          title={quickPin ? 'Hurtigmerke satt – trykk for å oppdatere' : 'Sett hurtigmerke her'}
+        >
+          <Crosshair size={20} />
         </button>
       </div>
 
