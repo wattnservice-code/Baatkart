@@ -1760,7 +1760,7 @@ html, body, #root {
   max-width: 260px;
   line-height: 1.3;
 }
-.leaflet-bottom.leaflet-right { bottom: 62px; }
+.leaflet-bottom.leaflet-left { bottom: 62px; }
 
 .night-vision .leaflet-tile {
   filter: saturate(0) brightness(0.55) sepia(1) hue-rotate(320deg) saturate(2.5) brightness(0.85);

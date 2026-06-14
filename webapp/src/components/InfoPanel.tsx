@@ -71,16 +71,58 @@ export default function InfoPanel({ onClose }: Props) {
           <li>Last ned et område på forhånd via Meg → Offline kart.</li>
         </ul>
 
-        <h3 className="info-h">Datakilder</h3>
+        <h3 className="info-h">Datakilder og lisenser</h3>
         <ul className="info-list">
-          <li><b>Grunnkart:</b> OpenStreetMap (openstreetmap.org) – lisens ODbL. © OpenStreetMap-bidragsytere.</li>
-          <li><b>Sjøkart:</b> Kartverket (kartverket.no) – norske sjøkart via WMS.</li>
-          <li><b>Sjømerker:</b> OpenSeaMap (openseamap.org) – navigasjonsmerker og havner.</li>
-          <li><b>AIS-fartøy:</b> Barentswatch / Kystverket (barentswatch.no) – offisiell norsk AIS.</li>
-          <li><b>Stedssøk:</b> Nominatim / OpenStreetMap – stedsnavnsøk.</li>
-          <li><b>Mer om fartøy:</b> VesselFinder (vesselfinder.com) – ekstern lenke fra popup.</li>
-          <li><b>GPS:</b> Enhetens innebygde GPS via Web Geolocation API.</li>
+          <li>
+            <b>Grunnkart:</b> © <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-bidragsytere –
+            lisens <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">ODbL</a>.
+            Kartdata kan inneholde feil.
+          </li>
+          <li>
+            <b>Nattmodus:</b> © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a> (CartoDB Dark Matter) –
+            basert på OpenStreetMap.
+          </li>
+          <li>
+            <b>Sjøkart:</b> © <a href="https://kartverket.no" target="_blank" rel="noopener">Kartverket</a> –
+            norske sjøkart (WMTS). Lisens NLOD 2.0.
+          </li>
+          <li>
+            <b>Sjømerker:</b> © <a href="https://openseamap.org" target="_blank" rel="noopener">OpenSeaMap</a> –
+            navigasjonsmerker, lisens ODbL.
+          </li>
+          <li>
+            <b>AIS-fartøy:</b> © <a href="https://barentswatch.no" target="_blank" rel="noopener">Barentswatch</a> /
+            Kystverket – offisiell norsk AIS, lisens NLOD 2.0.
+          </li>
+          <li>
+            <b>Vær:</b> © <a href="https://yr.no" target="_blank" rel="noopener">Yr</a> /
+            <a href="https://met.no" target="_blank" rel="noopener"> Meteorologisk institutt</a> –
+            data fra api.met.no, lisens NLOD 2.0.
+          </li>
+          <li>
+            <b>Tidevann:</b> © <a href="https://kartverket.no" target="_blank" rel="noopener">Kartverket</a> –
+            vannstand.kartverket.no, lisens NLOD 2.0.
+          </li>
+          <li>
+            <b>Stedsnavn:</b> © <a href="https://kartverket.no" target="_blank" rel="noopener">Kartverket</a> (stedsnavn API)
+            og <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener">Nominatim</a> / OpenStreetMap.
+          </li>
+          <li>
+            <b>Mer om fartøy:</b> <a href="https://www.vesselfinder.com" target="_blank" rel="noopener">VesselFinder</a> –
+            ekstern lenke, åpnes i nettleser.
+          </li>
+          <li>
+            <b>Google Maps / Google Earth:</b> Eksterne lenker fra stedskort –
+            åpner Googles egne tjenester i nettleser.
+          </li>
+          <li>
+            <b>GPS:</b> Enhetens innebygde GPS via Web Geolocation API (nettleser-native).
+          </li>
         </ul>
+        <p style={{ fontSize: 11, color: '#64748b', marginTop: 8, lineHeight: 1.5 }}>
+          Kartattribusjon vises nederst til venstre på kartet. Alle offentlige norske datakilder
+          er distribuert under <a href="https://data.norge.no/nlod" target="_blank" rel="noopener">Norsk lisens for offentlige data (NLOD) 2.0</a>.
+        </p>
       </div>
     </div>
   )
