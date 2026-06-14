@@ -115,17 +115,27 @@ function vesselIcon(vessel: AISVessel, danger: boolean, zoom: number): L.DivIcon
 
 interface Bounds { north: number; south: number; east: number; west: number }
 
+// Max bounding box half-size in degrees. Prevents aisstream from rejecting the
+// subscription or flooding the socket when the user zooms out far. 4° ≈ 440 km.
+const MAX_BOX_HALF_DEG = 4
+
 // Produce a valid aisstream box [[south,west],[north,east]]. Clamps to legal
-// lat/lon, fixes inverted corners, and avoids a zero-size box (which the server
-// rejects). Falls back to a wide box around Norway when bounds aren't ready.
+// lat/lon, caps the area to MAX_BOX_HALF_DEG around the box centre (so a wide
+// zoom-out doesn't cause aisstream errors), fixes inverted corners, and avoids
+// a zero-size box. Falls back to a small box around Oslofjord when not ready.
 function clampBox(b: Bounds | null): number[][] {
   if (!b || ![b.north, b.south, b.east, b.west].every(Number.isFinite)) {
-    return [[57, 4], [72, 32]]
+    return [[59, 9], [60, 11]]
   }
   let s = Math.max(-90, Math.min(90, Math.min(b.south, b.north)))
   let n = Math.max(-90, Math.min(90, Math.max(b.south, b.north)))
   let w = Math.max(-180, Math.min(180, Math.min(b.west, b.east)))
   let e = Math.max(-180, Math.min(180, Math.max(b.west, b.east)))
+  // Cap to MAX_BOX_HALF_DEG from the box centre on each axis
+  const latC = (s + n) / 2, lngC = (w + e) / 2
+  if (n - s > MAX_BOX_HALF_DEG * 2) { s = latC - MAX_BOX_HALF_DEG; n = latC + MAX_BOX_HALF_DEG }
+  if (e - w > MAX_BOX_HALF_DEG * 2) { w = lngC - MAX_BOX_HALF_DEG; e = lngC + MAX_BOX_HALF_DEG }
+  s = Math.max(-90, s); n = Math.min(90, n); w = Math.max(-180, w); e = Math.min(180, e)
   if (n - s < 0.02) { n = Math.min(90, n + 0.01); s = Math.max(-90, s - 0.01) }
   if (e - w < 0.02) { e = Math.min(180, e + 0.01); w = Math.max(-180, w - 0.01) }
   return [[s, w], [n, e]]
