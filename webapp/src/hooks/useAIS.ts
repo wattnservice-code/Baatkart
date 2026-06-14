@@ -9,7 +9,10 @@ interface AISVessel {
   lat: number
   lng: number
   heading: number
-  sog: number   // speed over ground, knots
+  cog: number        // course over ground (where it's actually going)
+  sog: number        // speed over ground, knots
+  navStatus: number  // AIS navigational status code
+  rot: number        // rate of turn (-128 = not available)
   name: string
 }
 
@@ -50,10 +53,34 @@ function vesselColor(sog: number): string {
 }
 
 function vesselSize(zoom: number): number {
-  if (zoom >= 16) return 30
-  if (zoom >= 14) return 24
-  if (zoom >= 12) return 20
-  return 16
+  if (zoom >= 16) return 36
+  if (zoom >= 14) return 30
+  if (zoom >= 12) return 26
+  return 22
+}
+
+function navStatusLabel(code: number): string | undefined {
+  switch (code) {
+    case 1: return 'For anker'
+    case 2: return 'Manøvreringsudyktig'
+    case 3: return 'Begrenset manøvreringsevne'
+    case 4: return 'Begrenset av dypgang'
+    case 5: return 'Fortøyd'
+    case 6: return 'Grunnstøtt'
+    case 7: return 'Fisker'
+    default: return undefined
+  }
+}
+
+function destPointAIS(lat: number, lng: number, headingDeg: number, meters: number): [number, number] {
+  const R = 6371000
+  const δ = meters / R
+  const θ = headingDeg * Math.PI / 180
+  const φ1 = lat * Math.PI / 180
+  const λ1 = lng * Math.PI / 180
+  const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(θ))
+  const λ2 = λ1 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2))
+  return [φ2 * 180 / Math.PI, λ2 * 180 / Math.PI]
 }
 
 // ── Collision (CPA/TCPA) ──────────────────────────────────────────────
@@ -103,10 +130,10 @@ function vesselIcon(vessel: AISVessel, danger: boolean, zoom: number): L.DivIcon
     <div style="
       width:${sz}px;height:${sz}px;
       transform:rotate(${hdg}deg);
-      filter:drop-shadow(0 1px 4px rgba(0,0,0,0.85));
+      filter:drop-shadow(0 0 4px rgba(0,0,0,1)) drop-shadow(0 2px 6px rgba(0,0,0,0.9));
     ">
       <svg width="${sz}" height="${sz}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="12,2 21,22 12,17 3,22" fill="${color}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
+        <polygon points="12,2 21,22 12,17 3,22" fill="${color}" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round"/>
       </svg>
     </div>
   </div>`
@@ -148,6 +175,7 @@ export function useAIS() {
 
   const wsRef         = useRef<WebSocket | null>(null)
   const markersRef    = useRef<Map<number, L.Marker>>(new Map())
+  const courseLinesRef = useRef<Map<number, L.Polyline>>(new Map())
   const layerRef      = useRef<L.LayerGroup | null>(null)
   const boundsRef     = useRef(mapBounds)
   const subTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -190,6 +218,7 @@ export function useAIS() {
       wsRef.current = null
       layerRef.current?.clearLayers()
       markersRef.current.clear()
+      courseLinesRef.current.clear()
       dangerRef.current.clear()
       staticRef.current.clear()
       useMapStore.getState().setAisStatus({ state: 'idle', count: 0, message: '' })
@@ -291,7 +320,7 @@ export function useAIS() {
               const name = (m.ShipName as string ?? '').trim() || `MMSI ${mmsi}`
               const ll = mk.getLatLng()
               mk.getPopup()?.setContent(popupContent(
-                { mmsi, lat: ll.lat, lng: ll.lng, heading: 0, sog: 0, name },
+                { mmsi, lat: ll.lat, lng: ll.lng, heading: 0, cog: 0, sog: 0, navStatus: 15, rot: -128, name },
                 null, dangerRef.current.has(mmsi), stat,
               ))
             }
@@ -317,15 +346,22 @@ export function useAIS() {
           if (sog < 0.5) {
             const old = markersRef.current.get(mmsi)
             if (old) { old.remove(); markersRef.current.delete(mmsi) }
+            const cl = courseLinesRef.current.get(mmsi)
+            if (cl) { cl.remove(); courseLinesRef.current.delete(mmsi) }
             dangerRef.current.delete(mmsi)
             return
           }
 
+          const cogRaw = (rep.Cog ?? 360) as number
+          const cog    = cogRaw < 360 ? cogRaw : 0
           const vessel: AISVessel = {
             mmsi,
             lat, lng,
-            heading: (rep.TrueHeading !== 511 ? rep.TrueHeading : rep.Cog) as number,
+            heading: (rep.TrueHeading !== 511 ? rep.TrueHeading : cog) as number,
+            cog,
             sog,
+            navStatus: (rep.NavigationalStatus ?? 15) as number,
+            rot: (rep.RateOfTurn ?? -128) as number,
             name: (meta.ShipName as string ?? '').trim() || `MMSI ${mmsi}`,
           }
 
@@ -351,17 +387,28 @@ export function useAIS() {
           }
 
           const stat = staticRef.current.get(mmsi)
+          // Course line: 2 min ahead at current SOG, min 150 m, max 1500 m
+          const lineM = Math.max(150, Math.min(sog * KN_TO_MS * 120, 1500))
+          const lineDir = vessel.cog > 0 ? vessel.cog : vessel.heading
+          const lineEnd = destPointAIS(lat, lng, lineDir, lineM)
+          const lineColor = danger ? '#ef4444' : vesselColor(sog)
+
           const existing = markersRef.current.get(mmsi)
           if (existing) {
             existing.setLatLng([lat, lng])
             existing.setIcon(vesselIcon(vessel, danger, zoom))
             existing.getPopup()?.setContent(popupContent(vessel, cpa, danger, stat))
+            const cl = courseLinesRef.current.get(mmsi)
+            if (cl) { cl.setLatLngs([[lat, lng], lineEnd]); cl.setStyle({ color: lineColor }) }
           } else {
             if (!layerRef.current) return
             const marker = L.marker([lat, lng], { icon: vesselIcon(vessel, danger, zoom), zIndexOffset: danger ? 600 : 200 })
-            marker.bindPopup(popupContent(vessel, cpa, danger, stat), { maxWidth: 240 })
+            marker.bindPopup(popupContent(vessel, cpa, danger, stat), { maxWidth: 260 })
             marker.addTo(layerRef.current)
             markersRef.current.set(mmsi, marker)
+            const cl = L.polyline([[lat, lng], lineEnd], { color: lineColor, weight: 2, opacity: 0.85, dashArray: '6 4' })
+            cl.addTo(layerRef.current)
+            courseLinesRef.current.set(mmsi, cl)
           }
 
           const dn = dangerRef.current.size
@@ -397,6 +444,7 @@ export function useAIS() {
       wsRef.current = null
       layerRef.current?.clearLayers()
       markersRef.current.clear()
+      courseLinesRef.current.clear()
       dangerRef.current.clear()
       staticRef.current.clear()
     }
@@ -411,8 +459,16 @@ export function useAIS() {
 }
 
 function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean, stat?: ShipStatic): string {
-  const sog = v.sog.toFixed(1)
-  const hdg = v.heading > 0 && v.heading < 360 ? `${Math.round(v.heading)}°` : '—'
+  const sog = v.sog > 0 ? `${v.sog.toFixed(1)} kn` : ''
+  const hdg = v.heading > 0 && v.heading < 360 ? `${Math.round(v.heading)}° (stavn)` : ''
+  const cogStr = v.cog > 0 && v.cog < 360 ? `${Math.round(v.cog)}° (kurs)` : ''
+  // Show COG separately only if it differs meaningfully from heading (drift/current)
+  const showCog = cogStr && hdg && Math.abs(v.cog - v.heading) > 5
+
+  const navStat = navStatusLabel(v.navStatus)
+  const turning = v.rot !== -128 && Math.abs(v.rot) > 15
+    ? (v.rot > 0 ? '→ Dreier styrbord' : '← Dreier babord') : ''
+
   let cpaLine = ''
   if (cpa && cpa.tcpaMin > 0 && isFinite(cpa.tcpaMin)) {
     const nm  = (cpa.cpaM / 1852).toFixed(2)
@@ -422,7 +478,7 @@ function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean, stat?:
       : `<div style="margin-top:4px;color:#94a3b8;font-size:12px">Nærmeste: ${nm} nm om ${min} min</div>`
   }
 
-  // Static/voyage lines — only render what we actually have
+  // Static/voyage lines
   let staticLines = ''
   if (stat) {
     const rows: string[] = []
@@ -431,14 +487,23 @@ function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean, stat?:
     if (stat.draught) rows.push(`dypg. ${stat.draught.toFixed(1)} m`)
     const line1 = rows.join(' · ')
     const dest = stat.destination ? `<div style="color:#94a3b8;font-size:12px">→ ${stat.destination}</div>` : ''
-    if (line1 || dest) {
-      staticLines = `<div style="margin-top:4px;color:#cbd5e1;font-size:12px">${line1}</div>${dest}`
+    const imo  = stat.imo ? `<div style="color:#64748b;font-size:11px">IMO ${stat.imo}</div>` : ''
+    if (line1 || dest || imo) {
+      staticLines = `<div style="margin-top:3px;color:#cbd5e1;font-size:12px">${line1}</div>${dest}${imo}`
     }
   }
 
+  const speedLine  = [sog, hdg].filter(Boolean).join(' · ')
+  const cogLine    = showCog ? `<div style="color:#94a3b8;font-size:12px">${cogStr}</div>` : ''
+  const statusLine = navStat  ? `<div style="margin-top:2px;color:#fbbf24;font-size:12px">${navStat}</div>` : ''
+  const turnLine   = turning  ? `<div style="color:#f97316;font-size:12px">${turning}</div>` : ''
+
   return `<div style="font-size:13px;line-height:1.5">
     <b>${v.name}</b><br/>
-    ${sog} kn · ${hdg}
+    ${speedLine}
+    ${cogLine}
+    ${statusLine}
+    ${turnLine}
     ${staticLines}
     <div style="color:#64748b;font-size:11px;margin-top:2px">MMSI ${v.mmsi}${stat?.callSign ? ` · ${stat.callSign}` : ''}</div>
     ${cpaLine}
