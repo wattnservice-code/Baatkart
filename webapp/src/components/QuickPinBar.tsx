@@ -75,6 +75,7 @@ export default function QuickPinBar() {
           <Trash2 size={13} /> Fjern alle
         </button>
       </div>
+      <div className="quickpin-list">
       {withDist.map(({ pin, dist, brg }) => (
         <PinRow
           key={pin.id}
@@ -88,6 +89,7 @@ export default function QuickPinBar() {
           onFly={() => setFlyTo({ lat: pin.lat, lng: pin.lng })}
         />
       ))}
+      </div>
     </div>
   )
 }

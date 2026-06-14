@@ -703,42 +703,45 @@ html, body, #root {
   position: absolute; bottom: 56px; left: 8px; right: 72px;
   background: rgba(20,28,46,0.95); backdrop-filter: blur(10px);
   border: 1px solid rgba(249,115,22,0.4);
-  color: white; border-radius: 12px;
+  color: white; border-radius: 10px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-  font-size: 13px; z-index: 600; overflow: hidden;
+  font-size: 12px; z-index: 600; overflow: hidden;
+  max-height: 160px; display: flex; flex-direction: column;
 }
 .quickpin-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 7px 10px 5px; border-bottom: 1px solid rgba(249,115,22,0.25);
+  padding: 5px 8px 4px; border-bottom: 1px solid rgba(249,115,22,0.25);
+  flex-shrink: 0;
 }
-.quickpin-title { font-size: 12px; font-weight: 700; color: #f97316; }
+.quickpin-title { font-size: 11px; font-weight: 700; color: #f97316; }
 .quickpin-clear-all {
-  display: flex; align-items: center; gap: 4px;
-  background: none; border: none; color: #64748b; font-size: 11px; cursor: pointer;
+  display: flex; align-items: center; gap: 3px;
+  background: none; border: none; color: #64748b; font-size: 10px; cursor: pointer;
 }
 .quickpin-clear-all:active { color: #f87171; }
+.quickpin-list { overflow-y: auto; flex: 1; }
 .quickpin-row {
   display: flex; align-items: center; gap: 6px;
-  padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .quickpin-row:last-child { border-bottom: none; }
 .quickpin-num {
-  width: 20px; height: 20px; border-radius: 50%;
-  background: #f97316; color: white; font-size: 11px; font-weight: 900;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #f97316; color: white; font-size: 10px; font-weight: 900;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.quickpin-info { flex: 1; background: none; border: none; color: inherit; text-align: left; cursor: pointer; padding: 0; display: flex; flex-direction: column; gap: 1px; }
-.quickpin-label { font-size: 13px; font-weight: 700; color: #e2e8f0; }
-.quickpin-dist  { font-size: 11px; color: #f97316; font-weight: 600; }
+.quickpin-info { flex: 1; background: none; border: none; color: inherit; text-align: left; cursor: pointer; padding: 0; min-width: 0; }
+.quickpin-label { font-size: 12px; font-weight: 600; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.quickpin-dist  { font-size: 10px; color: #f97316; font-weight: 600; }
 .quickpin-nav-btn {
   display: flex; align-items: center; justify-content: center;
   background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.4);
-  color: #f97316; border-radius: 8px; width: 30px; height: 30px; cursor: pointer; flex-shrink: 0;
+  color: #f97316; border-radius: 6px; width: 26px; height: 26px; cursor: pointer; flex-shrink: 0;
 }
 .quickpin-nav-btn:active { background: rgba(249,115,22,0.3); }
 .quickpin-del-btn {
   display: flex; align-items: center; justify-content: center;
-  background: none; border: none; color: #475569; cursor: pointer; width: 24px; height: 24px; flex-shrink: 0;
+  background: none; border: none; color: #475569; cursor: pointer; width: 22px; height: 22px; flex-shrink: 0;
 }
 .quickpin-del-btn:active { color: #f87171; }
 
