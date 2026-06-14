@@ -1656,6 +1656,8 @@ html, body, #root {
   pointer-events: none;
   z-index: 800;
 }
+.leaflet-control-attribution { display: none !important; }
+
 .night-vision .leaflet-tile {
   filter: saturate(0) brightness(0.55) sepia(1) hue-rotate(320deg) saturate(2.5) brightness(0.85);
 }
