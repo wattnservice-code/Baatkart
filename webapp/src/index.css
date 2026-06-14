@@ -1234,11 +1234,11 @@ html, body, #root {
 .day .tide-station { color: #475569; }
 .day .tide-level   { color: #64748b; }
 
-/* ── Offline panel ── */
+/* ── Offline panel (also used by Båtinfo, Hjelp) ── */
 .offline-panel {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 470;
+  z-index: 1050;
   background: rgba(15,23,42,0.98);
   backdrop-filter: blur(10px);
   color: white;
