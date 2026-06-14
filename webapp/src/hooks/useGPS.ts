@@ -1,10 +1,15 @@
 import { useEffect, useRef } from 'react'
 import { useMapStore } from '../store/useMapStore'
 
-const ALPHA = 0.25        // EMA for position
-const SPEED_ALPHA = 0.15  // EMA for speed — lower = smoother
-const MIN_SPEED = 0.8     // m/s below this = show 0
-const MAX_SPEED_ACCURACY = 20  // m — only trust speed when GPS is this accurate or better
+const ALPHA = 0.25               // EMA for position
+const MIN_SPEED = 0.8            // m/s below this = show 0
+const MAX_SPEED_ACCURACY = 20    // m — only trust speed when GPS is this accurate or better
+
+// Adaptive EMA: slow response (heavy smoothing) when near-stationary,
+// fast response at speed. Ramps from 0.10 at 0 m/s to 0.40 at 5 m/s (~10 kn).
+function speedAlpha(smoothedMs: number): number {
+  return 0.10 + Math.min(1, smoothedMs / 5) * 0.30
+}
 
 export function useGPS() {
   const setPosition = useMapStore((s) => s.setPosition)
@@ -36,7 +41,8 @@ export function useGPS() {
 
         // Only trust speed when GPS is accurate — indoor noise typically gives accuracy > 20m
         const rawSpeed = accuracy <= MAX_SPEED_ACCURACY ? (speed ?? 0) : 0
-        smoothedSpeed.current = SPEED_ALPHA * rawSpeed + (1 - SPEED_ALPHA) * smoothedSpeed.current
+        const alpha = speedAlpha(smoothedSpeed.current)
+        smoothedSpeed.current = alpha * rawSpeed + (1 - alpha) * smoothedSpeed.current
         const filteredSpeed = smoothedSpeed.current < MIN_SPEED ? 0 : smoothedSpeed.current
 
         // Only update heading when moving — freeze arrow when stationary
@@ -66,7 +72,7 @@ export function useGPS() {
         })
       },
       (err) => console.warn('GPS-feil:', err.message),
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
     )
 
     return () => navigator.geolocation.clearWatch(watchId)
