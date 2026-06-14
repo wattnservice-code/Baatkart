@@ -122,6 +122,93 @@ function mmsiFlag(mmsi: number): string {
   return f[mid] ?? ''
 }
 
+// UN/LOCODE → norsk stedsnavn. Dekker norske havner + vanlige europeiske.
+const LOCODE: Record<string, string> = {
+  // Norge
+  'NOOSL':'Oslo','NOSVG':'Stavanger','NOBGO':'Bergen','NOTRH':'Trondheim',
+  'NOTOS':'Tromsø','NOAES':'Ålesund','NOKRS':'Kristiansand','NODRA':'Drammen',
+  'NOTON':'Tønsberg','NOHAU':'Haugesund','NOHAR':'Harstad','NOMOS':'Moss',
+  'NOLAR':'Larvik','NONVK':'Narvik','NOBOO':'Bodø','NOFRO':'Florø',
+  'NOMOL':'Molde','NOSKE':'Skien','NOSAN':'Sandefjord','NOPOR':'Porsgrunn',
+  'NOFRK':'Fredrikstad','NOFUS':'Fusa','NOHRS':'Hørsand','NOLES':'Leknes',
+  'NOSVV':'Svolvær','NOAND':'Andenes','NOBNN':'Brønnøysund','NOMSS':'Mosjøen',
+  'NOSTO':'Stord','NOKOP':'Kopervika','NOLTA':'Leirvik','NOASN':'Åsgårdstrand',
+  // Danmark
+  'DKAAR':'Aarhus','DKCPH':'København','DKFRC':'Fredericia','DKAAL':'Aalborg',
+  'DKODE':'Odense','DKESB':'Esbjerg','DKKAL':'Kalundborg','DKRAN':'Randers',
+  // Sverige
+  'SEGOT':'Gøteborg','SESTO':'Stockholm','SEAHU':'Ahus','SEHAL':'Halmstad',
+  'SEKAR':'Karlskrona','SEHEL':'Helsingborg','SEMAL':'Malmø','SENYH':'Nynäshamn',
+  'SEOXE':'Oxelösund','SEUDD':'Uddevalla','SEVAR':'Varberg',
+  // Finland
+  'FIHEL':'Helsinki','FIRAU':'Rauma','FITUR':'Turku','FIPOR':'Pori',
+  'FIKTK':'Kotka','FIOUL':'Oulu','FIHAM':'Hamina','FIMAN':'Mäntyluoto',
+  // Tyskland
+  'DEHAM':'Hamburg','DEBRE':'Bremen','DEBHV':'Bremerhaven','DEROS':'Rostock',
+  'DEKIL':'Kiel','DELBC':'Lübeck','DEWIS':'Wismar','DESTD':'Stralsund',
+  // Nederland
+  'NLRTM':'Rotterdam','NLAMS':'Amsterdam','NLMOE':'Moerdijk','NLTER':'Terneuzen',
+  'NLVLI':'Vlissingen','NLGRQ':'Groningen',
+  // Belgia
+  'BEANR':'Antwerpen','BEBRU':'Brussel','BEGNE':'Gent','BEZEE':'Zeebrugge',
+  // Storbritannia
+  'GBFXT':'Felixstowe','GBSOU':'Southampton','GBLIV':'Liverpool',
+  'GBIMM':'Immingham','GBHUL':'Hull','GBLTH':'Leith','GBABD':'Aberdeen',
+  'GBINV':'Inverness','GBGLW':'Glasgow',
+  // Frankrike
+  'FRMAR':'Marseille','FRLEH':'Le Havre','FRDKK':'Dunkerque','FRNCE':'Nice',
+  // Spania
+  'ESBCN':'Barcelona','ESVLC':'Valencia','ESALG':'Algeciras','ESBIO':'Bilbao',
+  // Polen
+  'PLGDY':'Gdynia','PLGDN':'Gdansk','PLSZZ':'Szczecin',
+  // Baltikum
+  'EETLL':'Tallinn','LVRIX':'Riga','LTKLA':'Klaipeda',
+  // Russland
+  'RULED':'St. Petersburg','RUMUR':'Murmansk',
+  // Andre
+  'USNYC':'New York','USLAX':'Los Angeles','CNTAO':'Qingdao','CNSHA':'Shanghai',
+  'SGSIN':'Singapore','JPOSA':'Osaka','JPTYO':'Tokyo','KRPUS':'Busan',
+  'AESJA':'Sharjah','AEAUH':'Abu Dhabi','AEDXB':'Dubai',
+}
+
+function decodeDest(raw: string): string {
+  if (!raw || raw.trim() === '') return ''
+  const key = raw.trim().toUpperCase().replace(/\s+/g, '')
+  return LOCODE[key] ?? raw.trim()
+}
+
+// ETA fra Barentswatch — enten ISO-streng eller AIS-format MMDDHHmm
+function formatETA(eta: string): string {
+  if (!eta || eta === '00000000') return ''
+  // ISO-format
+  if (eta.includes('T') || eta.includes('-')) {
+    const d = new Date(eta)
+    if (isNaN(d.getTime())) return ''
+    return d.toLocaleDateString('no-NO', { weekday: 'short', day: 'numeric', month: 'short' })
+      + ' kl ' + d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
+  }
+  // AIS rå: MMDDHHmm
+  if (/^\d{8}$/.test(eta)) {
+    const month = parseInt(eta.slice(0, 2)) - 1
+    const day   = parseInt(eta.slice(2, 4))
+    const hour  = parseInt(eta.slice(4, 6))
+    const min   = parseInt(eta.slice(6, 8))
+    if (month < 0 || day === 0) return ''
+    const year = new Date().getFullYear()
+    const d = new Date(year, month, day, hour, min)
+    if (d < new Date()) d.setFullYear(year + 1)
+    return d.toLocaleDateString('no-NO', { weekday: 'short', day: 'numeric', month: 'short' })
+      + ' kl ' + d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
+  }
+  return eta
+}
+
+// Degrees → enkel kardinalretning
+function cardinal(deg: number): string {
+  const dirs = ['N','NØ','Ø','SØ','S','SV','V','NV']
+  return dirs[Math.round(((deg % 360) + 360) % 360 / 45) % 8]
+}
+
 // Human-readable age of AIS position fix
 function dataAge(msgtime: string): string {
   if (!msgtime) return ''
@@ -233,42 +320,53 @@ function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean): strin
   const typeClr = danger ? '#ef4444' : vesselTypeColor(v.shipType)
   const typeLabel = shipTypeLabel(v.shipType)
 
-  const sog    = v.sog > 0 ? `${v.sog.toFixed(1)} kn` : ''
-  const hdg    = v.heading > 0 && v.heading < 360 ? `${Math.round(v.heading)}° stavn` : ''
-  const cogStr = v.cog > 0 && v.cog < 360 ? `${Math.round(v.cog)}° kurs` : ''
-  const showCog = cogStr && hdg && Math.abs(v.cog - v.heading) > 5
+  const dest    = decodeDest(v.destination)
+  const eta     = formatETA(v.eta)
   const navStat = navStatusLabel(v.navStatus)
   const turning = v.rot !== -128 && Math.abs(v.rot) > 15
     ? (v.rot > 0 ? '→ Dreier styrbord' : '← Dreier babord') : ''
+
+  // Fart + retning i folkelig format
+  const sogStr = v.sog > 0.5 ? `${v.sog.toFixed(1)} knop` : 'Stopper'
+  const dirStr = v.cog > 0 && v.cog < 360
+    ? cardinal(v.cog)
+    : (v.heading > 0 && v.heading < 360 ? cardinal(v.heading) : '')
+  const speedLine = [sogStr, dirStr].filter(Boolean).join(' mot ')
 
   let cpaLine = ''
   if (cpa && cpa.tcpaMin > 0 && isFinite(cpa.tcpaMin)) {
     const nm = (cpa.cpaM / 1852).toFixed(2), min = Math.round(cpa.tcpaMin)
     cpaLine = danger
-      ? `<div style="margin-top:6px;padding:4px 6px;background:rgba(239,68,68,0.15);border-radius:4px;color:#ef4444;font-weight:700;font-size:12px">⚠ Kollisjonskurs · Passerer ${nm} nm om ${min} min</div>`
-      : `<div style="margin-top:4px;color:#94a3b8;font-size:11px">CPA ${nm} nm om ${min} min</div>`
+      ? `<div style="margin-top:6px;padding:4px 8px;background:rgba(239,68,68,0.15);border-radius:6px;color:#ef4444;font-weight:700;font-size:12px">⚠ Mulig kollisjonsrisiko<br/>Nærmeste punkt: ${nm} nm om ${min} min</div>`
+      : `<div style="margin-top:4px;color:#64748b;font-size:11px">Nærmeste punkt: ${nm} nm om ${min} min</div>`
   }
 
   const dimParts: string[] = []
   if (v.length) dimParts.push(`${Math.round(v.length)}${v.beam ? `×${Math.round(v.beam)}` : ''} m`)
-  if (v.draught) dimParts.push(`dypg. ${v.draught.toFixed(1)} m`)
-  const dimLine  = dimParts.length ? `<div style="color:#94a3b8;font-size:11px">${dimParts.join(' · ')}</div>` : ''
-  const destLine = v.destination ? `<div style="color:#94a3b8;font-size:11px">→ ${v.destination}${v.eta ? ` (ETA ${v.eta})` : ''}</div>` : ''
-  const imoLine  = v.imo ? `<div style="color:#475569;font-size:10px">IMO ${v.imo}</div>` : ''
-  const ageLine  = age ? `<span style="color:#475569;font-size:10px">· ${age} siden</span>` : ''
+  if (v.draught) dimParts.push(`dypgang ${v.draught.toFixed(1)} m`)
+  const dimLine  = dimParts.length ? `<div style="color:#64748b;font-size:11px;margin-top:2px">${dimParts.join(' · ')}</div>` : ''
+  const destLine = dest
+    ? `<div style="color:#94a3b8;font-size:12px;margin-top:3px">📍 Til: <b style="color:#e2e8f0">${dest}</b>${eta ? `<br><span style="font-size:11px;color:#64748b">Ankomst: ${eta}</span>` : ''}</div>`
+    : ''
+  const imoLine  = v.imo ? `<div style="color:#334155;font-size:10px">IMO ${v.imo}</div>` : ''
+  const ageLine  = age ? `<span style="color:#334155"> · ${age} siden</span>` : ''
+  const moreLink = `<a href="https://www.vesselfinder.com/vessels/details/${v.mmsi}" target="_blank" rel="noopener"
+    style="display:inline-block;margin-top:6px;font-size:11px;color:#38bdf8;text-decoration:none">
+    🔍 Mer info og bilde →</a>`
 
-  return `<div style="min-width:170px;font-family:system-ui,sans-serif">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-      ${flag ? `<span style="font-size:16px">${flag}</span>` : ''}
+  return `<div style="min-width:190px;font-family:system-ui,sans-serif;line-height:1.5">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+      ${flag ? `<span style="font-size:18px">${flag}</span>` : ''}
       <span style="font-weight:700;font-size:14px;flex:1">${v.name || `MMSI ${v.mmsi}`}</span>
     </div>
-    ${typeLabel ? `<div style="display:inline-block;padding:1px 6px;border-radius:10px;background:${typeClr}22;color:${typeClr};font-size:11px;font-weight:600;margin-bottom:4px">${typeLabel}</div>` : ''}
-    <div style="color:#94a3b8;font-size:12px">${[sog, hdg, showCog ? cogStr : ''].filter(Boolean).join(' · ')}</div>
+    ${typeLabel ? `<div style="display:inline-block;padding:2px 8px;border-radius:10px;background:${typeClr}25;color:${typeClr};font-size:11px;font-weight:600;margin-bottom:4px">${typeLabel}</div>` : ''}
+    <div style="font-size:13px;color:#cbd5e1">${speedLine}</div>
     ${navStat ? `<div style="color:#fbbf24;font-size:11px">${navStat}</div>` : ''}
     ${turning  ? `<div style="color:#94a3b8;font-size:11px">${turning}</div>` : ''}
-    ${dimLine}${destLine}
-    <div style="color:#475569;font-size:10px;margin-top:3px">MMSI ${v.mmsi}${v.callSign ? ` · ${v.callSign}` : ''} ${ageLine}</div>
+    ${destLine}${dimLine}
+    <div style="color:#334155;font-size:10px;margin-top:3px">MMSI ${v.mmsi}${v.callSign ? ` · ${v.callSign}` : ''}${ageLine}</div>
     ${imoLine}
+    ${moreLink}
     ${cpaLine}
   </div>`
 }
