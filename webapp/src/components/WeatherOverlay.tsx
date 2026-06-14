@@ -2,10 +2,16 @@ import { useEffect, useState, useRef } from 'react'
 import { useMapStore } from '../store/useMapStore'
 
 interface WxData {
-  windSpeed: number  // m/s
-  windDir: number    // degrees, FROM direction
-  temp: number       // celsius
-  symbol: string     // met.no symbol_code
+  windSpeed: number
+  windDir: number
+  temp: number
+  symbol: string
+}
+
+interface WaveData {
+  height: number
+  dir: number
+  seaTemp?: number
 }
 
 function wxEmoji(code: string): string {
@@ -24,16 +30,25 @@ function wxEmoji(code: string): string {
   return '🌡️'
 }
 
+function waveColor(h: number): string {
+  if (h < 0.5) return '#4ade80'
+  if (h < 1.5) return '#facc15'
+  if (h < 2.5) return '#fb923c'
+  return '#ef4444'
+}
+
 export default function WeatherOverlay() {
-  const weatherVisible     = useMapStore((s) => s.weatherVisible)
-  const hideWxTide         = useMapStore((s) => s.hideWxTide)
-  const position           = useMapStore((s) => s.position)
-  const setCurrentWeather  = useMapStore((s) => s.setCurrentWeather)
-  const [wx, setWx]        = useState<WxData | null>(null)
-  const [err, setErr]      = useState<string | null>(null)
-  const [place, setPlace]  = useState<string | null>(null)
-  const fetchedKey         = useRef<string | null>(null)
-  const placeKey           = useRef<string | null>(null)
+  const weatherVisible    = useMapStore((s) => s.weatherVisible)
+  const hideWxTide        = useMapStore((s) => s.hideWxTide)
+  const position          = useMapStore((s) => s.position)
+  const setCurrentWeather = useMapStore((s) => s.setCurrentWeather)
+  const [wx, setWx]       = useState<WxData | null>(null)
+  const [wave, setWave]   = useState<WaveData | null>(null)
+  const [err, setErr]     = useState<string | null>(null)
+  const [place, setPlace] = useState<string | null>(null)
+  const fetchedKey        = useRef<string | null>(null)
+  const waveKey           = useRef<string | null>(null)
+  const placeKey          = useRef<string | null>(null)
 
   useEffect(() => {
     if (!weatherVisible) return
@@ -63,8 +78,30 @@ export default function WeatherOverlay() {
       .catch(() => setErr('api'))
   }, [weatherVisible, position?.lat, position?.lng, setCurrentWeather])
 
-  // Nearest place name via Kartverket stedsnavn (Norwegian, no API key).
-  // Coarser key (~1 km) so we don't re-query on every GPS tick.
+  useEffect(() => {
+    if (!weatherVisible || !position) return
+    const key = `${position.lat.toFixed(2)},${position.lng.toFixed(2)}`
+    if (waveKey.current === key) return
+    waveKey.current = key
+    setWave(null)
+
+    fetch(
+      `https://api.met.no/weatherapi/oceanforecast/2.0/complete?lat=${position.lat.toFixed(4)}&lon=${position.lng.toFixed(4)}`,
+      { headers: { 'User-Agent': 'BaatKart/1.0 frode.sighaug@gmail.com' } }
+    )
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((data) => {
+        const d = data.properties?.timeseries?.[0]?.data?.instant?.details
+        if (!d || d.sea_surface_wave_height == null) return
+        setWave({
+          height:  d.sea_surface_wave_height,
+          dir:     d.sea_surface_wave_from_direction ?? 0,
+          seaTemp: d.sea_water_temperature,
+        })
+      })
+      .catch(() => {}) // wave er valgfritt — stille feil utenfor kystdekning
+  }, [weatherVisible, position?.lat, position?.lng])
+
   useEffect(() => {
     if (!weatherVisible || !position) return
     const key = `${position.lat.toFixed(2)},${position.lng.toFixed(2)}`
@@ -78,7 +115,6 @@ export default function WeatherOverlay() {
     )
       .then((r) => r.json())
       .then((data) => {
-        // Kartverket nests the written name under navn[].stedsnavn[].skrivemåte
         const navn = (data?.navn ?? []) as Array<{
           meterFraPunkt?: number
           stedsnavn?: Array<{ skrivemåte?: string; navnestatus?: string }>
@@ -110,7 +146,6 @@ export default function WeatherOverlay() {
         <>
           {place && <div className="tide-station">{place}</div>}
           <div className="wx-row">
-            {/* Arrow points direction wind blows TO */}
             <span className="wx-arrow" style={{ transform: `rotate(${wx.windDir + 180}deg)` }}>↑</span>
             <span className="wx-val">{ms} m/s</span>
             <span className="wx-sub">{Math.round(wx.windDir)}°</span>
@@ -119,6 +154,17 @@ export default function WeatherOverlay() {
             {wx.symbol && <span className="wx-symbol">{wxEmoji(wx.symbol)}</span>}
             {Math.round(wx.temp)}°C
           </div>
+          {wave && (
+            <div className="wx-row">
+              <span className="wx-arrow" style={{ transform: `rotate(${wave.dir + 180}deg)` }}>↑</span>
+              <span className="wx-val" style={{ color: waveColor(wave.height) }}>
+                🌊 {wave.height.toFixed(1)} m
+              </span>
+              {wave.seaTemp != null && (
+                <span className="wx-sub">{Math.round(wave.seaTemp)}° hav</span>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>
