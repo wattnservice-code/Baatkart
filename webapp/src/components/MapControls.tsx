@@ -74,7 +74,6 @@ export default function MapControls() {
   const nightVision      = useMapStore((s) => s.nightVision)
   const cycleDisplayMode = useMapStore((s) => s.cycleDisplayMode)
   const aisVisible       = useMapStore((s) => s.aisVisible)
-  const aisKey           = useMapStore((s) => s.aisKey)
   const toggleAis        = useMapStore((s) => s.toggleAis)
   const aisStatus        = useMapStore((s) => s.aisStatus)
   const quickPins        = useMapStore((s) => s.quickPins)
@@ -133,7 +132,7 @@ export default function MapControls() {
       )}
 
       {/* AIS status pill — only while AIS is enabled */}
-      {aisVisible && aisKey && (
+      {aisVisible && (
         <div className={`ais-status ais-status-${aisStatus.state}`}>
           {aisStatus.state === 'live'
             ? `🚢 ${aisStatus.count} fartøy`
@@ -168,15 +167,13 @@ export default function MapControls() {
         >
           <CompassBtn mode={nordMode} />
         </button>
-        {aisKey && (
-          <button
-            className={`fab ${aisVisible ? 'fab-active' : ''}`}
-            onClick={toggleAis}
-            title={aisVisible ? 'Skjul AIS-fartøy' : 'Vis AIS-fartøy'}
-          >
-            <Ship size={20} />
-          </button>
-        )}
+        <button
+          className={`fab ${aisVisible ? 'fab-active' : ''}`}
+          onClick={toggleAis}
+          title={aisVisible ? 'Skjul AIS-fartøy' : 'Vis AIS-fartøy'}
+        >
+          <Ship size={20} />
+        </button>
         <button
           className={`fab ${nightVision ? 'fab-nightvision' : !darkMode ? 'fab-active' : ''}`}
           onClick={cycleDisplayMode}

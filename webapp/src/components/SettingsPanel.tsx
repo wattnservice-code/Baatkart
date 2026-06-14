@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, Trash2, User, Info } from 'lucide-react'
+import { useState } from 'react'
+import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, User, Info } from 'lucide-react'
 import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
 import OfflinePanel from './OfflinePanel'
@@ -22,10 +22,6 @@ export default function SettingsPanel({ onClose }: Props) {
   const [offlineOpen, setOfflineOpen]     = useState(false)
   const [boatInfoOpen, setBoatInfoOpen]   = useState(false)
   const [infoOpen, setInfoOpen]           = useState(false)
-  const [aisKeyInput, setAisKeyInput]     = useState('')
-  const [confirmDelKey, setConfirmDelKey] = useState(false)
-
-  const darkMode       = useMapStore((s) => s.darkMode)
   const seamarkVisible = useMapStore((s) => s.seamarkVisible)
   const compassEnabled = useMapStore((s) => s.compassEnabled)
   const speedUnit      = useMapStore((s) => s.speedUnit)
@@ -38,11 +34,8 @@ export default function SettingsPanel({ onClose }: Props) {
   const autoTrack      = useMapStore((s) => s.autoTrack)
   const toggleAutoTrack = useMapStore((s) => s.toggleAutoTrack)
   const cycleRingRadius      = useMapStore((s) => s.cycleRingRadius)
-  const aisKey               = useMapStore((s) => s.aisKey)
-  const setAisKey            = useMapStore((s) => s.setAisKey)
   const aisVisible           = useMapStore((s) => s.aisVisible)
   const toggleAis            = useMapStore((s) => s.toggleAis)
-  useEffect(() => { setAisKeyInput(aisKey) }, [aisKey])
 
   const handleCompassToggle = async () => {
     if (!compassEnabled) {
@@ -106,57 +99,9 @@ export default function SettingsPanel({ onClose }: Props) {
 
           <div className="menu-divider" />
           <div style={subhead}>AIS – fartøy på kartet</div>
-          {aisKey && (
-            <button className="menu-item" style={{ color: aisVisible ? '#60a5fa' : undefined }} onClick={toggleAis}>
-              <Ship size={20} /><span>Vis AIS-fartøy {aisVisible ? '(på)' : '(av)'}</span>
-            </button>
-          )}
-          <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ fontSize: 12, color: darkMode ? '#94a3b8' : '#475569' }}>
-              Gratis nøkkel: <b style={{ color: '#38bdf8' }}>aisstream.io</b>
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                type="text"
-                placeholder="Lim inn API-nøkkel"
-                value={aisKeyInput}
-                onChange={(e) => setAisKeyInput(e.target.value)}
-                style={{
-                  flex: 1, minWidth: 0, padding: '8px 10px', borderRadius: 8,
-                  background: darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-                  border: darkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.15)',
-                  color: darkMode ? 'white' : '#0f172a', fontSize: 13, outline: 'none',
-                }}
-              />
-              {aisKeyInput.trim() !== aisKey && (
-                <button
-                  onClick={() => setAisKey(aisKeyInput.trim())}
-                  style={{
-                    flexShrink: 0, padding: '8px 14px', borderRadius: 8, border: 'none',
-                    background: '#2563eb', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                  }}
-                >
-                  Lagre
-                </button>
-              )}
-              {aisKeyInput.trim() !== '' && (
-                <button
-                  onClick={() => setConfirmDelKey(true)}
-                  style={{
-                    flexShrink: 0, padding: '8px 10px', borderRadius: 8, border: 'none',
-                    background: '#dc2626', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                  }}
-                  title="Slett nøkkel"
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
-            </div>
-            {aisKey
-              ? <div style={{ fontSize: 11, color: '#16a34a' }}>✓ Nøkkel lagret — bruk Ship-knappen på kartet</div>
-              : <div style={{ fontSize: 11, color: darkMode ? '#64748b' : '#94a3b8' }}>Ingen nøkkel — AIS ikke tilgjengelig</div>
-            }
-          </div>
+          <button className="menu-item" style={{ color: aisVisible ? '#60a5fa' : undefined }} onClick={toggleAis}>
+            <Ship size={20} /><span>Vis AIS-fartøy {aisVisible ? '(på)' : '(av)'}</span>
+          </button>
 
           <div className="menu-divider" />
           <div style={subhead}>Enheter</div>
@@ -173,23 +118,6 @@ export default function SettingsPanel({ onClose }: Props) {
       {offlineOpen && <OfflinePanel onClose={() => setOfflineOpen(false)} />}
       {boatInfoOpen && <BoatInfoPanel onClose={() => setBoatInfoOpen(false)} />}
       {infoOpen && <InfoPanel onClose={() => setInfoOpen(false)} />}
-
-      {confirmDelKey && (
-        <div className="dialog-overlay" onClick={() => setConfirmDelKey(false)}>
-          <div className="dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="dialog-header">Slett AIS-nøkkel</div>
-            <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 16 }}>
-              Er du sikker på at du vil slette API-nøkkelen?
-            </p>
-            <div className="dialog-actions">
-              <button className="btn-secondary" onClick={() => setConfirmDelKey(false)}>Avbryt</button>
-              <button className="btn-primary" style={{ background: '#dc2626' }} onClick={() => { setAisKey(''); setAisKeyInput(''); setConfirmDelKey(false) }}>
-                <Trash2 size={15} /> Slett
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </>
   )
