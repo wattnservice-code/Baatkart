@@ -161,7 +161,7 @@ export default function WeatherOverlay() {
                 🌊 {wave.height.toFixed(1)} m
               </span>
               {wave.seaTemp != null && (
-                <span className="wx-sub">{Math.round(wave.seaTemp)}° hav</span>
+                <span className="wx-sub">{Math.round(wave.seaTemp)}° sjø</span>
               )}
             </div>
           )}
