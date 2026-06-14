@@ -262,7 +262,7 @@ export const useMapStore = create<MapStore>((set) => ({
   currentWeather: null,
   offlineOnly: loadBool('offlineOnly', false),
   offlineDownload: null,
-  aisVisible: loadBool('aisVisible', false),
+  aisVisible: false,
   aisKey: localStorage.getItem('aisKey') ?? '',
   aisStatus: { state: 'idle', count: 0, message: '' },
   boatInfo: loadBoatInfo(),
