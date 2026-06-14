@@ -104,6 +104,15 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
               value={query}
               onChange={(e) => onQueryChange(e.target.value)}
             />
+            {query && (
+              <button
+                className="spots-search-clear"
+                onClick={() => { setQuery(''); setResults([]) }}
+                title="Tøm søk"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
 
           {/* Saved spots */}

@@ -372,7 +372,13 @@ html, body, #root {
 }
 .spots-action-btn:active { background: rgba(59,130,246,0.22); }
 .spots-action-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.spots-search { padding: 6px 16px 10px; }
+.spots-search { padding: 6px 16px 10px; position: relative; }
+.spots-search-clear {
+  position: absolute; right: 24px; top: 50%; translate: 0 -50%;
+  background: none; border: none; color: #64748b; cursor: pointer;
+  display: flex; align-items: center; padding: 4px;
+}
+.spots-search-clear:active { color: #94a3b8; }
 .day .spots-action-btn { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.25); color: #1d4ed8; }
 
 /* ── Spot list panel (floating, unused after sheet migration) ── */
@@ -409,7 +415,7 @@ html, body, #root {
 .spot-panel-search-input {
   width: 100%; background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.10); border-radius: 8px;
-  color: white; padding: 7px 10px; font-size: 14px; outline: none;
+  color: white; padding: 7px 32px 7px 10px; font-size: 14px; outline: none;
 }
 .spot-panel-search-input::placeholder { color: #475569; }
 .spot-panel-search-input:focus { border-color: #3b82f6; }
