@@ -75,7 +75,7 @@ export default function QuickPinBar() {
           <Trash2 size={13} /> Fjern alle
         </button>
       </div>
-      {withDist.map(({ pin, dist, brg }, idx) => (
+      {withDist.map(({ pin, dist, brg }) => (
         <PinRow
           key={pin.id}
           pin={pin}
