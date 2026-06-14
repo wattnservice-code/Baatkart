@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, Trash2, User, Info } from 'lucide-react'
+import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
 import OfflinePanel from './OfflinePanel'
 import BoatInfoPanel from './BoatInfoPanel'
@@ -57,10 +58,12 @@ export default function SettingsPanel({ onClose }: Props) {
     toggleCompass()
   }
 
+  const swipe = useSwipeDismiss(onClose)
+
   return (
     <>
       <div className="settings-sheet">
-        <div className="settings-head">
+        <div className="settings-head" {...swipe}>
           <span className="settings-title"><User size={18} /> Meg</span>
           <button className="settings-close" onClick={onClose}><X size={20} /></button>
         </div>

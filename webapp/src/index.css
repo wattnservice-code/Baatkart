@@ -1700,11 +1700,21 @@ html, body, #root {
   from { transform: translateY(12px); opacity: 0; }
   to   { transform: translateY(0); opacity: 1; }
 }
+.settings-sheet::before {
+  content: '';
+  display: block;
+  width: 36px; height: 4px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 2px;
+  margin: 8px auto 0;
+  flex-shrink: 0;
+}
+.day .settings-sheet::before { background: rgba(0,0,0,0.15); }
 .settings-head {
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px;
-  padding-top: max(16px, calc(env(safe-area-inset-top) + 8px));
+  padding-top: max(8px, calc(env(safe-area-inset-top) + 4px));
   border-bottom: 1px solid rgba(255,255,255,0.10);
 }
 .settings-title { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; }

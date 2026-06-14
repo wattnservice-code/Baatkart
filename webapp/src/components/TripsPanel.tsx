@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, Trash2, Play, Square, Circle } from 'lucide-react'
+import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
 import { iconEmoji } from '../spotIcons'
@@ -59,10 +60,12 @@ export default function TripsPanel({ onClose }: Props) {
     else clearTrack()
   }
 
+  const swipe = useSwipeDismiss(onClose)
+
   return (
     <>
       <div className="settings-sheet">
-        <div className="settings-head">
+        <div className="settings-head" {...swipe}>
           <span className="settings-title">Turer</span>
           <button className="settings-close" onClick={onClose}><X size={20} /></button>
         </div>

@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { X, Trash2, Navigation, LocateFixed, MapPin, Globe, Bookmark, BookmarkCheck, Eye, EyeOff } from 'lucide-react'
+import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth } from '../googleEarth'
@@ -75,12 +76,13 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
   const saveWeb  = (r: NominatimResult) => addSpot({ id: `search-${r.place_id}`, lat: +r.lat, lng: +r.lon, name: webName(r) })
   const isSaved  = (r: NominatimResult) => savedSpots.some((s) => s.id === `search-${r.place_id}`)
 
+  const swipe = useSwipeDismiss(onClose)
   const searching = query.trim().length >= 2
 
   return (
     <>
       <div className="settings-sheet">
-        <div className="settings-head">
+        <div className="settings-head" {...swipe}>
           <span className="settings-title">Steder</span>
           <button
             className={`settings-head-icon-btn ${spotsVisible ? 'settings-head-icon-btn-active' : ''}`}

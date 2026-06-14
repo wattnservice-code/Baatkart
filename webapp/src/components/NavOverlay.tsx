@@ -36,7 +36,7 @@ export default function NavOverlay() {
 
   const dist    = position ? haversineM(position.lat, position.lng, navTarget.lat, navTarget.lng) : null
   const eta     = (dist !== null && position) ? formatETA(dist, position.speed) : null
-  const arrived = dist !== null && dist < 30
+  const arrived = dist !== null && dist < 20
 
   return (
     <div className={`nav-overlay ${arrived ? 'nav-arrived' : ''}`}>
