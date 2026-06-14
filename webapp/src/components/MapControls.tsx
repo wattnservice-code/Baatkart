@@ -138,11 +138,11 @@ export default function MapControls() {
           {aisStatus.state === 'live'
             ? `🚢 ${aisStatus.count} fartøy`
             : aisStatus.state === 'warn'
-            ? `${aisStatus.message} · ${aisStatus.count} fartøy`
+            ? `🚨 ${aisStatus.message}`
             : aisStatus.state === 'connecting'
             ? `🚢 ${aisStatus.message}`
             : aisStatus.state === 'error'
-            ? `⚠ AIS: ${aisStatus.message}`
+            ? `📡 Ingen AIS-kontakt`
             : '🚢 AIS av'}
         </div>
       )}

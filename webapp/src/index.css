@@ -1246,8 +1246,8 @@ html, body, #root {
 }
 .ais-status-connecting { background: rgba(37,99,235,0.92); }
 .ais-status-live       { background: rgba(22,163,74,0.92); }
-.ais-status-warn       { background: rgba(220,38,38,0.95); animation: aisStatusPulse 1.1s ease-in-out infinite; }
-.ais-status-error      { background: rgba(220,38,38,0.95); }
+.ais-status-warn       { background: rgba(220,38,38,0.97); font-size: 14px; font-weight: 800; letter-spacing: 0.3px; animation: aisStatusPulse 0.65s ease-in-out infinite; }
+.ais-status-error      { background: rgba(161,58,0,0.93); }
 .ais-status-idle       { background: rgba(71,85,105,0.9); }
 
 /* On narrow portrait phones a long warn message would overrun into the MOB

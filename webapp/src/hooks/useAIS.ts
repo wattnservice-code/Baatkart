@@ -183,8 +183,10 @@ export function useAIS() {
   const dangerRef     = useRef<Set<number>>(new Set())
   const lastAlarmRef  = useRef(0)
   const staticRef     = useRef<Map<number, ShipStatic>>(new Map())
+  const lastSeenRef   = useRef<Map<number, number>>(new Map())
   const lastMsgRef    = useRef(0)        // timestamp of last frame (for the watchdog)
   const watchdogRef   = useRef<ReturnType<typeof setInterval> | null>(null)
+  const vesselTrimRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Keep bounds ref current without triggering re-subscription immediately
   useEffect(() => { boundsRef.current = mapBounds }, [mapBounds])
@@ -214,6 +216,7 @@ export function useAIS() {
     if (!aisVisible || !aisKey) {
       if (reconnectRef.current) { clearTimeout(reconnectRef.current); reconnectRef.current = null }
       if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null }
+      if (vesselTrimRef.current) { clearInterval(vesselTrimRef.current); vesselTrimRef.current = null }
       wsRef.current?.close(1000)
       wsRef.current = null
       layerRef.current?.clearLayers()
@@ -221,6 +224,7 @@ export function useAIS() {
       courseLinesRef.current.clear()
       dangerRef.current.clear()
       staticRef.current.clear()
+      lastSeenRef.current.clear()
       useMapStore.getState().setAisStatus({ state: 'idle', count: 0, message: '' })
       return
     }
@@ -339,6 +343,7 @@ export function useAIS() {
           if (!lat || !lng) return
 
           attempt = 0   // healthy data — reset backoff
+          lastSeenRef.current.set(mmsi, Date.now())
 
           const sog = (rep.Sog ?? 0) as number
 
@@ -415,7 +420,7 @@ export function useAIS() {
           setAisStatus({
             state: dn > 0 ? 'warn' : 'live',
             count: markersRef.current.size,
-            message: dn > 0 ? `⚠ ${dn} på kollisjonskurs` : '',
+            message: dn > 0 ? `${dn} på kollisjonskurs` : '',
           })
         } catch { /* ignore malformed messages */ }
       }
@@ -435,11 +440,35 @@ export function useAIS() {
 
     connect()
 
+    // Remove vessels that stopped broadcasting (left area, anchored, etc.)
+    // so danger warnings clear automatically when the threat disappears.
+    const VESSEL_TTL = 3 * 60 * 1000   // 3 min silence = gone
+    vesselTrimRef.current = setInterval(() => {
+      const now = Date.now()
+      let changed = false
+      for (const [mmsi, ts] of lastSeenRef.current) {
+        if (now - ts > VESSEL_TTL) {
+          lastSeenRef.current.delete(mmsi)
+          const m = markersRef.current.get(mmsi)
+          if (m) { m.remove(); markersRef.current.delete(mmsi) }
+          const cl = courseLinesRef.current.get(mmsi)
+          if (cl) { cl.remove(); courseLinesRef.current.delete(mmsi) }
+          dangerRef.current.delete(mmsi)
+          changed = true
+        }
+      }
+      if (changed) {
+        const dn = dangerRef.current.size
+        setAisStatus({ state: dn > 0 ? 'warn' : 'live', count: markersRef.current.size, message: dn > 0 ? `${dn} på kollisjonskurs` : '' })
+      }
+    }, 30000)
+
     return () => {
       cancelled = true
       if (reconnectRef.current) { clearTimeout(reconnectRef.current); reconnectRef.current = null }
       if (subTimerRef.current) clearTimeout(subTimerRef.current)
       if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null }
+      if (vesselTrimRef.current) { clearInterval(vesselTrimRef.current); vesselTrimRef.current = null }
       wsRef.current?.close(1000)
       wsRef.current = null
       layerRef.current?.clearLayers()
@@ -447,6 +476,7 @@ export function useAIS() {
       courseLinesRef.current.clear()
       dangerRef.current.clear()
       staticRef.current.clear()
+      lastSeenRef.current.clear()
     }
   }, [aisVisible, aisKey, sendSubscription])
 
