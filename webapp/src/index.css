@@ -1610,7 +1610,6 @@ html, body, #root {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  z-index: 460;
   background: rgba(15,23,42,0.98);
   backdrop-filter: blur(10px);
   color: white;
@@ -1636,7 +1635,7 @@ html, body, #root {
 }
 .settings-close:active { background: rgba(255,255,255,0.16); }
 .settings-close svg { width: 24px; height: 24px; }
-.settings-body { flex: 1; overflow-y: auto; padding-bottom: 24px; }
+.settings-body { flex: 1; overflow-y: auto; padding-bottom: max(32px, calc(env(safe-area-inset-bottom) + 20px)); }
 
 .day .settings-sheet { background: rgba(248,250,252,0.99); color: #0f172a; }
 .day .settings-head { border-bottom-color: rgba(0,0,0,0.10); }
