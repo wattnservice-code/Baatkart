@@ -79,8 +79,8 @@ export default function MapControls() {
   const aisStatus        = useMapStore((s) => s.aisStatus)
   const spotsVisible     = useMapStore((s) => s.spotsVisible)
   const toggleSpotsVisible = useMapStore((s) => s.toggleSpotsVisible)
-  const quickPin         = useMapStore((s) => s.quickPin)
-  const setQuickPin      = useMapStore((s) => s.setQuickPin)
+  const quickPins        = useMapStore((s) => s.quickPins)
+  const addQuickPin      = useMapStore((s) => s.addQuickPin)
   const speedUnit        = useMapStore((s) => s.speedUnit)
   const toggleSpeedUnit  = useMapStore((s) => s.toggleSpeedUnit)
   const distUnit         = useMapStore((s) => s.distUnit)
@@ -217,11 +217,12 @@ export default function MapControls() {
           <Star size={20} fill={spotsVisible ? 'currentColor' : 'none'} />
         </button>
         <button
-          className={`fab ${quickPin ? 'fab-quickpin' : ''}`}
-          onClick={() => position ? setQuickPin({ lat: position.lat, lng: position.lng }) : undefined}
-          title={quickPin ? 'Hurtigmerke satt – trykk for å oppdatere' : 'Sett hurtigmerke her'}
+          className={`fab ${quickPins.length > 0 ? 'fab-quickpin' : ''}`}
+          onClick={() => position && addQuickPin({ lat: position.lat, lng: position.lng })}
+          title="Merk posisjon (blåse, holdeplass…)"
         >
           <Crosshair size={20} />
+          {quickPins.length > 0 && <span className="fab-badge">{quickPins.length}</span>}
         </button>
       </div>
 

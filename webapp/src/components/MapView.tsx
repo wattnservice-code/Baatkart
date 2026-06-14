@@ -222,7 +222,7 @@ export default function MapView() {
   const resumeFollowRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wasMovingRef    = useRef(false)
   const spotMarkersRef      = useRef<Map<string, L.Marker>>(new Map())
-  const quickPinRef         = useRef<L.Marker | null>(null)
+  const quickPinMarkersRef  = useRef<Map<string, L.Marker>>(new Map())
   const followTrackLineRef  = useRef<L.Polyline | null>(null)
 
   const [pendingSpot, setPendingSpot]       = useState<{ lat: number; lng: number } | null>(null)
@@ -245,7 +245,7 @@ export default function MapView() {
   const savedSpots       = useMapStore((s) => s.savedSpots)
   const activeSpotId     = useMapStore((s) => s.activeSpotId)
   const spotsVisible     = useMapStore((s) => s.spotsVisible)
-  const quickPin         = useMapStore((s) => s.quickPin)
+  const quickPins        = useMapStore((s) => s.quickPins)
   const compassEnabled   = useMapStore((s) => s.compassEnabled)
   const compassHeading   = useMapStore((s) => s.compassHeading)
   const darkMode         = useMapStore((s) => s.darkMode)
@@ -750,23 +750,25 @@ export default function MapView() {
     })
   }, [savedSpots, activeSpotId, spotsVisible])
 
-  // Quick pin marker — temporary navigation pin
+  // Quick pin markers — temporary navigation pins (multiple)
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
-    if (!quickPin) {
-      quickPinRef.current?.remove()
-      quickPinRef.current = null
-      return
-    }
-    const html = `<div class="quick-pin-marker"></div>`
-    const icon = L.divIcon({ className: '', html, iconSize: [28, 28], iconAnchor: [14, 14] })
-    if (quickPinRef.current) {
-      quickPinRef.current.setLatLng([quickPin.lat, quickPin.lng]).setIcon(icon)
-    } else {
-      quickPinRef.current = L.marker([quickPin.lat, quickPin.lng], { icon, zIndexOffset: 900 }).addTo(map)
-    }
-  }, [quickPin])
+    const activeIds = new Set(quickPins.map((p) => p.id))
+    quickPinMarkersRef.current.forEach((m, id) => {
+      if (!activeIds.has(id)) { m.remove(); quickPinMarkersRef.current.delete(id) }
+    })
+    quickPins.forEach((pin, idx) => {
+      const html = `<div class="quick-pin-marker"><span class="quick-pin-num">${idx + 1}</span></div>`
+      const icon = L.divIcon({ className: '', html, iconSize: [32, 32], iconAnchor: [16, 16] })
+      if (quickPinMarkersRef.current.has(pin.id)) {
+        quickPinMarkersRef.current.get(pin.id)!.setLatLng([pin.lat, pin.lng]).setIcon(icon)
+      } else {
+        const m = L.marker([pin.lat, pin.lng], { icon, zIndexOffset: 900 }).addTo(map)
+        quickPinMarkersRef.current.set(pin.id, m)
+      }
+    })
+  }, [quickPins])
 
   // Click to add spot, or tap anywhere to drop a pin
   useEffect(() => {

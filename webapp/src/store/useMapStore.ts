@@ -29,6 +29,14 @@ export interface MobPoint {
   timestamp: number
 }
 
+export interface QuickPin {
+  id: string
+  lat: number
+  lng: number
+  timestamp: number
+  label: string   // e.g. "14:32"
+}
+
 export type SpeedUnit = 'kn' | 'kmh'
 export type DistUnit = 'm' | 'km' | 'nm'
 
@@ -106,7 +114,7 @@ interface MapStore {
   trackDistanceM: number
   trackMaxSpeed: number
   spotsVisible: boolean
-  quickPin: { lat: number; lng: number; timestamp: number } | null
+  quickPins: QuickPin[]
 
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
@@ -155,7 +163,9 @@ interface MapStore {
   toggleLookAhead: () => void
   toggleHeadingUp: () => void
   toggleSpotsVisible: () => void
-  setQuickPin: (p: { lat: number; lng: number } | null) => void
+  addQuickPin: (p: { lat: number; lng: number }) => void
+  removeQuickPin: (id: string) => void
+  clearQuickPins: () => void
   saveCurrentTrack: (name: string, icon?: string) => void
   deleteSavedTrack: (id: string) => void
   startFollowingTrack: (track: SavedTrack) => void
@@ -197,8 +207,8 @@ function persistSavedTracks(tracks: SavedTrack[]) {
   localStorage.setItem('savedTracks', JSON.stringify(tracks))
 }
 
-function loadQuickPin(): { lat: number; lng: number; timestamp: number } | null {
-  try { return JSON.parse(localStorage.getItem('quickPin') || 'null') } catch { return null }
+function loadQuickPins(): QuickPin[] {
+  try { return JSON.parse(localStorage.getItem('quickPins') || '[]') } catch { return [] }
 }
 
 function loadBool(key: string, def: boolean): boolean {
@@ -263,7 +273,7 @@ export const useMapStore = create<MapStore>((set) => ({
   trackDistanceM: 0,
   trackMaxSpeed: 0,
   spotsVisible: loadBool('spotsVisible', false),
-  quickPin: loadQuickPin(),
+  quickPins: loadQuickPins(),
 
   setPosition: (pos) =>
     set((state) => {
@@ -397,11 +407,19 @@ export const useMapStore = create<MapStore>((set) => ({
   toggleLookAhead: () => set((s) => { const v = !s.lookAhead; localStorage.setItem('lookAhead', String(v)); return { lookAhead: v } }),
   toggleHeadingUp: () => set((s) => { const v = !s.headingUp; localStorage.setItem('headingUp', String(v)); return { headingUp: v } }),
   toggleSpotsVisible: () => set((s) => { const v = !s.spotsVisible; localStorage.setItem('spotsVisible', String(v)); return { spotsVisible: v } }),
-  setQuickPin: (p) => {
-    const pin = p ? { ...p, timestamp: Date.now() } : null
-    localStorage.setItem('quickPin', JSON.stringify(pin))
-    set({ quickPin: pin })
-  },
+  addQuickPin: (p) => set((s) => {
+    const label = new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
+    const pin: QuickPin = { id: Date.now().toString(), ...p, timestamp: Date.now(), label }
+    const pins = [...s.quickPins, pin]
+    localStorage.setItem('quickPins', JSON.stringify(pins))
+    return { quickPins: pins }
+  }),
+  removeQuickPin: (id) => set((s) => {
+    const pins = s.quickPins.filter((p) => p.id !== id)
+    localStorage.setItem('quickPins', JSON.stringify(pins))
+    return { quickPins: pins }
+  }),
+  clearQuickPins: () => { localStorage.removeItem('quickPins'); set({ quickPins: [] }) },
 
   saveCurrentTrack: (name, icon) => set((s) => {
     if (s.track.length < 2) return {}

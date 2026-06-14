@@ -87,7 +87,7 @@ html, body, #root {
   background: rgba(15,23,42,0.92);
   backdrop-filter: blur(6px);
   border: 1px solid rgba(255,255,255,0.15);
-  color: white;
+  color: white; position: relative;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   transition: all 0.15s;
@@ -675,43 +675,72 @@ html, body, #root {
   border-top-color: rgba(15,23,42,0.92);
 }
 
-/* ── Quick pin (temporary waypoint) ── */
+/* ── Quick pin markers (on map) ── */
 .quick-pin-marker {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: #f97316;
-  border: 3px solid white;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #f97316; border: 3px solid white;
+  display: flex; align-items: center; justify-content: center;
   box-shadow: 0 0 0 0 rgba(249,115,22,0.6), 0 2px 6px rgba(0,0,0,0.5);
   animation: quickpin-pulse 1.8s infinite;
 }
+.quick-pin-num { font-size: 13px; font-weight: 900; color: white; line-height: 1; }
 @keyframes quickpin-pulse {
   0%   { box-shadow: 0 0 0 0 rgba(249,115,22,0.6), 0 2px 6px rgba(0,0,0,0.5); }
   60%  { box-shadow: 0 0 0 10px rgba(249,115,22,0), 0 2px 6px rgba(0,0,0,0.5); }
   100% { box-shadow: 0 0 0 0 rgba(249,115,22,0), 0 2px 6px rgba(0,0,0,0.5); }
 }
 .fab-quickpin { color: #f97316 !important; border-color: rgba(249,115,22,0.5) !important; }
+.fab-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: #f97316; color: white; border-radius: 9px;
+  font-size: 10px; font-weight: 900; min-width: 17px; height: 17px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid #0b1220; line-height: 1;
+}
 
-/* ── Quick pin bar (distance/nav banner) ── */
+/* ── Quick pin bar (list panel) ── */
 .quickpin-bar {
-  position: absolute; bottom: 56px; left: 50%; translate: -50% 0;
-  display: flex; align-items: center; gap: 8px;
-  background: rgba(249,115,22,0.92); backdrop-filter: blur(8px);
-  color: white; border-radius: 24px; padding: 6px 10px 6px 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-  font-size: 13px; font-weight: 700; z-index: 600;
-  white-space: nowrap;
+  position: absolute; bottom: 56px; left: 8px; right: 72px;
+  background: rgba(20,28,46,0.95); backdrop-filter: blur(10px);
+  border: 1px solid rgba(249,115,22,0.4);
+  color: white; border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  font-size: 13px; z-index: 600; overflow: hidden;
 }
-.quickpin-icon { font-size: 16px; }
-.quickpin-coords { background: none; border: none; color: inherit; font: inherit; cursor: pointer; padding: 0; }
-.quickpin-nav {
+.quickpin-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px 5px; border-bottom: 1px solid rgba(249,115,22,0.25);
+}
+.quickpin-title { font-size: 12px; font-weight: 700; color: #f97316; }
+.quickpin-clear-all {
   display: flex; align-items: center; gap: 4px;
-  background: rgba(255,255,255,0.25); border: none; color: white;
-  border-radius: 16px; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
+  background: none; border: none; color: #64748b; font-size: 11px; cursor: pointer;
 }
-.quickpin-clear {
-  display: flex; align-items: center;
-  background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; padding: 2px;
+.quickpin-clear-all:active { color: #f87171; }
+.quickpin-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.quickpin-clear:active { opacity: 0.6; }
+.quickpin-row:last-child { border-bottom: none; }
+.quickpin-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #f97316; color: white; font-size: 11px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.quickpin-info { flex: 1; background: none; border: none; color: inherit; text-align: left; cursor: pointer; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.quickpin-label { font-size: 13px; font-weight: 700; color: #e2e8f0; }
+.quickpin-dist  { font-size: 11px; color: #f97316; font-weight: 600; }
+.quickpin-nav-btn {
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.4);
+  color: #f97316; border-radius: 8px; width: 30px; height: 30px; cursor: pointer; flex-shrink: 0;
+}
+.quickpin-nav-btn:active { background: rgba(249,115,22,0.3); }
+.quickpin-del-btn {
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; color: #475569; cursor: pointer; width: 24px; height: 24px; flex-shrink: 0;
+}
+.quickpin-del-btn:active { color: #f87171; }
 
 /* ── Search result pin ── */
 .search-pin {
