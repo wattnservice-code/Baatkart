@@ -69,7 +69,7 @@ class OfflineTileLayer extends L.TileLayer {
 const _STADIA_KEY = import.meta.env.VITE_STADIA_KEY
 const _KP = _STADIA_KEY ? `?api_key=${_STADIA_KEY}` : ''
 const STADIA_ATTR = '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-const OSM_URL   = `https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}.png${_KP}`
+const OSM_URL   = `https://tiles.stadiamaps.com/tiles/stamen_toner_background/{z}/{x}/{y}.png${_KP}`
 const OSM_ATTR  = STADIA_ATTR
 const DARK_URL  = `https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png${_KP}`
 const DARK_ATTR = STADIA_ATTR
