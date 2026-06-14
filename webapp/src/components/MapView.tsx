@@ -66,10 +66,13 @@ class OfflineTileLayer extends L.TileLayer {
   }
 }
 
-const OSM_URL   = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-const OSM_ATTR  = '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
-const DARK_URL  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-const DARK_ATTR = '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>'
+const _STADIA_KEY = import.meta.env.VITE_STADIA_KEY
+const _KP = _STADIA_KEY ? `?api_key=${_STADIA_KEY}` : ''
+const STADIA_ATTR = '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+const OSM_URL   = `https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}.png${_KP}`
+const OSM_ATTR  = STADIA_ATTR
+const DARK_URL  = `https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png${_KP}`
+const DARK_ATTR = STADIA_ATTR
 const SJOKAART_URL  = 'https://cache.kartverket.no/v1/wmts/1.0.0/sjokartraster/default/webmercator/{z}/{y}/{x}.png'
 const SJOKAART_ATTR = '&copy; <a href="https://kartverket.no">Kartverket</a>'
 const SEAMARK_URL   = 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png'

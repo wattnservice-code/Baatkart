@@ -74,13 +74,15 @@ export default function InfoPanel({ onClose }: Props) {
         <h3 className="info-h">Datakilder og lisenser</h3>
         <ul className="info-list">
           <li>
-            <b>Grunnkart:</b> © <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-bidragsytere –
+            <b>Grunnkart:</b> © <a href="https://stadiamaps.com/" target="_blank" rel="noopener">Stadia Maps</a> /
+            <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> /
+            <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-bidragsytere –
             lisens <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">ODbL</a>.
-            Kartdata kan inneholde feil.
+            Kommersiell bruk tillatt.
           </li>
           <li>
-            <b>Nattmodus:</b> © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a> (CartoDB Dark Matter) –
-            basert på OpenStreetMap.
+            <b>Nattmodus:</b> Stadia Maps «Alidade Smooth Dark» –
+            basert på OpenStreetMap, kommersiell bruk tillatt.
           </li>
           <li>
             <b>Sjøkart:</b> © <a href="https://kartverket.no" target="_blank" rel="noopener">Kartverket</a> –
