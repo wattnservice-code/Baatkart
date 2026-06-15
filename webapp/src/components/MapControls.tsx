@@ -11,6 +11,29 @@ import TripsPanel from './TripsPanel'
 import SpotDialog from './SpotDialog'
 import SettingsPanel from './SettingsPanel'
 
+function cardinal(deg: number): string {
+  return ['N','NØ','Ø','SØ','S','SV','V','NV'][Math.round(deg / 45) % 8]
+}
+function waveColor(h: number): string {
+  if (h < 0.5) return '#4ade80'
+  if (h < 1.5) return '#facc15'
+  if (h < 2.5) return '#fb923c'
+  return '#ef4444'
+}
+function wxEmoji(code: string): string {
+  if (!code) return ''
+  if (code.includes('thunder')) return '⛈️'
+  if (code.includes('snow')) return '❄️'
+  if (code.includes('sleet')) return '🌨️'
+  if (code.includes('rain') || code.includes('drizzle')) return '🌧️'
+  if (code.includes('fog')) return '🌫️'
+  if (code.startsWith('clearsky')) return '☀️'
+  if (code.startsWith('fair')) return '🌤️'
+  if (code.includes('partlycloudy')) return '⛅'
+  if (code.includes('cloudy')) return '☁️'
+  return ''
+}
+
 function distanceM(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const R = 6371000
   const φ1 = (aLat * Math.PI) / 180, φ2 = (bLat * Math.PI) / 180
@@ -59,6 +82,8 @@ function CompassBtn({ mode }: { mode: NordMode }) {
 
 export default function MapControls() {
   const [gpsSpot, setGpsSpot]           = useState<{ lat: number; lng: number } | null>(null)
+  const [spotWx, setSpotWx]   = useState<{ windSpeed: number; windDir: number; temp: number; symbol: string } | null>(null)
+  const [spotWave, setSpotWave] = useState<{ height: number; dir: number; seaTemp?: number } | null>(null)
 
   const isOnline         = useOnline()
   const headingUp        = useMapStore((s) => s.headingUp)
@@ -98,6 +123,30 @@ export default function MapControls() {
 
   const useGpsPos = () => { if (position) setGpsSpot({ lat: position.lat, lng: position.lng }) }
   const useMapPos = () => { setAddingSpot(true) }
+
+  useEffect(() => {
+    if (!spotMenu || !isOnline) { setSpotWx(null); setSpotWave(null); return }
+    setSpotWx(null); setSpotWave(null)
+    const { lat, lng } = spotMenu
+    const ua = { 'User-Agent': 'BaatKart/1.0 frode.sighaug@gmail.com' }
+    fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}`, { headers: ua })
+      .then(r => r.json())
+      .then(data => {
+        const ts0 = data.properties.timeseries[0].data
+        const d = ts0.instant.details
+        const symbol = ts0.next_1_hours?.summary?.symbol_code ?? ts0.next_6_hours?.summary?.symbol_code ?? ''
+        setSpotWx({ windSpeed: d.wind_speed, windDir: d.wind_from_direction, temp: d.air_temperature, symbol })
+      })
+      .catch(() => {})
+    fetch(`https://api.met.no/weatherapi/oceanforecast/2.0/complete?lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}`, { headers: ua })
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then(data => {
+        const d = data.properties?.timeseries?.[0]?.data?.instant?.details
+        if (!d || d.sea_surface_wave_height == null) return
+        setSpotWave({ height: d.sea_surface_wave_height, dir: d.sea_surface_wave_from_direction ?? 0, seaTemp: d.sea_water_temperature })
+      })
+      .catch(() => {})
+  }, [spotMenu?.lat, spotMenu?.lng, isOnline])
 
   // 3-state cycle: nord-opp → GPS kjøreretning → kompassretning → nord-opp
   const nordMode: NordMode = compassEnabled ? 'krs' : headingUp ? 'gps' : 'off'
@@ -242,6 +291,14 @@ export default function MapControls() {
               </div>
             )
           })()}
+          {spotWx && (
+            <div className="spot-wx-block">
+              <span>{wxEmoji(spotWx.symbol)} {Math.round(spotWx.temp)}°C</span>
+              <span>🌬 {spotWx.windSpeed.toFixed(1)} m/s {cardinal(spotWx.windDir)}</span>
+              {spotWave && <span style={{ color: waveColor(spotWave.height) }}>🌊 {spotWave.height.toFixed(1)} m</span>}
+              {spotWave?.seaTemp != null && <span>{Math.round(spotWave.seaTemp)}° sjø</span>}
+            </div>
+          )}
           <div className="spot-action-btns">
             <button className="spot-action-btn spot-action-nav" onClick={() => {
               setNavPreview({ lat: spotMenu.lat, lng: spotMenu.lng, name: spotMenu.name })
