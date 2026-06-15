@@ -773,22 +773,33 @@ export default function MapView() {
     })
   }, [quickPins])
 
-  // Click to add spot, or tap anywhere to drop a pin
+  // Click to add spot, or tap anywhere to drop a pin.
+  // Guard: if click is closing a popup (e.g. AIS vessel info), skip pin creation.
   useEffect(() => {
     if (!mapRef.current) return
     const map = mapRef.current
+    const popupJustClosed = { current: false }
+    const onPopupClose = () => {
+      popupJustClosed.current = true
+      setTimeout(() => { popupJustClosed.current = false }, 100)
+    }
     const onClick = (e: L.LeafletMouseEvent) => {
+      if (popupJustClosed.current) return
       if (addingSpot) { setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng }); return }
       const s = useMapStore.getState()
-      if (s.spotMenu) return  // backdrop handles dismiss; ignore Leaflet clicks while card is open
+      if (s.spotMenu) return
       const lat = e.latlng.lat, lng = e.latlng.lng
       const name = 'Valgt punkt'
       s.setSearchPin({ lat, lng, name })
       s.setSpotMenu({ lat, lng, name })
     }
+    map.on('popupclose', onPopupClose)
     map.on('click', onClick)
     map.getContainer().style.cursor = addingSpot ? 'crosshair' : ''
-    return () => { map.off('click', onClick) }
+    return () => {
+      map.off('popupclose', onPopupClose)
+      map.off('click', onClick)
+    }
   }, [addingSpot])
 
   return (
