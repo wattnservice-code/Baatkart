@@ -1303,11 +1303,12 @@ html, body, #root {
 .wx-expand-toggle:active { color: #94a3b8; }
 .wx-forecast { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
 .wx-forecast-row { display: flex; align-items: center; gap: 6px; }
-.wx-forecast-label { font-size: 12px; flex-shrink: 0; }
-.wx-sparkline { width: 160px; height: 30px; display: block; }
+.wx-sparkline { width: 120px; height: 28px; display: block; flex-shrink: 0; }
+.wx-forecast-label { font-size: 11px; font-weight: 600; color: #94a3b8; flex-shrink: 0; min-width: 56px; }
 .wx-forecast-hours { display: flex; justify-content: space-between; font-size: 10px; color: #475569; padding-left: 18px; }
 .day .wx-expand-toggle { color: #94a3b8; border-top-color: rgba(0,0,0,0.08); }
 .day .wx-forecast-hours { color: #94a3b8; }
+.day .wx-forecast-label { color: #475569; }
 /* tide */
 .tide-station { font-size: 11px; color: #64748b; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
 .tide-row { display: flex; align-items: center; gap: 6px; font-size: 13px; }

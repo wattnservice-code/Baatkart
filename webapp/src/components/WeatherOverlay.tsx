@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useMapStore } from '../store/useMapStore'
+import { waveColor, seriesRange, WindSparkline, WaveBars } from './forecastCharts'
+import type { SeriesPoint } from './forecastCharts'
 
 interface WxData {
   windSpeed: number
@@ -12,11 +14,6 @@ interface WaveData {
   height: number
   dir: number
   seaTemp?: number
-}
-
-interface SeriesPoint {
-  hour: number
-  v: number
 }
 
 function wxEmoji(code: string): string {
@@ -33,46 +30,6 @@ function wxEmoji(code: string): string {
   if (code.includes('partlycloudy')) return '⛅'
   if (code.includes('cloudy'))       return '☁️'
   return '🌡️'
-}
-
-function waveColor(h: number): string {
-  if (h < 0.5) return '#4ade80'
-  if (h < 1.5) return '#facc15'
-  if (h < 2.5) return '#fb923c'
-  return '#ef4444'
-}
-
-function WindSparkline({ points }: { points: SeriesPoint[] }) {
-  const w = 160, h = 30
-  const values = points.map((p) => p.v)
-  const max = Math.max(...values, 0.1)
-  const min = Math.min(...values, 0)
-  const range = max - min || 1
-  const pts = points.map((p, i) => {
-    const x = (i / (points.length - 1)) * w
-    const y = h - ((p.v - min) / range) * (h - 4) - 2
-    return `${x.toFixed(1)},${y.toFixed(1)}`
-  }).join(' ')
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="wx-sparkline" preserveAspectRatio="none">
-      <polyline points={pts} fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function WaveBars({ points }: { points: SeriesPoint[] }) {
-  const w = 160, h = 30
-  const values = points.map((p) => p.v)
-  const max = Math.max(...values, 0.3)
-  const bw = w / points.length
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="wx-sparkline" preserveAspectRatio="none">
-      {points.map((p, i) => {
-        const bh = Math.max((p.v / max) * h, 2)
-        return <rect key={i} x={i * bw + 1} y={h - bh} width={Math.max(bw - 2, 1)} height={bh} fill={waveColor(p.v)} rx="1" />
-      })}
-    </svg>
-  )
 }
 
 export default function WeatherOverlay() {
@@ -230,13 +187,13 @@ export default function WeatherOverlay() {
             <div className="wx-forecast" onClick={(e) => e.stopPropagation()}>
               {windSeries.length >= 2 && (
                 <div className="wx-forecast-row">
-                  <span className="wx-forecast-label">🌬</span>
+                  <span className="wx-forecast-label">🌬 {seriesRange(windSeries)}</span>
                   <WindSparkline points={windSeries} />
                 </div>
               )}
               {waveSeries.length >= 2 && (
                 <div className="wx-forecast-row">
-                  <span className="wx-forecast-label">🌊</span>
+                  <span className="wx-forecast-label">🌊 {seriesRange(waveSeries)} m</span>
                   <WaveBars points={waveSeries} />
                 </div>
               )}

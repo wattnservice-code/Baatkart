@@ -11,15 +11,11 @@ import TripsPanel from './TripsPanel'
 import SpotDialog from './SpotDialog'
 import SettingsPanel from './SettingsPanel'
 import QuickPinBar from './QuickPinBar'
+import { waveColor, seriesRange, WindSparkline, WaveBars } from './forecastCharts'
+import type { SeriesPoint } from './forecastCharts'
 
 function cardinal(deg: number): string {
   return ['N','NØ','Ø','SØ','S','SV','V','NV'][Math.round(deg / 45) % 8]
-}
-function waveColor(h: number): string {
-  if (h < 0.5) return '#4ade80'
-  if (h < 1.5) return '#facc15'
-  if (h < 2.5) return '#fb923c'
-  return '#ef4444'
 }
 function wxEmoji(code: string): string {
   if (!code) return ''
@@ -86,6 +82,9 @@ export default function MapControls() {
   const [quickPinListOpen, setQuickPinListOpen] = useState(false)
   const [spotWx, setSpotWx]   = useState<{ windSpeed: number; windDir: number; temp: number; symbol: string } | null>(null)
   const [spotWave, setSpotWave] = useState<{ height: number; dir: number; seaTemp?: number } | null>(null)
+  const [spotWindSeries, setSpotWindSeries] = useState<SeriesPoint[]>([])
+  const [spotWaveSeries, setSpotWaveSeries] = useState<SeriesPoint[]>([])
+  const [spotForecastOpen, setSpotForecastOpen] = useState(false)
 
   const isOnline         = useOnline()
   const headingUp        = useMapStore((s) => s.headingUp)
@@ -127,25 +126,40 @@ export default function MapControls() {
   const useMapPos = () => { setAddingSpot(true) }
 
   useEffect(() => {
-    if (!spotMenu || !isOnline) { setSpotWx(null); setSpotWave(null); return }
+    if (!spotMenu || !isOnline) {
+      setSpotWx(null); setSpotWave(null)
+      setSpotWindSeries([]); setSpotWaveSeries([]); setSpotForecastOpen(false)
+      return
+    }
     setSpotWx(null); setSpotWave(null)
+    setSpotWindSeries([]); setSpotWaveSeries([]); setSpotForecastOpen(false)
     const { lat, lng } = spotMenu
     const ua = { 'User-Agent': 'BaatKart/1.0 frode.sighaug@gmail.com' }
     fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}`, { headers: ua })
       .then(r => r.json())
       .then(data => {
-        const ts0 = data.properties.timeseries[0].data
+        const series = data.properties.timeseries
+        const ts0 = series[0].data
         const d = ts0.instant.details
         const symbol = ts0.next_1_hours?.summary?.symbol_code ?? ts0.next_6_hours?.summary?.symbol_code ?? ''
         setSpotWx({ windSpeed: d.wind_speed, windDir: d.wind_from_direction, temp: d.air_temperature, symbol })
+        setSpotWindSeries(
+          series.slice(0, 8).map((p: any, i: number) => ({ hour: i, v: p.data.instant.details.wind_speed }))
+        )
       })
       .catch(() => {})
     fetch(`https://api.met.no/weatherapi/oceanforecast/2.0/complete?lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}`, { headers: ua })
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(data => {
-        const d = data.properties?.timeseries?.[0]?.data?.instant?.details
+        const series = data.properties?.timeseries ?? []
+        const d = series[0]?.data?.instant?.details
         if (!d || d.sea_surface_wave_height == null) return
         setSpotWave({ height: d.sea_surface_wave_height, dir: d.sea_surface_wave_from_direction ?? 0, seaTemp: d.sea_water_temperature })
+        setSpotWaveSeries(
+          series.slice(0, 8)
+            .filter((p: any) => p.data?.instant?.details?.sea_surface_wave_height != null)
+            .map((p: any, i: number) => ({ hour: i, v: p.data.instant.details.sea_surface_wave_height }))
+        )
       })
       .catch(() => {})
   }, [spotMenu?.lat, spotMenu?.lng, isOnline])
@@ -309,6 +323,33 @@ export default function MapControls() {
               <span>🌬 {spotWx.windSpeed.toFixed(1)} m/s {cardinal(spotWx.windDir)}</span>
               {spotWave && <span style={{ color: waveColor(spotWave.height) }}>🌊 {spotWave.height.toFixed(1)} m</span>}
               {spotWave?.seaTemp != null && <span>{Math.round(spotWave.seaTemp)}° sjø</span>}
+            </div>
+          )}
+          {(spotWindSeries.length >= 2 || spotWaveSeries.length >= 2) && (
+            <button
+              className="wx-expand-toggle"
+              onClick={(e) => { e.stopPropagation(); setSpotForecastOpen((v) => !v) }}
+            >
+              {spotForecastOpen ? '▲ Skjul varsel' : '▼ Varsel 8t'}
+            </button>
+          )}
+          {spotForecastOpen && (
+            <div className="wx-forecast" onClick={(e) => e.stopPropagation()}>
+              {spotWindSeries.length >= 2 && (
+                <div className="wx-forecast-row">
+                  <span className="wx-forecast-label">🌬 {seriesRange(spotWindSeries)}</span>
+                  <WindSparkline points={spotWindSeries} />
+                </div>
+              )}
+              {spotWaveSeries.length >= 2 && (
+                <div className="wx-forecast-row">
+                  <span className="wx-forecast-label">🌊 {seriesRange(spotWaveSeries)} m</span>
+                  <WaveBars points={spotWaveSeries} />
+                </div>
+              )}
+              <div className="wx-forecast-hours">
+                <span>nå</span><span>+8t</span>
+              </div>
             </div>
           )}
           <div className="spot-action-btns">
