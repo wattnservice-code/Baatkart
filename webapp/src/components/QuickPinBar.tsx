@@ -1,6 +1,7 @@
 import { X, Navigation, Trash2 } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
+import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import type { QuickPin } from '../store/useMapStore'
 
 function haversineM(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -58,6 +59,7 @@ export default function QuickPinBar({ onClose }: { onClose: () => void }) {
   const clearQuickPins = useMapStore((s) => s.clearQuickPins)
   const setNavTarget   = useMapStore((s) => s.setNavTarget)
   const setFlyTo       = useMapStore((s) => s.setFlyTo)
+  const swipe          = useSwipeDismiss(onClose)
 
   const withDist = quickPins.map((p) => ({
     pin: p,
@@ -67,7 +69,7 @@ export default function QuickPinBar({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="offline-panel">
-      <div className="settings-head">
+      <div className="settings-head" {...swipe}>
         <span className="settings-title">⊕ Merker {quickPins.length > 0 && `(${quickPins.length})`}</span>
         <button className="settings-close" onClick={onClose}><X size={20} /></button>
       </div>
