@@ -32,25 +32,25 @@ interface PinRowProps {
 
 function PinRow({ pin, idx, dist, brg, distUnit, onNav, onRemove, onFly }: PinRowProps) {
   return (
-    <div className="quickpin-row">
-      <span className="quickpin-num">{idx + 1}</span>
-      <button className="quickpin-info" onClick={onFly}>
-        <span className="quickpin-label">{pin.label}</span>
+    <div className="quickpin-row-lg">
+      <span className="quickpin-num-lg">{idx + 1}</span>
+      <button className="quickpin-info-lg" onClick={onFly}>
+        <span className="quickpin-label-lg">{pin.label}</span>
         {dist !== null && (
-          <span className="quickpin-dist">{formatDist(dist, distUnit as 'nm'|'m'|'km')} · {Math.round(brg!)}°</span>
+          <span className="quickpin-dist-lg">{formatDist(dist, distUnit as 'nm'|'m'|'km')} · {Math.round(brg!)}°</span>
         )}
       </button>
-      <button className="quickpin-nav-btn" onClick={onNav} title="Navigér hit">
-        <Navigation size={14} />
+      <button className="quickpin-nav-btn-lg" onClick={onNav} title="Navigér hit">
+        <Navigation size={20} />
       </button>
-      <button className="quickpin-del-btn" onClick={onRemove} title="Fjern merke">
-        <X size={14} />
+      <button className="quickpin-del-btn-lg" onClick={onRemove} title="Fjern merke">
+        <X size={20} />
       </button>
     </div>
   )
 }
 
-export default function QuickPinBar() {
+export default function QuickPinBar({ onClose }: { onClose: () => void }) {
   const quickPins      = useMapStore((s) => s.quickPins)
   const position       = useMapStore((s) => s.position)
   const distUnit       = useMapStore((s) => s.distUnit)
@@ -59,8 +59,6 @@ export default function QuickPinBar() {
   const setNavTarget   = useMapStore((s) => s.setNavTarget)
   const setFlyTo       = useMapStore((s) => s.setFlyTo)
 
-  if (quickPins.length === 0) return null
-
   const withDist = quickPins.map((p) => ({
     pin: p,
     dist: position ? haversineM(position.lat, position.lng, p.lat, p.lng) : null,
@@ -68,27 +66,36 @@ export default function QuickPinBar() {
   })).sort((a, b) => (a.dist ?? 0) - (b.dist ?? 0))
 
   return (
-    <div className="quickpin-bar">
-      <div className="quickpin-header">
-        <span className="quickpin-title">⊕ Merker</span>
-        <button className="quickpin-clear-all" onClick={clearQuickPins} title="Fjern alle merker">
-          <Trash2 size={13} /> Fjern alle
-        </button>
+    <div className="offline-panel">
+      <div className="settings-head">
+        <span className="settings-title">⊕ Merker {quickPins.length > 0 && `(${quickPins.length})`}</span>
+        <button className="settings-close" onClick={onClose}><X size={20} /></button>
       </div>
-      <div className="quickpin-list">
-      {withDist.map(({ pin, dist, brg }) => (
-        <PinRow
-          key={pin.id}
-          pin={pin}
-          idx={quickPins.indexOf(pin)}
-          dist={dist}
-          brg={brg}
-          distUnit={distUnit}
-          onNav={() => { setNavTarget({ lat: pin.lat, lng: pin.lng, name: `Merke ${pin.label}` }); removeQuickPin(pin.id) }}
-          onRemove={() => removeQuickPin(pin.id)}
-          onFly={() => setFlyTo({ lat: pin.lat, lng: pin.lng })}
-        />
-      ))}
+      <div className="settings-body">
+        {quickPins.length === 0 ? (
+          <div className="quickpin-empty">Ingen merker. Trykk ⊕-knappen på kartet for å merke et sted.</div>
+        ) : (
+          <>
+            <button className="quickpin-clear-all-lg" onClick={clearQuickPins}>
+              <Trash2 size={16} /> Fjern alle merker
+            </button>
+            <div className="quickpin-list-lg">
+              {withDist.map(({ pin, dist, brg }) => (
+                <PinRow
+                  key={pin.id}
+                  pin={pin}
+                  idx={quickPins.indexOf(pin)}
+                  dist={dist}
+                  brg={brg}
+                  distUnit={distUnit}
+                  onNav={() => { setNavTarget({ lat: pin.lat, lng: pin.lng, name: `Merke ${pin.label}` }); removeQuickPin(pin.id); onClose() }}
+                  onRemove={() => removeQuickPin(pin.id)}
+                  onFly={() => { setFlyTo({ lat: pin.lat, lng: pin.lng }); onClose() }}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, X, Plus, Minus, LocateFixed, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye, Crosshair } from 'lucide-react'
+import { Navigation, X, Plus, Minus, LocateFixed, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye, Crosshair, List } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -10,6 +10,7 @@ import SpotListPanel from './SpotListPanel'
 import TripsPanel from './TripsPanel'
 import SpotDialog from './SpotDialog'
 import SettingsPanel from './SettingsPanel'
+import QuickPinBar from './QuickPinBar'
 
 function cardinal(deg: number): string {
   return ['N','NØ','Ø','SØ','S','SV','V','NV'][Math.round(deg / 45) % 8]
@@ -82,6 +83,7 @@ function CompassBtn({ mode }: { mode: NordMode }) {
 
 export default function MapControls() {
   const [gpsSpot, setGpsSpot]           = useState<{ lat: number; lng: number } | null>(null)
+  const [quickPinListOpen, setQuickPinListOpen] = useState(false)
   const [spotWx, setSpotWx]   = useState<{ windSpeed: number; windDir: number; temp: number; symbol: string } | null>(null)
   const [spotWave, setSpotWave] = useState<{ height: number; dir: number; seaTemp?: number } | null>(null)
 
@@ -261,6 +263,15 @@ export default function MapControls() {
           <Crosshair size={20} />
           {quickPins.length > 0 && <span className="fab-badge">{quickPins.length}</span>}
         </button>
+        {quickPins.length > 0 && (
+          <button
+            className="fab fab-quickpin"
+            onClick={() => setQuickPinListOpen(true)}
+            title="Vis alle merker"
+          >
+            <List size={20} />
+          </button>
+        )}
       </div>
 
       {activePanel === 'spots' && (
@@ -273,6 +284,7 @@ export default function MapControls() {
       {activePanel === 'turer' && <TripsPanel onClose={() => setActivePanel(null)} />}
       {activePanel === 'meg' && <SettingsPanel onClose={() => setActivePanel(null)} />}
       {gpsSpot && <SpotDialog lat={gpsSpot.lat} lng={gpsSpot.lng} onClose={() => setGpsSpot(null)} />}
+      {quickPinListOpen && <QuickPinBar onClose={() => setQuickPinListOpen(false)} />}
 
       {spotMenu && <div className="spot-action-backdrop" onClick={closeSpotMenu} />}
       {spotMenu && (
