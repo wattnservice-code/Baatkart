@@ -188,18 +188,21 @@ export default function WeatherOverlay() {
               {windSeries.length >= 2 && (
                 <div className="wx-forecast-row">
                   <span className="wx-forecast-label">🌬 {seriesRange(windSeries)}</span>
-                  <WindSparkline points={windSeries} />
+                  <div className="wx-forecast-col">
+                    <WindSparkline points={windSeries} />
+                    <div className="wx-forecast-hours"><span>nå</span><span>+8t</span></div>
+                  </div>
                 </div>
               )}
               {waveSeries.length >= 2 && (
                 <div className="wx-forecast-row">
                   <span className="wx-forecast-label">🌊 {seriesRange(waveSeries)} m</span>
-                  <WaveBars points={waveSeries} />
+                  <div className="wx-forecast-col">
+                    <WaveBars points={waveSeries} />
+                    <div className="wx-forecast-hours"><span>nå</span><span>+8t</span></div>
+                  </div>
                 </div>
               )}
-              <div className="wx-forecast-hours">
-                <span>nå</span><span>+8t</span>
-              </div>
             </div>
           )}
         </>

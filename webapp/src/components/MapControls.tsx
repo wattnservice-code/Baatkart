@@ -338,18 +338,21 @@ export default function MapControls() {
               {spotWindSeries.length >= 2 && (
                 <div className="wx-forecast-row">
                   <span className="wx-forecast-label">🌬 {seriesRange(spotWindSeries)}</span>
-                  <WindSparkline points={spotWindSeries} />
+                  <div className="wx-forecast-col">
+                    <WindSparkline points={spotWindSeries} />
+                    <div className="wx-forecast-hours"><span>nå</span><span>+8t</span></div>
+                  </div>
                 </div>
               )}
               {spotWaveSeries.length >= 2 && (
                 <div className="wx-forecast-row">
                   <span className="wx-forecast-label">🌊 {seriesRange(spotWaveSeries)} m</span>
-                  <WaveBars points={spotWaveSeries} />
+                  <div className="wx-forecast-col">
+                    <WaveBars points={spotWaveSeries} />
+                    <div className="wx-forecast-hours"><span>nå</span><span>+8t</span></div>
+                  </div>
                 </div>
               )}
-              <div className="wx-forecast-hours">
-                <span>nå</span><span>+8t</span>
-              </div>
             </div>
           )}
           <div className="spot-action-btns">
