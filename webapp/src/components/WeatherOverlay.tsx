@@ -14,6 +14,11 @@ interface WaveData {
   seaTemp?: number
 }
 
+interface SeriesPoint {
+  hour: number
+  v: number
+}
+
 function wxEmoji(code: string): string {
   if (!code) return ''
   if (code.includes('thunder'))      return '⛈️'
@@ -37,6 +42,39 @@ function waveColor(h: number): string {
   return '#ef4444'
 }
 
+function WindSparkline({ points }: { points: SeriesPoint[] }) {
+  const w = 160, h = 30
+  const values = points.map((p) => p.v)
+  const max = Math.max(...values, 0.1)
+  const min = Math.min(...values, 0)
+  const range = max - min || 1
+  const pts = points.map((p, i) => {
+    const x = (i / (points.length - 1)) * w
+    const y = h - ((p.v - min) / range) * (h - 4) - 2
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="wx-sparkline" preserveAspectRatio="none">
+      <polyline points={pts} fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function WaveBars({ points }: { points: SeriesPoint[] }) {
+  const w = 160, h = 30
+  const values = points.map((p) => p.v)
+  const max = Math.max(...values, 0.3)
+  const bw = w / points.length
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="wx-sparkline" preserveAspectRatio="none">
+      {points.map((p, i) => {
+        const bh = Math.max((p.v / max) * h, 2)
+        return <rect key={i} x={i * bw + 1} y={h - bh} width={Math.max(bw - 2, 1)} height={bh} fill={waveColor(p.v)} rx="1" />
+      })}
+    </svg>
+  )
+}
+
 export default function WeatherOverlay() {
   const weatherVisible    = useMapStore((s) => s.weatherVisible)
   const hideWxTide        = useMapStore((s) => s.hideWxTide)
@@ -44,6 +82,9 @@ export default function WeatherOverlay() {
   const setCurrentWeather = useMapStore((s) => s.setCurrentWeather)
   const [wx, setWx]       = useState<WxData | null>(null)
   const [wave, setWave]   = useState<WaveData | null>(null)
+  const [windSeries, setWindSeries] = useState<SeriesPoint[]>([])
+  const [waveSeries, setWaveSeries] = useState<SeriesPoint[]>([])
+  const [expanded, setExpanded] = useState(false)
   const [err, setErr]     = useState<string | null>(null)
   const [place, setPlace] = useState<string | null>(null)
   const fetchedKey        = useRef<string | null>(null)
@@ -58,6 +99,7 @@ export default function WeatherOverlay() {
     fetchedKey.current = key
     setErr(null)
     setWx(null)
+    setWindSeries([])
 
     fetch(
       `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${position.lat.toFixed(4)}&lon=${position.lng.toFixed(4)}`,
@@ -65,7 +107,8 @@ export default function WeatherOverlay() {
     )
       .then((r) => r.json())
       .then((data) => {
-        const ts0 = data.properties.timeseries[0].data
+        const series = data.properties.timeseries
+        const ts0 = series[0].data
         const d = ts0.instant.details
         const symbol = ts0.next_1_hours?.summary?.symbol_code
           ?? ts0.next_6_hours?.summary?.symbol_code
@@ -74,6 +117,9 @@ export default function WeatherOverlay() {
         setWx(w)
         setCurrentWeather(w)
         setErr(null)
+        setWindSeries(
+          series.slice(0, 8).map((p: any, i: number) => ({ hour: i, v: p.data.instant.details.wind_speed }))
+        )
       })
       .catch(() => setErr('api'))
   }, [weatherVisible, position?.lat, position?.lng, setCurrentWeather])
@@ -84,6 +130,7 @@ export default function WeatherOverlay() {
     if (waveKey.current === key) return
     waveKey.current = key
     setWave(null)
+    setWaveSeries([])
 
     fetch(
       `https://api.met.no/weatherapi/oceanforecast/2.0/complete?lat=${position.lat.toFixed(4)}&lon=${position.lng.toFixed(4)}`,
@@ -91,13 +138,19 @@ export default function WeatherOverlay() {
     )
       .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => {
-        const d = data.properties?.timeseries?.[0]?.data?.instant?.details
+        const series = data.properties?.timeseries ?? []
+        const d = series[0]?.data?.instant?.details
         if (!d || d.sea_surface_wave_height == null) return
         setWave({
           height:  d.sea_surface_wave_height,
           dir:     d.sea_surface_wave_from_direction ?? 0,
           seaTemp: d.sea_water_temperature,
         })
+        setWaveSeries(
+          series.slice(0, 8)
+            .filter((p: any) => p.data?.instant?.details?.sea_surface_wave_height != null)
+            .map((p: any, i: number) => ({ hour: i, v: p.data.instant.details.sea_surface_wave_height }))
+        )
       })
       .catch(() => {}) // wave er valgfritt — stille feil utenfor kystdekning
   }, [weatherVisible, position?.lat, position?.lng])
@@ -163,6 +216,33 @@ export default function WeatherOverlay() {
               {wave.seaTemp != null && (
                 <span className="wx-sub">{Math.round(wave.seaTemp)}° sjø</span>
               )}
+            </div>
+          )}
+          {(windSeries.length >= 2 || waveSeries.length >= 2) && (
+            <button
+              className="wx-expand-toggle"
+              onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v) }}
+            >
+              {expanded ? '▲ Skjul varsel' : '▼ Varsel 8t'}
+            </button>
+          )}
+          {expanded && (
+            <div className="wx-forecast" onClick={(e) => e.stopPropagation()}>
+              {windSeries.length >= 2 && (
+                <div className="wx-forecast-row">
+                  <span className="wx-forecast-label">🌬</span>
+                  <WindSparkline points={windSeries} />
+                </div>
+              )}
+              {waveSeries.length >= 2 && (
+                <div className="wx-forecast-row">
+                  <span className="wx-forecast-label">🌊</span>
+                  <WaveBars points={waveSeries} />
+                </div>
+              )}
+              <div className="wx-forecast-hours">
+                <span>nå</span><span>+8t</span>
+              </div>
             </div>
           )}
         </>
