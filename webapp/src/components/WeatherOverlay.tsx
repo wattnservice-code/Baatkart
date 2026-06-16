@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useMapStore } from '../store/useMapStore'
-import { waveColor, seriesRange, WindSparkline, WaveBars } from './forecastCharts'
+import { waveClass, seriesRange, WindSparkline, WaveBars } from './forecastCharts'
 import type { SeriesPoint } from './forecastCharts'
 
 interface WxData {
@@ -167,7 +167,7 @@ export default function WeatherOverlay() {
           {wave && (
             <div className="wx-row">
               <span className="wx-arrow" style={{ transform: `rotate(${wave.dir + 180}deg)` }}>↑</span>
-              <span className="wx-val" style={{ color: waveColor(wave.height) }}>
+              <span className={`wx-val ${waveClass(wave.height)}`}>
                 🌊 {wave.height.toFixed(1)} m
               </span>
               {wave.seaTemp != null && (

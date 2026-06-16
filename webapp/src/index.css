@@ -1309,6 +1309,16 @@ html, body, #root {
 .day .wx-expand-toggle { color: #94a3b8; border-top-color: rgba(0,0,0,0.08); }
 .day .wx-forecast-hours { color: #94a3b8; }
 .day .wx-forecast-label { color: #475569; }
+
+/* ── Wave severity colours — vivid on dark, darker for daylight contrast ── */
+.wave-ok  { color: #4ade80; }
+.wave-low { color: #facc15; }
+.wave-mid { color: #fb923c; }
+.wave-hi  { color: #ef4444; }
+.day .wave-ok  { color: #15803d; }
+.day .wave-low { color: #b45309; }
+.day .wave-mid { color: #c2410c; }
+.day .wave-hi  { color: #b91c1c; }
 /* tide */
 .tide-station { font-size: 11px; color: #64748b; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
 .tide-row { display: flex; align-items: center; gap: 6px; font-size: 13px; }

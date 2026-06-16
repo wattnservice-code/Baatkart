@@ -11,7 +11,7 @@ import TripsPanel from './TripsPanel'
 import SpotDialog from './SpotDialog'
 import SettingsPanel from './SettingsPanel'
 import QuickPinBar from './QuickPinBar'
-import { waveColor, seriesRange, WindSparkline, WaveBars } from './forecastCharts'
+import { waveClass, seriesRange, WindSparkline, WaveBars } from './forecastCharts'
 import type { SeriesPoint } from './forecastCharts'
 
 function cardinal(deg: number): string {
@@ -321,7 +321,7 @@ export default function MapControls() {
             <div className="spot-wx-block">
               <span>{wxEmoji(spotWx.symbol)} {Math.round(spotWx.temp)}°C</span>
               <span>🌬 {spotWx.windSpeed.toFixed(1)} m/s {cardinal(spotWx.windDir)}</span>
-              {spotWave && <span style={{ color: waveColor(spotWave.height) }}>🌊 {spotWave.height.toFixed(1)} m</span>}
+              {spotWave && <span className={waveClass(spotWave.height)}>🌊 {spotWave.height.toFixed(1)} m</span>}
               {spotWave?.seaTemp != null && <span>{Math.round(spotWave.seaTemp)}° sjø</span>}
             </div>
           )}

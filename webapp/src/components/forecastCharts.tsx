@@ -10,6 +10,14 @@ export function waveColor(h: number): string {
   return '#ef4444'
 }
 
+// Returns a CSS class whose color is theme-aware (dark: vivid, day: darker for contrast)
+export function waveClass(h: number): string {
+  if (h < 0.5) return 'wave-ok'
+  if (h < 1.5) return 'wave-low'
+  if (h < 2.5) return 'wave-mid'
+  return 'wave-hi'
+}
+
 // Formats the value range across a series, e.g. "0.2–0.6" — used so the
 // chart's relative (min–max stretched) scaling always has concrete numbers next to it.
 export function seriesRange(points: SeriesPoint[], decimals = 1): string {
