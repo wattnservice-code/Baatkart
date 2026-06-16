@@ -1780,6 +1780,29 @@ html, body, #root {
   pointer-events: none;
   z-index: 800;
 }
+/* ── AIS vessel popup — dark theme matching app ── */
+.dark-popup .leaflet-popup-content-wrapper {
+  background: rgba(15,23,42,0.96);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+}
+.dark-popup .leaflet-popup-tip {
+  background: rgba(15,23,42,0.96);
+}
+.dark-popup .leaflet-popup-content {
+  color: #e2e8f0;
+  margin: 10px 14px;
+}
+.dark-popup .leaflet-popup-close-button {
+  color: #64748b !important;
+}
+.dark-popup .leaflet-popup-close-button:hover {
+  color: #e2e8f0 !important;
+}
+
 .leaflet-control-attribution {
   font-size: 10px !important;
   opacity: 0.75;

@@ -348,8 +348,8 @@ function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean): strin
   const destLine = dest
     ? `<div style="color:#94a3b8;font-size:12px;margin-top:3px">📍 Til: <b style="color:#e2e8f0">${dest}</b>${eta ? `<br><span style="font-size:11px;color:#64748b">Ankomst: ${eta}</span>` : ''}</div>`
     : ''
-  const imoLine  = v.imo ? `<div style="color:#334155;font-size:10px">IMO ${v.imo}</div>` : ''
-  const ageLine  = age ? `<span style="color:#334155"> · ${age} siden</span>` : ''
+  const imoLine  = v.imo ? `<div style="color:#64748b;font-size:10px">IMO ${v.imo}</div>` : ''
+  const ageLine  = age ? `<span style="color:#64748b"> · ${age} siden</span>` : ''
   const moreLink = `<a href="https://www.vesselfinder.com/vessels/details/${v.mmsi}" target="_blank" rel="noopener"
     style="display:inline-block;margin-top:6px;font-size:11px;color:#38bdf8;text-decoration:none">
     🔍 Mer info og bilde →</a>`
@@ -364,7 +364,7 @@ function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean): strin
     ${navStat ? `<div style="color:#fbbf24;font-size:11px">${navStat}</div>` : ''}
     ${turning  ? `<div style="color:#94a3b8;font-size:11px">${turning}</div>` : ''}
     ${destLine}${dimLine}
-    <div style="color:#334155;font-size:10px;margin-top:3px">MMSI ${v.mmsi}${v.callSign ? ` · ${v.callSign}` : ''}${ageLine}</div>
+    <div style="color:#64748b;font-size:10px;margin-top:3px">MMSI ${v.mmsi}${v.callSign ? ` · ${v.callSign}` : ''}${ageLine}</div>
     ${imoLine}
     ${moreLink}
     ${cpaLine}
@@ -510,7 +510,7 @@ export function useAIS() {
               icon: vesselIcon(vessel, danger, zoom),
               zIndexOffset: danger ? 600 : 200,
             })
-            marker.bindPopup(popupContent(vessel, cpa, danger), { maxWidth: 260 })
+            marker.bindPopup(popupContent(vessel, cpa, danger), { maxWidth: 260, className: 'dark-popup' })
             marker.addTo(layerRef.current)
             markersRef.current.set(mmsi, marker)
             const cl = L.polyline([[lat, lng], lineEnd], {
