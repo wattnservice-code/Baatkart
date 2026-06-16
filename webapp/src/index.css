@@ -838,10 +838,21 @@ html, body, #root {
 .spot-action-row .spot-action-btn { flex: 1; }
 .spot-action-btn:active { transform: scale(0.97); }
 .spot-action-nav    { background: #2563eb; }
-.spot-action-maps   { background: #0891b2; }
-.spot-action-earth  { background: #047857; }
-.spot-action-save   { background: #ca8a04; }
-.spot-action-remove { background: #334155; color: #f87171; }
+.spot-action-maps    { background: #0891b2; }
+.spot-action-earth   { background: #047857; }
+.spot-action-save    { background: #ca8a04; }
+.spot-action-remove  { background: #334155; color: #f87171; }
+.spot-action-measure { background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.3); color: #f97316; font-size: 13px; }
+.spot-measure-result {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px 6px;
+  background: rgba(249,115,22,0.1);
+  border-bottom: 1px solid rgba(249,115,22,0.25);
+}
+.spot-measure-dist { font-size: 20px; font-weight: 800; color: #f97316; }
+.spot-measure-close { background: none; border: none; color: #64748b; font-size: 12px; cursor: pointer; padding: 4px 6px; }
+.day .spot-measure-result { background: rgba(249,115,22,0.08); border-bottom-color: rgba(249,115,22,0.2); }
+.day .spot-action-measure { background: rgba(249,115,22,0.08); color: #c2410c; border-color: rgba(194,65,12,0.3); }
 
 /* ── MOB map marker ── */
 .mob-map-marker { position: relative; width: 40px; height: 40px; }

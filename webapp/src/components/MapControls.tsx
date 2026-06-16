@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, X, Plus, Minus, LocateFixed, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye, Crosshair, List } from 'lucide-react'
+import { Navigation, X, Plus, Minus, LocateFixed, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye, Crosshair, List, Ruler } from 'lucide-react'
+import L from 'leaflet'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -80,6 +81,8 @@ function CompassBtn({ mode }: { mode: NordMode }) {
 export default function MapControls() {
   const [gpsSpot, setGpsSpot]           = useState<{ lat: number; lng: number } | null>(null)
   const [quickPinListOpen, setQuickPinListOpen] = useState(false)
+  const [measuringFrom, setMeasuringFrom] = useState<{ lat: number; lng: number } | null>(null)
+  const measureLineRef = useRef<L.Polyline | null>(null)
   const [spotWx, setSpotWx]   = useState<{ windSpeed: number; windDir: number; temp: number; symbol: string } | null>(null)
   const [spotWave, setSpotWave] = useState<{ height: number; dir: number; seaTemp?: number } | null>(null)
   const [spotWindSeries, setSpotWindSeries] = useState<SeriesPoint[]>([])
@@ -164,6 +167,18 @@ export default function MapControls() {
       .catch(() => {})
   }, [spotMenu?.lat, spotMenu?.lng, isOnline])
 
+  useEffect(() => {
+    const map = getMapInstance()
+    if (measureLineRef.current) { measureLineRef.current.remove(); measureLineRef.current = null }
+    if (map && measuringFrom && spotMenu) {
+      measureLineRef.current = L.polyline(
+        [[measuringFrom.lat, measuringFrom.lng], [spotMenu.lat, spotMenu.lng]],
+        { color: '#f97316', weight: 2, dashArray: '6 4', opacity: 0.9 }
+      ).addTo(map)
+    }
+    return () => { if (measureLineRef.current) { measureLineRef.current.remove(); measureLineRef.current = null } }
+  }, [measuringFrom, spotMenu])
+
   // 3-state cycle: nord-opp → GPS kjøreretning → kompassretning → nord-opp
   const nordMode: NordMode = compassEnabled ? 'krs' : headingUp ? 'gps' : 'off'
 
@@ -193,6 +208,12 @@ export default function MapControls() {
         <div className="map-banner">
           <span>Trykk på kartet for å lagre sted</span>
           <button onClick={() => setAddingSpot(false)}><X size={18} /></button>
+        </div>
+      )}
+      {measuringFrom && !spotMenu && (
+        <div className="map-banner">
+          <span>📏 Trykk et punkt for å måle avstand</span>
+          <button onClick={() => setMeasuringFrom(null)}><X size={18} /></button>
         </div>
       )}
 
@@ -303,6 +324,14 @@ export default function MapControls() {
       {spotMenu && <div className="spot-action-backdrop" onClick={closeSpotMenu} />}
       {spotMenu && (
         <div className="spot-action-card" onClick={(e) => e.stopPropagation()}>
+          {measuringFrom && (
+            <div className="spot-measure-result">
+              <span className="spot-measure-dist">
+                📏 {formatDist(distanceM(measuringFrom.lat, measuringFrom.lng, spotMenu.lat, spotMenu.lng), distUnit)}
+              </span>
+              <button className="spot-measure-close" onClick={() => setMeasuringFrom(null)}>✕ Avslutt</button>
+            </div>
+          )}
           <div className="spot-action-head">
             <span className="spot-action-name">📍 {spotMenu.name}</span>
             <button className="spot-action-close" onClick={closeSpotMenu}><X size={18} /></button>
@@ -396,6 +425,13 @@ export default function MapControls() {
                 <Trash2 size={18} /> Slett lagret sted
               </button>
             )}
+            <button className="spot-action-btn spot-action-measure" onClick={() => {
+              setMeasuringFrom({ lat: spotMenu.lat, lng: spotMenu.lng })
+              setSearchPin(null)
+              setSpotMenu(null)
+            }}>
+              <Ruler size={16} /> Mål herfra
+            </button>
           </div>
         </div>
       )}
