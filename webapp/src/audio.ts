@@ -36,3 +36,26 @@ export function collisionAlarm() {
   beep(880, 0.18, 0.6, 0.28)
   try { navigator.vibrate?.([180, 90, 180]) } catch { /* unsupported */ }
 }
+
+// MOB alarm: loud SOS-pattern that repeats until stopMobAlarm() is called.
+// AudioContext created inside user gesture (button click) → works on iOS.
+let mobInterval: ReturnType<typeof setInterval> | null = null
+
+function mobBurst() {
+  // Three short + one long (SOS-ish)
+  beep(880, 0.2, 1.0, 0.0)
+  beep(880, 0.2, 1.0, 0.3)
+  beep(880, 0.2, 1.0, 0.6)
+  beep(660, 0.6, 1.0, 1.0)
+  try { navigator.vibrate?.([200, 100, 200, 100, 200, 200, 600]) } catch { /* unsupported */ }
+}
+
+export function startMobAlarm() {
+  if (mobInterval) return
+  mobBurst()
+  mobInterval = setInterval(mobBurst, 4000)
+}
+
+export function stopMobAlarm() {
+  if (mobInterval) { clearInterval(mobInterval); mobInterval = null }
+}

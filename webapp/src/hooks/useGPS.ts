@@ -72,7 +72,7 @@ export function useGPS() {
         })
       },
       (err) => console.warn('GPS-feil:', err.message),
-      { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 30000 }
     )
 
     return () => navigator.geolocation.clearWatch(watchId)

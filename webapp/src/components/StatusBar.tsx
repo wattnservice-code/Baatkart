@@ -10,6 +10,8 @@ function headingLabel(deg: number): string {
 
 export default function StatusBar() {
   const position          = useMapStore((s) => s.position)
+  const compassEnabled    = useMapStore((s) => s.compassEnabled)
+  const compassHeading    = useMapStore((s) => s.compassHeading)
   const isTracking        = useMapStore((s) => s.isTracking)
   const startTracking     = useMapStore((s) => s.startTracking)
   const setActivePanel    = useMapStore((s) => s.setActivePanel)
@@ -79,8 +81,15 @@ export default function StatusBar() {
 
       <div className="status-item">
         <Compass size={16} className="status-icon" />
-        <span className="status-value">{position ? `${Math.round(position.heading)}°` : '--'}</span>
-        <span className="status-unit">{position ? headingLabel(position.heading) : ''}</span>
+        {(() => {
+          const useCompass = compassEnabled && compassHeading != null && !isNaN(compassHeading)
+          const deg = useCompass ? compassHeading! : position?.heading
+          return <>
+            <span className="status-value">{deg != null ? `${Math.round(deg)}°` : '--'}</span>
+            <span className="status-unit">{deg != null ? headingLabel(deg) : ''}</span>
+            {useCompass && <span className="status-unit" style={{ marginLeft: 2, opacity: 0.6 }}>KMP</span>}
+          </>
+        })()}
       </div>
 
       <div className="status-divider" />

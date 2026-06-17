@@ -16,6 +16,12 @@ export function useCompass(enabled: boolean) {
     }
 
     let usingAbsolute = false
+    let gotData = false
+
+    // If no compass event fires within 5 s, mark as unavailable
+    const noDataTimer = setTimeout(() => {
+      if (!gotData) useMapStore.getState().setCompassHeading(NaN)
+    }, 5000)
 
     const handler = (e: DeviceOrientationEvent, absolute: boolean) => {
       // Foretrekk absolutt-eventet — ignorer relativ dersom absolutt allerede funker
@@ -25,6 +31,7 @@ export function useCompass(enabled: boolean) {
       const raw = (e as DeviceOrientationEvent & { webkitCompassHeading?: number }).webkitCompassHeading
         ?? (e.alpha !== null ? (360 - e.alpha) % 360 : null)
       if (raw === null) return
+      gotData = true
 
       if (smoothedRef.current === null) {
         smoothedRef.current = raw
@@ -46,6 +53,7 @@ export function useCompass(enabled: boolean) {
     window.addEventListener('deviceorientation', relHandler, true)
 
     return () => {
+      clearTimeout(noDataTimer)
       window.removeEventListener('deviceorientationabsolute', absHandler, true)
       window.removeEventListener('deviceorientation', relHandler, true)
       smoothedRef.current = null

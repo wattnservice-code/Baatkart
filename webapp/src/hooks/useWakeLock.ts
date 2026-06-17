@@ -5,16 +5,21 @@ export function useWakeLock() {
     if (!('wakeLock' in navigator)) return
 
     let lock: WakeLockSentinel | null = null
+    let released = false
 
     const request = async () => {
+      if (released) return
       try {
         lock = await navigator.wakeLock.request('screen')
+        lock.addEventListener('release', () => {
+          // Re-acquire if the system released it and we're still visible
+          if (!released && document.visibilityState === 'visible') request()
+        })
       } catch {
-        // System denied (e.g. battery saver) — fail silently
+        // Battery saver or system denial — fail silently
       }
     }
 
-    // Re-acquire after the screen was unlocked / app foregrounded
     const onVisibility = () => {
       if (document.visibilityState === 'visible') request()
     }
@@ -22,6 +27,7 @@ export function useWakeLock() {
     request()
     document.addEventListener('visibilitychange', onVisibility)
     return () => {
+      released = true
       document.removeEventListener('visibilitychange', onVisibility)
       lock?.release().catch(() => {})
     }
