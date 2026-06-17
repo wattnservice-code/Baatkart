@@ -13,6 +13,7 @@ import SettingsPanel from './SettingsPanel'
 import QuickPinBar from './QuickPinBar'
 import { waveClass, seriesRange, WindSparkline, WaveBars } from './forecastCharts'
 import type { SeriesPoint } from './forecastCharts'
+import { track } from '../analytics'
 
 function cardinal(deg: number): string {
   return ['N','NØ','Ø','SØ','S','SV','V','NV'][Math.round(deg / 45) % 8]
@@ -233,14 +234,14 @@ export default function MapControls() {
         </button>
         <button
           className={`fab ${aisVisible ? 'fab-active' : ''}`}
-          onClick={toggleAis}
+          onClick={() => { track('ais_toggle', { on: !aisVisible }); toggleAis() }}
           title={aisVisible ? 'Skjul AIS-fartøy' : 'Vis AIS-fartøy'}
         >
           <Ship size={20} />
         </button>
         <button
           className={`fab ${nightVision ? 'fab-nightvision' : !darkMode ? 'fab-active' : ''}`}
-          onClick={cycleDisplayMode}
+          onClick={() => { track('display_mode', { from: nightVision ? 'night' : darkMode ? 'dark' : 'day' }); cycleDisplayMode() }}
           title={
             nightVision ? 'Nattsyn (rødt) – trykk for dag'
             : darkMode  ? 'Natt – trykk for nattsyn'
@@ -270,7 +271,7 @@ export default function MapControls() {
         <div className="fab-divider" />
         <button
           className={`fab ${quickPins.length > 0 ? 'fab-quickpin' : ''}`}
-          onClick={() => position && addQuickPin({ lat: position.lat, lng: position.lng })}
+          onClick={() => { if (position) { track('quickpin_added'); addQuickPin({ lat: position.lat, lng: position.lng }) } }}
           title="Merk posisjon (blåse, holdeplass…)"
         >
           <Crosshair size={20} />
@@ -279,7 +280,7 @@ export default function MapControls() {
         {quickPins.length > 0 && (
           <button
             className="fab fab-quickpin"
-            onClick={() => setQuickPinListOpen(true)}
+            onClick={() => { track('panel_open', { panel: 'quickpins' }); setQuickPinListOpen(true) }}
             title="Vis alle merker"
           >
             <List size={20} />
@@ -356,6 +357,7 @@ export default function MapControls() {
           )}
           <div className="spot-action-btns">
             <button className="spot-action-btn spot-action-nav" onClick={() => {
+              track('nav_started')
               setNavPreview({ lat: spotMenu.lat, lng: spotMenu.lng, name: spotMenu.name })
               setSpotMenu(null)
             }}>

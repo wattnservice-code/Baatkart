@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useMapStore } from '../store/useMapStore'
 import { waveClass, seriesRange, WindSparkline, WaveBars } from './forecastCharts'
+import { track } from '../analytics'
 import type { SeriesPoint } from './forecastCharts'
 
 interface WxData {
@@ -178,7 +179,7 @@ export default function WeatherOverlay() {
           {(windSeries.length >= 2 || waveSeries.length >= 2) && (
             <button
               className="wx-expand-toggle"
-              onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v) }}
+              onClick={(e) => { e.stopPropagation(); if (!expanded) track('forecast_expanded'); setExpanded((v) => !v) }}
             >
               {expanded ? '▲ Skjul varsel' : '▼ Varsel 8t'}
             </button>

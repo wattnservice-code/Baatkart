@@ -1,5 +1,6 @@
 import { Map, Star, User } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
+import { track } from '../analytics'
 
 type Tab = 'kart' | 'steder' | 'meg'
 
@@ -20,6 +21,7 @@ export default function BottomNav() {
     : 'kart'
 
   const select = (tab: Tab) => {
+    if (tab !== 'kart') track('panel_open', { panel: tab })
     setActivePanel(
       tab === 'steder' ? 'spots'
       : tab === 'meg'  ? 'meg'
