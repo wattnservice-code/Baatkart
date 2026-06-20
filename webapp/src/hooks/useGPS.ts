@@ -1,42 +1,20 @@
 import { useEffect, useRef } from 'react'
 import { useMapStore } from '../store/useMapStore'
 
-const ALPHA = 0.25               // EMA for position
-const MIN_SPEED = 0.8            // m/s below this = show 0
-const MAX_SPEED_ACCURACY = 20    // m — only trust speed when GPS is this accurate or better
+const ALPHA = 0.25
+const MIN_SPEED = 0.8
+const MAX_SPEED_ACCURACY = 20
 
 function speedAlpha(smoothedMs: number): number {
   return 0.10 + Math.min(1, smoothedMs / 5) * 0.30
 }
 
 export function useGPS() {
-  const setPosition     = useMapStore((s) => s.setPosition)
-  const smoothed        = useRef<{ lat: number; lng: number } | null>(null)
-  const smoothedSpeed   = useRef<number>(0)
-  const lastHeading     = useRef<number>(0)
-  const lastPos         = useRef<{ lat: number; lng: number; timestamp: number } | null>(null)
-  const passiveHeading  = useRef<number | null>(null)
-
-  // Passively read device orientation regardless of compass toggle —
-  // used only as stationary fallback for the boat arrow direction.
-  useEffect(() => {
-    let usingAbsolute = false
-    const handler = (e: Event, absolute: boolean) => {
-      if (!absolute && usingAbsolute) return
-      if (absolute) usingAbsolute = true
-      const ev = e as DeviceOrientationEvent & { webkitCompassHeading?: number }
-      const raw = ev.webkitCompassHeading ?? (ev.alpha !== null ? (360 - ev.alpha) % 360 : null)
-      if (raw !== null) passiveHeading.current = raw
-    }
-    const absH = (e: Event) => handler(e, true)
-    const relH = (e: Event) => handler(e, false)
-    window.addEventListener('deviceorientationabsolute', absH, true)
-    window.addEventListener('deviceorientation', relH, true)
-    return () => {
-      window.removeEventListener('deviceorientationabsolute', absH, true)
-      window.removeEventListener('deviceorientation', relH, true)
-    }
-  }, [])
+  const setPosition   = useMapStore((s) => s.setPosition)
+  const smoothed      = useRef<{ lat: number; lng: number } | null>(null)
+  const smoothedSpeed = useRef<number>(0)
+  const lastHeading   = useRef<number>(0)
+  const lastPos       = useRef<{ lat: number; lng: number; timestamp: number } | null>(null)
 
   useEffect(() => {
     if (!navigator.geolocation) return
@@ -78,19 +56,11 @@ export function useGPS() {
 
         lastPos.current = { lat, lng, timestamp }
 
-        // Stationary heading priority:
-        // 1. Compass feature heading (smoothed, from store)
-        // 2. Passive sensor reading (raw, always available)
-        // 3. Last known GPS course
-        let heading = lastHeading.current
-        if (filteredSpeed === 0) {
-          const compassHdg = useMapStore.getState().compassHeading
-          if (compassHdg != null && !isNaN(compassHdg)) {
-            heading = compassHdg
-          } else if (passiveHeading.current !== null) {
-            heading = passiveHeading.current
-          }
-        }
+        // When stationary and compass feature is active, use compass heading
+        const compassHdg = useMapStore.getState().compassHeading
+        const heading = filteredSpeed === 0 && compassHdg != null && !isNaN(compassHdg)
+          ? compassHdg
+          : lastHeading.current
 
         setPosition({
           lat: smoothed.current.lat,
