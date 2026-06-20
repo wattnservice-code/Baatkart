@@ -269,7 +269,8 @@ function destPointAIS(lat: number, lng: number, headingDeg: number, meters: numb
 
 function vesselIcon(vessel: AISVessel, danger: boolean, zoom: number): L.DivIcon {
   const sz = vesselSize(zoom)
-  const hdg = vessel.heading > 0 && vessel.heading < 360 ? vessel.heading : vessel.cog
+  const hdg = (vessel.heading >= 0 && vessel.heading < 360) ? vessel.heading
+            : (vessel.cog >= 0 && vessel.cog < 360) ? vessel.cog : 0
   const color = danger ? '#ef4444' : vesselTypeColor(vessel.shipType)
   const wrapCls = danger ? 'ais-danger-wrap' : ''
   const html = `<div class="${wrapCls}" style="width:${sz}px;height:${sz}px;">
@@ -513,10 +514,13 @@ export function useAIS() {
             if (now - lastAlarmRef.current > 8000) { lastAlarmRef.current = now; collisionAlarm() }
           }
 
-          const lineDir = cog > 0 ? cog : heading
-          // Min synlig lengde skalerer med zoom: zoom 10 → ~4 km, zoom 13 → ~500 m, zoom 16 → ~65 m
-          const minLineM = Math.max(60, Math.pow(2, 24 - zoom) / 4)
-          const lineM    = Math.max(minLineM, Math.min(sog * KN_TO_MS * 120, minLineM * 5))
+          // COG er faktisk spor over grunn — riktig kilde for kurslinjen.
+          // Ekskluder 511 (AIS "unavailable") fra heading-fallback.
+          const lineDir = (cog >= 0 && cog < 360) ? cog
+                        : (heading > 0 && heading < 360) ? heading : 0
+          // Minimum synlig lengde skalerer med zoom; maks 1500 m for å unngå rot
+          const minLineM = Math.max(80, Math.pow(2, 22 - zoom) / 8)
+          const lineM    = Math.max(minLineM, Math.min(sog * KN_TO_MS * 120, 1500))
           const lineEnd = destPointAIS(lat, lng, lineDir, lineM)
           const lineColor = danger ? '#ef4444' : vesselTypeColor(vessel.shipType)
 
@@ -536,6 +540,18 @@ export function useAIS() {
               zIndexOffset: danger ? 600 : 200,
             })
             marker.bindPopup(popupContent(vessel, cpa, danger, distUnit, speedUnit), { maxWidth: 260, className: 'dark-popup', autoPan: false })
+            // Refresh popup with live CPA data every time user opens it
+            marker.on('popupopen', () => {
+              const v = vesselsRef.current.get(mmsi)
+              if (!v) return
+              const p = useMapStore.getState().position
+              const o = p ? { lat: p.lat, lng: p.lng, speedMs: p.speed ?? 0, courseDeg: p.heading ?? 0 } : null
+              const freshCpa    = o ? computeCPA(o, v) : null
+              const freshDanger = isDanger(freshCpa)
+              const dUnit = useMapStore.getState().distUnit
+              const sUnit = useMapStore.getState().speedUnit
+              marker.getPopup()?.setContent(popupContent(v, freshCpa, freshDanger, dUnit, sUnit))
+            })
             marker.addTo(layerRef.current)
             markersRef.current.set(mmsi, marker)
             const lineWeight = zoom >= 14 ? 2 : zoom >= 12 ? 2.5 : 3
