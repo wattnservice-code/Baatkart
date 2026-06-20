@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Copy, Check } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
-import { stopMobAlarm } from '../audio'
 
 function windDirLabel(deg: number): string {
   const dirs = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV']
@@ -110,7 +109,7 @@ export default function MobOverlay() {
         <button className="mob-goto" onClick={() => setFlyTo({ lat: mobPoint.lat, lng: mobPoint.lng })}>
           Vis på kart
         </button>
-        <button className="mob-clear" onClick={() => { stopMobAlarm(); clearMob() }}>Person funnet ✓</button>
+        <button className="mob-clear" onClick={clearMob}>Person funnet ✓</button>
       </div>
     </div>
   )

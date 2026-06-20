@@ -1,5 +1,4 @@
 import { useMapStore } from '../store/useMapStore'
-import { unlockAudio, startMobAlarm } from '../audio'
 
 export default function MobButton() {
   const mobPoint    = useMapStore((s) => s.mobPoint)
@@ -9,8 +8,6 @@ export default function MobButton() {
 
   const handleMob = () => {
     if (mobPoint || !position) return
-    unlockAudio()
-    startMobAlarm()
     setMob({ lat: position.lat, lng: position.lng })
   }
 
