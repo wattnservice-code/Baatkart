@@ -502,7 +502,9 @@ export function useAIS() {
           }
 
           const lineDir = cog > 0 ? cog : heading
-          const lineM   = Math.max(150, Math.min(sog * KN_TO_MS * 120, 1500))
+          // Min synlig lengde skalerer med zoom: zoom 10 → ~4 km, zoom 13 → ~500 m, zoom 16 → ~65 m
+          const minLineM = Math.max(60, Math.pow(2, 24 - zoom) / 4)
+          const lineM    = Math.max(minLineM, Math.min(sog * KN_TO_MS * 120, minLineM * 5))
           const lineEnd = destPointAIS(lat, lng, lineDir, lineM)
           const lineColor = danger ? '#ef4444' : vesselTypeColor(vessel.shipType)
 
@@ -524,8 +526,9 @@ export function useAIS() {
             marker.bindPopup(popupContent(vessel, cpa, danger, distUnit, speedUnit), { maxWidth: 260, className: 'dark-popup' })
             marker.addTo(layerRef.current)
             markersRef.current.set(mmsi, marker)
+            const lineWeight = zoom >= 14 ? 2 : zoom >= 12 ? 2.5 : 3
             const cl = L.polyline([[lat, lng], lineEnd], {
-              color: lineColor, weight: 2, opacity: 0.85, dashArray: '6 4',
+              color: lineColor, weight: lineWeight, opacity: 0.85, dashArray: '6 4',
             })
             cl.addTo(layerRef.current)
             courseLinesRef.current.set(mmsi, cl)
