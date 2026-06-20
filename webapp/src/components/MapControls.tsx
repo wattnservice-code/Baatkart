@@ -103,6 +103,7 @@ export default function MapControls() {
   const aisVisible       = useMapStore((s) => s.aisVisible)
   const toggleAis        = useMapStore((s) => s.toggleAis)
   const aisStatus        = useMapStore((s) => s.aisStatus)
+  const setFlyTo         = useMapStore((s) => s.setFlyTo)
   const quickPins        = useMapStore((s) => s.quickPins)
   const addQuickPin      = useMapStore((s) => s.addQuickPin)
   const speedUnit        = useMapStore((s) => s.speedUnit)
@@ -198,11 +199,15 @@ export default function MapControls() {
       )}
       {/* AIS status pill — only while AIS is enabled */}
       {aisVisible && (
-        <div className={`ais-status ais-status-${aisStatus.state}`}>
+        <div
+          className={`ais-status ais-status-${aisStatus.state}${aisStatus.dangerPos ? ' ais-status-clickable' : ''}`}
+          onClick={() => aisStatus.dangerPos && setFlyTo(aisStatus.dangerPos)}
+          title={aisStatus.dangerPos ? 'Trykk for å se farlig fartøy' : undefined}
+        >
           {aisStatus.state === 'live'
             ? `🚢 ${aisStatus.count} fartøy`
             : aisStatus.state === 'warn'
-            ? `🚨 ${aisStatus.message}`
+            ? `🚨 ${aisStatus.message} – trykk for å se`
             : aisStatus.state === 'connecting'
             ? `🚢 ${aisStatus.message}`
             : aisStatus.state === 'error'

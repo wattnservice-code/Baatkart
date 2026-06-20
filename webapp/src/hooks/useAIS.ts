@@ -564,10 +564,24 @@ export function useAIS() {
         }
 
         const dn = dangerRef.current.size
+        // Find most imminent dangerous vessel (smallest positive TCPA)
+        let dangerPos: { lat: number; lng: number } | undefined
+        if (dn > 0 && own) {
+          let best: { lat: number; lng: number; tcpa: number } | null = null
+          for (const [mid, v] of vesselsRef.current) {
+            if (!dangerRef.current.has(mid)) continue
+            const c = computeCPA(own, v)
+            if (c && c.tcpaMin > 0 && (!best || c.tcpaMin < best.tcpa)) {
+              best = { lat: v.lat, lng: v.lng, tcpa: c.tcpaMin }
+            }
+          }
+          if (best) dangerPos = { lat: best.lat, lng: best.lng }
+        }
         setAisStatus({
-          state:   dn > 0 ? 'warn' : 'live',
-          count:   markersRef.current.size,
-          message: dn > 0 ? `${dn} på kollisjonskurs` : '',
+          state:    dn > 0 ? 'warn' : 'live',
+          count:    markersRef.current.size,
+          message:  dn > 0 ? `${dn} på kollisjonskurs` : '',
+          dangerPos,
         })
 
       } catch (e) {
@@ -621,10 +635,23 @@ export function useAIS() {
           if (cl) cl.setStyle({ color: danger ? '#ef4444' : vesselTypeColor(vessel.shipType) })
         }
       }
+      let dangerPos2: { lat: number; lng: number } | undefined
+      if (dn > 0) {
+        let best: { lat: number; lng: number; tcpa: number } | null = null
+        for (const [mid, v] of vesselsRef.current) {
+          if (!dangerRef.current.has(mid)) continue
+          const c = computeCPA(own, v)
+          if (c && c.tcpaMin > 0 && (!best || c.tcpaMin < best.tcpa)) {
+            best = { lat: v.lat, lng: v.lng, tcpa: c.tcpaMin }
+          }
+        }
+        if (best) dangerPos2 = { lat: best.lat, lng: best.lng }
+      }
       useMapStore.getState().setAisStatus({
-        state:   dn > 0 ? 'warn' : 'live',
-        count:   markersRef.current.size,
-        message: dn > 0 ? `${dn} på kollisjonskurs` : '',
+        state:    dn > 0 ? 'warn' : 'live',
+        count:    markersRef.current.size,
+        message:  dn > 0 ? `${dn} på kollisjonskurs` : '',
+        dangerPos: dangerPos2,
       })
     }, 3000)
     return () => clearInterval(id)

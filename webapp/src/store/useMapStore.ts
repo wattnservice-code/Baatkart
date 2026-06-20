@@ -106,7 +106,7 @@ interface MapStore {
   aisVisible: boolean
   aisShowStationary: boolean
   aisKey: string
-  aisStatus: { state: 'idle' | 'connecting' | 'live' | 'warn' | 'error'; count: number; message: string }
+  aisStatus: { state: 'idle' | 'connecting' | 'live' | 'warn' | 'error'; count: number; message: string; dangerPos?: { lat: number; lng: number } }
   boatInfo: BoatInfo
   lookAhead: boolean
   headingUp: boolean

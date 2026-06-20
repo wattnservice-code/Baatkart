@@ -1248,6 +1248,8 @@ html, body, #root {
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   pointer-events: none;
 }
+.ais-status-clickable { pointer-events: auto; cursor: pointer; }
+.ais-status-clickable:active { opacity: 0.8; }
 .ais-status-connecting { background: rgba(37,99,235,0.92); }
 .ais-status-live       { background: rgba(22,163,74,0.92); }
 .ais-status-warn       { background: rgba(220,38,38,0.97); font-size: 14px; font-weight: 800; letter-spacing: 0.3px; animation: aisStatusPulse 0.65s ease-in-out infinite; }
