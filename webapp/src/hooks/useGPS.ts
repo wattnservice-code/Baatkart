@@ -62,11 +62,17 @@ export function useGPS() {
 
         lastPos.current = { lat, lng, timestamp }
 
+        // When stationary, prefer compass heading over the last known GPS course
+        const compassHdg = useMapStore.getState().compassHeading
+        const heading = filteredSpeed === 0 && compassHdg != null && !isNaN(compassHdg)
+          ? compassHdg
+          : lastHeading.current
+
         setPosition({
           lat: smoothed.current.lat,
           lng: smoothed.current.lng,
           speed: filteredSpeed,
-          heading: lastHeading.current,
+          heading,
           accuracy,
           timestamp,
         })
