@@ -5,18 +5,38 @@ const ALPHA = 0.25               // EMA for position
 const MIN_SPEED = 0.8            // m/s below this = show 0
 const MAX_SPEED_ACCURACY = 20    // m — only trust speed when GPS is this accurate or better
 
-// Adaptive EMA: slow response (heavy smoothing) when near-stationary,
-// fast response at speed. Ramps from 0.10 at 0 m/s to 0.40 at 5 m/s (~10 kn).
 function speedAlpha(smoothedMs: number): number {
   return 0.10 + Math.min(1, smoothedMs / 5) * 0.30
 }
 
 export function useGPS() {
-  const setPosition = useMapStore((s) => s.setPosition)
-  const smoothed = useRef<{ lat: number; lng: number } | null>(null)
-  const smoothedSpeed = useRef<number>(0)
-  const lastHeading = useRef<number>(0)
-  const lastPos = useRef<{ lat: number; lng: number; timestamp: number } | null>(null)
+  const setPosition     = useMapStore((s) => s.setPosition)
+  const smoothed        = useRef<{ lat: number; lng: number } | null>(null)
+  const smoothedSpeed   = useRef<number>(0)
+  const lastHeading     = useRef<number>(0)
+  const lastPos         = useRef<{ lat: number; lng: number; timestamp: number } | null>(null)
+  const passiveHeading  = useRef<number | null>(null)
+
+  // Passively read device orientation regardless of compass toggle —
+  // used only as stationary fallback for the boat arrow direction.
+  useEffect(() => {
+    let usingAbsolute = false
+    const handler = (e: Event, absolute: boolean) => {
+      if (!absolute && usingAbsolute) return
+      if (absolute) usingAbsolute = true
+      const ev = e as DeviceOrientationEvent & { webkitCompassHeading?: number }
+      const raw = ev.webkitCompassHeading ?? (ev.alpha !== null ? (360 - ev.alpha) % 360 : null)
+      if (raw !== null) passiveHeading.current = raw
+    }
+    const absH = (e: Event) => handler(e, true)
+    const relH = (e: Event) => handler(e, false)
+    window.addEventListener('deviceorientationabsolute', absH, true)
+    window.addEventListener('deviceorientation', relH, true)
+    return () => {
+      window.removeEventListener('deviceorientationabsolute', absH, true)
+      window.removeEventListener('deviceorientation', relH, true)
+    }
+  }, [])
 
   useEffect(() => {
     if (!navigator.geolocation) return
@@ -26,10 +46,8 @@ export function useGPS() {
         const { latitude: lat, longitude: lng, speed, accuracy } = pos.coords
         const timestamp = pos.timestamp
 
-        // Skip updates with poor accuracy (> 50m)
         if (accuracy > 50) return
 
-        // Exponential moving average to reduce jitter
         if (!smoothed.current) {
           smoothed.current = { lat, lng }
         } else {
@@ -39,13 +57,11 @@ export function useGPS() {
           }
         }
 
-        // Only trust speed when GPS is accurate — indoor noise typically gives accuracy > 20m
         const rawSpeed = accuracy <= MAX_SPEED_ACCURACY ? (speed ?? 0) : 0
         const alpha = speedAlpha(smoothedSpeed.current)
         smoothedSpeed.current = alpha * rawSpeed + (1 - alpha) * smoothedSpeed.current
         const filteredSpeed = smoothedSpeed.current < MIN_SPEED ? 0 : smoothedSpeed.current
 
-        // Only update heading when moving — freeze arrow when stationary
         if (filteredSpeed > 0) {
           if (pos.coords.heading != null && !isNaN(pos.coords.heading)) {
             lastHeading.current = pos.coords.heading
@@ -62,11 +78,19 @@ export function useGPS() {
 
         lastPos.current = { lat, lng, timestamp }
 
-        // When stationary, prefer compass heading over the last known GPS course
-        const compassHdg = useMapStore.getState().compassHeading
-        const heading = filteredSpeed === 0 && compassHdg != null && !isNaN(compassHdg)
-          ? compassHdg
-          : lastHeading.current
+        // Stationary heading priority:
+        // 1. Compass feature heading (smoothed, from store)
+        // 2. Passive sensor reading (raw, always available)
+        // 3. Last known GPS course
+        let heading = lastHeading.current
+        if (filteredSpeed === 0) {
+          const compassHdg = useMapStore.getState().compassHeading
+          if (compassHdg != null && !isNaN(compassHdg)) {
+            heading = compassHdg
+          } else if (passiveHeading.current !== null) {
+            heading = passiveHeading.current
+          }
+        }
 
         setPosition({
           lat: smoothed.current.lat,
