@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import { useMapStore } from '../store/useMapStore'
-import type { DistUnit } from '../store/useMapStore'
+import type { DistUnit, SpeedUnit } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import { collisionAlarm } from '../audio'
 import { formatDist } from '../components/NavOverlay'
@@ -316,7 +316,7 @@ function isDanger(cpa: CpaInfo | null): boolean {
 
 // ── Popup ─────────────────────────────────────────────────────────────────────
 
-function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean, distUnit: DistUnit = 'nm'): string {
+function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean, distUnit: DistUnit = 'nm', speedUnit: SpeedUnit = 'kn'): string {
   const flag    = mmsiFlag(v.mmsi)
   const age     = dataAge(v.msgtime)
   const typeClr = danger ? '#ef4444' : vesselTypeColor(v.shipType)
@@ -329,7 +329,8 @@ function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean, distUn
     ? (v.rot > 0 ? '→ Dreier styrbord' : '← Dreier babord') : ''
 
   // Fart + retning i folkelig format
-  const sogStr = v.sog > 0.5 ? `${v.sog.toFixed(1)} knop` : 'Stopper'
+  const sogDisplay = speedUnit === 'kmh' ? `${(v.sog * 1.852).toFixed(1)} km/t` : `${v.sog.toFixed(1)} knop`
+  const sogStr = v.sog > 0.5 ? sogDisplay : 'Stopper'
   const dirStr = v.cog > 0 && v.cog < 360
     ? cardinal(v.cog)
     : (v.heading > 0 && v.heading < 360 ? cardinal(v.heading) : '')
@@ -454,9 +455,10 @@ export function useAIS() {
         const raw: BwRaw[] = await r.json()
         if (cancelled) return
 
-        const zoom     = getMapInstance()?.getZoom() ?? 13
-        const pos      = useMapStore.getState().position
-        const distUnit = useMapStore.getState().distUnit
+        const zoom      = getMapInstance()?.getZoom() ?? 13
+        const pos       = useMapStore.getState().position
+        const distUnit  = useMapStore.getState().distUnit
+        const speedUnit = useMapStore.getState().speedUnit
         const own: OwnState | null = pos
           ? { lat: pos.lat, lng: pos.lng, speedMs: pos.speed ?? 0, courseDeg: pos.heading ?? 0 }
           : null
@@ -510,7 +512,7 @@ export function useAIS() {
           if (existing) {
             existing.setLatLng([lat, lng])
             existing.setIcon(vesselIcon(vessel, danger, zoom))
-            existing.getPopup()?.setContent(popupContent(vessel, cpa, danger, distUnit))
+            existing.getPopup()?.setContent(popupContent(vessel, cpa, danger, distUnit, speedUnit))
             const cl = courseLinesRef.current.get(mmsi)
             if (cl) { cl.setLatLngs([[lat, lng], lineEnd]); cl.setStyle({ color: lineColor }) }
           } else {
@@ -519,7 +521,7 @@ export function useAIS() {
               icon: vesselIcon(vessel, danger, zoom),
               zIndexOffset: danger ? 600 : 200,
             })
-            marker.bindPopup(popupContent(vessel, cpa, danger, distUnit), { maxWidth: 260, className: 'dark-popup' })
+            marker.bindPopup(popupContent(vessel, cpa, danger, distUnit, speedUnit), { maxWidth: 260, className: 'dark-popup' })
             marker.addTo(layerRef.current)
             markersRef.current.set(mmsi, marker)
             const cl = L.polyline([[lat, lng], lineEnd], {
@@ -565,7 +567,8 @@ export function useAIS() {
       const pos = useMapStore.getState().position
       if (!pos || vesselsRef.current.size === 0) return
       const own: OwnState = { lat: pos.lat, lng: pos.lng, speedMs: pos.speed ?? 0, courseDeg: pos.heading ?? 0 }
-      const distUnit = useMapStore.getState().distUnit
+      const distUnit  = useMapStore.getState().distUnit
+      const speedUnit = useMapStore.getState().speedUnit
       const zoom = getMapInstance()?.getZoom() ?? 13
       let dn = 0
       for (const [mmsi, vessel] of vesselsRef.current) {
@@ -582,7 +585,7 @@ export function useAIS() {
         const marker = markersRef.current.get(mmsi)
         if (marker && danger !== wasDanger) {
           marker.setIcon(vesselIcon(vessel, danger, zoom))
-          marker.getPopup()?.setContent(popupContent(vessel, cpa, danger, distUnit))
+          marker.getPopup()?.setContent(popupContent(vessel, cpa, danger, distUnit, speedUnit))
           const cl = courseLinesRef.current.get(mmsi)
           if (cl) cl.setStyle({ color: danger ? '#ef4444' : vesselTypeColor(vessel.shipType) })
         }

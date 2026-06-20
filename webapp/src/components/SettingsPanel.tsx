@@ -34,8 +34,10 @@ export default function SettingsPanel({ onClose }: Props) {
   const autoTrack      = useMapStore((s) => s.autoTrack)
   const toggleAutoTrack = useMapStore((s) => s.toggleAutoTrack)
   const cycleRingRadius      = useMapStore((s) => s.cycleRingRadius)
-  const aisVisible           = useMapStore((s) => s.aisVisible)
-  const toggleAis            = useMapStore((s) => s.toggleAis)
+  const aisVisible              = useMapStore((s) => s.aisVisible)
+  const toggleAis               = useMapStore((s) => s.toggleAis)
+  const aisShowStationary       = useMapStore((s) => s.aisShowStationary)
+  const toggleAisShowStationary = useMapStore((s) => s.toggleAisShowStationary)
 
   const handleCompassToggle = async () => {
     if (!compassEnabled) {
@@ -102,6 +104,11 @@ export default function SettingsPanel({ onClose }: Props) {
           <button className="menu-item" style={{ color: aisVisible ? '#60a5fa' : undefined }} onClick={toggleAis}>
             <Ship size={20} /><span>Vis AIS-fartøy {aisVisible ? '(på)' : '(av)'}</span>
           </button>
+          {aisVisible && (
+            <button className="menu-item" style={{ color: aisShowStationary ? '#60a5fa' : undefined }} onClick={toggleAisShowStationary}>
+              <Ship size={20} /><span>Vis fortøyde/ankrede {aisShowStationary ? '(på)' : '(av)'}</span>
+            </button>
+          )}
 
           <div className="menu-divider" />
           <div style={subhead}>Enheter</div>
