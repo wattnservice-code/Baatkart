@@ -104,6 +104,7 @@ interface MapStore {
   offlineOnly: boolean
   offlineDownload: { status: 'downloading' | 'done' | 'error'; progress: number; total: number; skipped: number; areaName: string } | null
   aisVisible: boolean
+  aisShowStationary: boolean
   aisKey: string
   aisStatus: { state: 'idle' | 'connecting' | 'live' | 'warn' | 'error'; count: number; message: string }
   boatInfo: BoatInfo
@@ -157,6 +158,7 @@ interface MapStore {
   setOfflineOnly: (v: boolean) => void
   setOfflineDownload: (d: { status: 'downloading' | 'done' | 'error'; progress: number; total: number; skipped: number; areaName: string } | null) => void
   toggleAis: () => void
+  toggleAisShowStationary: () => void
   setAisKey: (key: string) => void
   setAisStatus: (s: { state: 'idle' | 'connecting' | 'live' | 'warn' | 'error'; count: number; message: string }) => void
   setBoatInfo: (info: Partial<BoatInfo>) => void
@@ -275,6 +277,7 @@ export const useMapStore = create<MapStore>((set) => ({
   offlineOnly: loadBool('offlineOnly', false),
   offlineDownload: null,
   aisVisible: loadBool('aisVisible', false),
+  aisShowStationary: loadBool('aisShowStationary', false),
   aisKey: localStorage.getItem('aisKey') ?? '',
   aisStatus: { state: 'idle', count: 0, message: '' },
   boatInfo: loadBoatInfo(),
@@ -409,6 +412,7 @@ export const useMapStore = create<MapStore>((set) => ({
   setOfflineOnly: (v) => { localStorage.setItem('offlineOnly', String(v)); set({ offlineOnly: v }) },
   setOfflineDownload: (d) => set({ offlineDownload: d }),
   toggleAis: () => set((s) => { const v = !s.aisVisible; localStorage.setItem('aisVisible', String(v)); return { aisVisible: v } }),
+  toggleAisShowStationary: () => set((s) => { const v = !s.aisShowStationary; localStorage.setItem('aisShowStationary', String(v)); return { aisShowStationary: v } }),
   setAisKey: (key) => {
     localStorage.setItem('aisKey', key)
     const extra = key ? {} : { aisVisible: false }

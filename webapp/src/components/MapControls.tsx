@@ -100,9 +100,11 @@ export default function MapControls() {
   const darkMode         = useMapStore((s) => s.darkMode)
   const nightVision      = useMapStore((s) => s.nightVision)
   const cycleDisplayMode = useMapStore((s) => s.cycleDisplayMode)
-  const aisVisible       = useMapStore((s) => s.aisVisible)
-  const toggleAis        = useMapStore((s) => s.toggleAis)
-  const aisStatus        = useMapStore((s) => s.aisStatus)
+  const aisVisible              = useMapStore((s) => s.aisVisible)
+  const toggleAis               = useMapStore((s) => s.toggleAis)
+  const aisStatus               = useMapStore((s) => s.aisStatus)
+  const aisShowStationary       = useMapStore((s) => s.aisShowStationary)
+  const toggleAisShowStationary = useMapStore((s) => s.toggleAisShowStationary)
   const quickPins        = useMapStore((s) => s.quickPins)
   const addQuickPin      = useMapStore((s) => s.addQuickPin)
   const speedUnit        = useMapStore((s) => s.speedUnit)
@@ -198,16 +200,26 @@ export default function MapControls() {
       )}
       {/* AIS status pill — only while AIS is enabled */}
       {aisVisible && (
-        <div className={`ais-status ais-status-${aisStatus.state}`}>
-          {aisStatus.state === 'live'
-            ? `🚢 ${aisStatus.count} fartøy`
-            : aisStatus.state === 'warn'
-            ? `🚨 ${aisStatus.message}`
-            : aisStatus.state === 'connecting'
-            ? `🚢 ${aisStatus.message}`
-            : aisStatus.state === 'error'
-            ? `📡 Ingen AIS-kontakt`
-            : '🚢 AIS av'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className={`ais-status ais-status-${aisStatus.state}`}>
+            {aisStatus.state === 'live'
+              ? `🚢 ${aisStatus.count} fartøy`
+              : aisStatus.state === 'warn'
+              ? `🚨 ${aisStatus.message}`
+              : aisStatus.state === 'connecting'
+              ? `🚢 ${aisStatus.message}`
+              : aisStatus.state === 'error'
+              ? `📡 Ingen AIS-kontakt`
+              : '🚢 AIS av'}
+          </div>
+          <button
+            className={`map-ctrl-btn${aisShowStationary ? ' active' : ''}`}
+            onClick={toggleAisShowStationary}
+            title={aisShowStationary ? 'Skjul fortøyde/ankrede' : 'Vis fortøyde/ankrede'}
+            style={{ fontSize: 13, padding: '3px 7px' }}
+          >
+            ⚓
+          </button>
         </div>
       )}
 

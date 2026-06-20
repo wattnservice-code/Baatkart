@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import { useMapStore } from '../store/useMapStore'
+import type { DistUnit } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import { collisionAlarm } from '../audio'
+import { formatDist } from '../components/NavOverlay'
 
 // ── Data model ────────────────────────────────────────────────────────────────
 
@@ -314,7 +316,7 @@ function isDanger(cpa: CpaInfo | null): boolean {
 
 // ── Popup ─────────────────────────────────────────────────────────────────────
 
-function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean): string {
+function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean, distUnit: DistUnit = 'nm'): string {
   const flag    = mmsiFlag(v.mmsi)
   const age     = dataAge(v.msgtime)
   const typeClr = danger ? '#ef4444' : vesselTypeColor(v.shipType)
@@ -335,10 +337,10 @@ function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean): strin
 
   let cpaLine = ''
   if (cpa && cpa.tcpaMin > 0 && isFinite(cpa.tcpaMin)) {
-    const nm = (cpa.cpaM / 1852).toFixed(2), min = Math.round(cpa.tcpaMin)
+    const distStr = formatDist(cpa.cpaM, distUnit), min = Math.round(cpa.tcpaMin)
     cpaLine = danger
-      ? `<div style="margin-top:6px;padding:4px 8px;background:rgba(239,68,68,0.15);border-radius:6px;color:#ef4444;font-weight:700;font-size:12px">⚠ Mulig kollisjonsrisiko<br/>Nærmeste punkt: ${nm} nm om ${min} min</div>`
-      : `<div style="margin-top:4px;color:#64748b;font-size:11px">Nærmeste punkt: ${nm} nm om ${min} min</div>`
+      ? `<div style="margin-top:6px;padding:4px 8px;background:rgba(239,68,68,0.15);border-radius:6px;color:#ef4444;font-weight:700;font-size:12px">⚠ Mulig kollisjonsrisiko<br/>Nærmeste punkt: ${distStr} om ${min} min</div>`
+      : `<div style="margin-top:4px;color:#64748b;font-size:11px">Nærmeste punkt: ${distStr} om ${min} min</div>`
   }
 
   const dimParts: string[] = []
@@ -395,8 +397,9 @@ function clampBox(b: Bounds | null): Bounds {
 }
 
 export function useAIS() {
-  const aisVisible = useMapStore((s) => s.aisVisible)
-  const mapBounds  = useMapStore((s) => s.mapBounds)
+  const aisVisible        = useMapStore((s) => s.aisVisible)
+  const aisShowStationary = useMapStore((s) => s.aisShowStationary)
+  const mapBounds         = useMapStore((s) => s.mapBounds)
 
   const markersRef     = useRef<Map<number, L.Marker>>(new Map())
   const courseLinesRef = useRef<Map<number, L.Polyline>>(new Map())
@@ -404,6 +407,7 @@ export function useAIS() {
   const boundsRef      = useRef<Bounds | null>(mapBounds)
   const dangerRef      = useRef<Set<number>>(new Set())
   const lastAlarmRef   = useRef(0)
+  const vesselsRef     = useRef<Map<number, AISVessel>>(new Map())
 
   useEffect(() => { boundsRef.current = mapBounds }, [mapBounds])
 
@@ -450,16 +454,18 @@ export function useAIS() {
         const raw: BwRaw[] = await r.json()
         if (cancelled) return
 
-        const zoom = getMapInstance()?.getZoom() ?? 13
-        const pos  = useMapStore.getState().position
+        const zoom     = getMapInstance()?.getZoom() ?? 13
+        const pos      = useMapStore.getState().position
+        const distUnit = useMapStore.getState().distUnit
         const own: OwnState | null = pos
           ? { lat: pos.lat, lng: pos.lng, speedMs: pos.speed ?? 0, courseDeg: pos.heading ?? 0 }
           : null
 
-        // Convert; skip stationary; filter to bbox client-side as safety net
+        const showStationary = useMapStore.getState().aisShowStationary
+        // Convert; optionally skip stationary; filter to bbox client-side as safety net
         const vessels = raw
           .map(bwToVessel)
-          .filter(v => v.sog >= 0.5)
+          .filter(v => showStationary || v.sog >= 0.5)
           .filter(v =>
             v.lat >= box.south && v.lat <= box.north &&
             v.lng >= box.west  && v.lng <= box.east
@@ -475,6 +481,7 @@ export function useAIS() {
             courseLinesRef.current.get(mmsi)?.remove()
             courseLinesRef.current.delete(mmsi)
             dangerRef.current.delete(mmsi)
+            vesselsRef.current.delete(mmsi)
           }
         }
 
@@ -497,11 +504,13 @@ export function useAIS() {
           const lineEnd = destPointAIS(lat, lng, lineDir, lineM)
           const lineColor = danger ? '#ef4444' : vesselTypeColor(vessel.shipType)
 
+          vesselsRef.current.set(mmsi, vessel)
+
           const existing = markersRef.current.get(mmsi)
           if (existing) {
             existing.setLatLng([lat, lng])
             existing.setIcon(vesselIcon(vessel, danger, zoom))
-            existing.getPopup()?.setContent(popupContent(vessel, cpa, danger))
+            existing.getPopup()?.setContent(popupContent(vessel, cpa, danger, distUnit))
             const cl = courseLinesRef.current.get(mmsi)
             if (cl) { cl.setLatLngs([[lat, lng], lineEnd]); cl.setStyle({ color: lineColor }) }
           } else {
@@ -510,7 +519,7 @@ export function useAIS() {
               icon: vesselIcon(vessel, danger, zoom),
               zIndexOffset: danger ? 600 : 200,
             })
-            marker.bindPopup(popupContent(vessel, cpa, danger), { maxWidth: 260, className: 'dark-popup' })
+            marker.bindPopup(popupContent(vessel, cpa, danger, distUnit), { maxWidth: 260, className: 'dark-popup' })
             marker.addTo(layerRef.current)
             markersRef.current.set(mmsi, marker)
             const cl = L.polyline([[lat, lng], lineEnd], {
@@ -545,6 +554,45 @@ export function useAIS() {
       markersRef.current.clear()
       courseLinesRef.current.clear()
       dangerRef.current.clear()
+      vesselsRef.current.clear()
     }
+  }, [aisVisible, aisShowStationary])
+
+  // Re-run CPA every 3 s using latest own position — clears alarm without waiting for next API poll
+  useEffect(() => {
+    if (!aisVisible) return
+    const id = setInterval(() => {
+      const pos = useMapStore.getState().position
+      if (!pos || vesselsRef.current.size === 0) return
+      const own: OwnState = { lat: pos.lat, lng: pos.lng, speedMs: pos.speed ?? 0, courseDeg: pos.heading ?? 0 }
+      const distUnit = useMapStore.getState().distUnit
+      const zoom = getMapInstance()?.getZoom() ?? 13
+      let dn = 0
+      for (const [mmsi, vessel] of vesselsRef.current) {
+        const cpa    = computeCPA(own, vessel)
+        const danger = isDanger(cpa)
+        const wasDanger = dangerRef.current.has(mmsi)
+        if (danger) { dangerRef.current.add(mmsi); dn++ }
+        else        dangerRef.current.delete(mmsi)
+        if (danger && !wasDanger) {
+          const now = Date.now()
+          if (now - lastAlarmRef.current > 8000) { lastAlarmRef.current = now; collisionAlarm() }
+        }
+        // Update marker icon + popup to reflect changed danger state
+        const marker = markersRef.current.get(mmsi)
+        if (marker && danger !== wasDanger) {
+          marker.setIcon(vesselIcon(vessel, danger, zoom))
+          marker.getPopup()?.setContent(popupContent(vessel, cpa, danger, distUnit))
+          const cl = courseLinesRef.current.get(mmsi)
+          if (cl) cl.setStyle({ color: danger ? '#ef4444' : vesselTypeColor(vessel.shipType) })
+        }
+      }
+      useMapStore.getState().setAisStatus({
+        state:   dn > 0 ? 'warn' : 'live',
+        count:   markersRef.current.size,
+        message: dn > 0 ? `${dn} på kollisjonskurs` : '',
+      })
+    }, 3000)
+    return () => clearInterval(id)
   }, [aisVisible])
 }
