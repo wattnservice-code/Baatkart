@@ -535,7 +535,7 @@ export function useAIS() {
               icon: vesselIcon(vessel, danger, zoom),
               zIndexOffset: danger ? 600 : 200,
             })
-            marker.bindPopup(popupContent(vessel, cpa, danger, distUnit, speedUnit), { maxWidth: 260, className: 'dark-popup' })
+            marker.bindPopup(popupContent(vessel, cpa, danger, distUnit, speedUnit), { maxWidth: 260, className: 'dark-popup', autoPan: false })
             marker.addTo(layerRef.current)
             markersRef.current.set(mmsi, marker)
             const lineWeight = zoom >= 14 ? 2 : zoom >= 12 ? 2.5 : 3
