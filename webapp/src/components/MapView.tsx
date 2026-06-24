@@ -227,8 +227,9 @@ export default function MapView() {
   const savedSpots       = useMapStore((s) => s.savedSpots)
   const activeSpotId     = useMapStore((s) => s.activeSpotId)
   const spotsVisible     = useMapStore((s) => s.spotsVisible)
-  const quickPins        = useMapStore((s) => s.quickPins)
-  const compassEnabled   = useMapStore((s) => s.compassEnabled)
+  const quickPins               = useMapStore((s) => s.quickPins)
+  const highlightedQuickPinId   = useMapStore((s) => s.highlightedQuickPinId)
+  const compassEnabled          = useMapStore((s) => s.compassEnabled)
   const compassHeading   = useMapStore((s) => s.compassHeading)
   const darkMode         = useMapStore((s) => s.darkMode)
   const seamarkVisible   = useMapStore((s) => s.seamarkVisible)
@@ -741,7 +742,9 @@ export default function MapView() {
       if (!activeIds.has(id)) { m.remove(); quickPinMarkersRef.current.delete(id) }
     })
     quickPins.forEach((pin, idx) => {
-      const html = `<div class="quick-pin-marker"><span class="quick-pin-num">${idx + 1}</span></div>`
+      const sel = pin.id === highlightedQuickPinId
+      const cls = sel ? 'quick-pin-marker quick-pin-marker--selected' : 'quick-pin-marker'
+      const html = `<div class="${cls}"><span class="quick-pin-num">${idx + 1}</span></div>`
       const icon = L.divIcon({ className: '', html, iconSize: [32, 32], iconAnchor: [16, 16] })
       if (quickPinMarkersRef.current.has(pin.id)) {
         quickPinMarkersRef.current.get(pin.id)!.setLatLng([pin.lat, pin.lng]).setIcon(icon)
@@ -750,7 +753,7 @@ export default function MapView() {
         quickPinMarkersRef.current.set(pin.id, m)
       }
     })
-  }, [quickPins])
+  }, [quickPins, highlightedQuickPinId])
 
   // Click to add spot, or tap anywhere to drop a pin.
   // Guard: if click is closing a popup (e.g. AIS vessel info), skip pin creation.

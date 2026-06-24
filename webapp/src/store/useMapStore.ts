@@ -109,6 +109,7 @@ interface MapStore {
   trackMaxSpeed: number
   spotsVisible: boolean
   quickPins: QuickPin[]
+  highlightedQuickPinId: string | null
 
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
@@ -161,6 +162,7 @@ interface MapStore {
   addQuickPin: (p: { lat: number; lng: number }) => void
   removeQuickPin: (id: string) => void
   clearQuickPins: () => void
+  setHighlightedQuickPin: (id: string | null) => void
   saveCurrentTrack: (name: string, icon?: string) => void
   deleteSavedTrack: (id: string) => void
   startFollowingTrack: (track: SavedTrack) => void
@@ -282,6 +284,7 @@ export const useMapStore = create<MapStore>((set) => ({
   trackMaxSpeed: 0,
   spotsVisible: loadBool('spotsVisible', true),
   quickPins: loadQuickPins(),
+  highlightedQuickPinId: null,
 
   setPosition: (pos) =>
     set((state) => {
@@ -432,6 +435,7 @@ export const useMapStore = create<MapStore>((set) => ({
     return { quickPins: pins }
   }),
   clearQuickPins: () => { localStorage.removeItem('quickPins'); set({ quickPins: [] }) },
+  setHighlightedQuickPin: (id) => set({ highlightedQuickPinId: id }),
 
   saveCurrentTrack: (name, icon) => set((s) => {
     if (s.track.length < 2) return {}

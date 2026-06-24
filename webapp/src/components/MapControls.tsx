@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, X, Plus, Minus, LocateFixed, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye, Crosshair } from 'lucide-react'
+import { Navigation, X, Plus, Minus, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye, Crosshair } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -93,8 +93,9 @@ export default function MapControls() {
   const setSearchPin     = useMapStore((s) => s.setSearchPin)
   const removeSpot       = useMapStore((s) => s.removeSpot)
   const setNavTarget     = useMapStore((s) => s.setNavTarget)
-  const removeQuickPin   = useMapStore((s) => s.removeQuickPin)
-  const clearQuickPins   = useMapStore((s) => s.clearQuickPins)
+  const removeQuickPin          = useMapStore((s) => s.removeQuickPin)
+  const clearQuickPins          = useMapStore((s) => s.clearQuickPins)
+  const setHighlightedQuickPin  = useMapStore((s) => s.setHighlightedQuickPin)
 
   // Close the card. For a dropped/search pin (no saved id) also remove the
   // blue pin from the map; for a saved spot just close (keep its yellow pin).
@@ -248,7 +249,7 @@ export default function MapControls() {
           }}
           title={followBoat ? 'Følger båten' : 'Tilbake til båten'}
         >
-          <LocateFixed size={22} />
+          <Navigation size={22} />
         </button>
         <div className="fab-divider" />
         <button
@@ -308,7 +309,11 @@ export default function MapControls() {
                 <div
                   key={pin.id}
                   className="quickpin-popup-row"
-                  onClick={() => setFlyTo({ lat: pin.lat, lng: pin.lng })}
+                  onClick={() => {
+                    setFlyTo({ lat: pin.lat, lng: pin.lng })
+                    setHighlightedQuickPin(pin.id)
+                    setTimeout(() => setHighlightedQuickPin(null), 3000)
+                  }}
                 >
                   <span className="quickpin-popup-num">{idx + 1}</span>
                   <div className="quickpin-popup-info">

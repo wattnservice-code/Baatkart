@@ -692,6 +692,14 @@ html, body, #root {
   60%  { box-shadow: 0 0 0 10px rgba(249,115,22,0), 0 2px 6px rgba(0,0,0,0.5); }
   100% { box-shadow: 0 0 0 0 rgba(249,115,22,0), 0 2px 6px rgba(0,0,0,0.5); }
 }
+.quick-pin-marker--selected {
+  background: #2563eb;
+  border-color: white;
+  animation: none;
+  box-shadow: 0 0 0 4px white, 0 0 0 8px #2563eb, 0 2px 10px rgba(0,0,0,0.6);
+  transform: scale(1.15);
+  z-index: 1000;
+}
 .fab-quickpin { color: #f97316 !important; border-color: rgba(249,115,22,0.5) !important; }
 .fab-badge {
   position: absolute; top: -4px; right: -4px;
