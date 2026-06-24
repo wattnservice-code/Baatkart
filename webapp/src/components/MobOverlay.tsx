@@ -88,6 +88,10 @@ export default function MobOverlay() {
         </div>
       )}
 
+      <a className="mob-emergency" href="tel:120">
+        ⚠ Estimat – ring nødnummer sjø <strong>120</strong>
+      </a>
+
       <button className="mob-coords-copy" onClick={copyMobPos} title="Kopier posisjon til utklippstavle">
         {copied
           ? <><Check size={16} /> Posisjon kopiert!</>
