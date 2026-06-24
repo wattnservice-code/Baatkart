@@ -315,30 +315,35 @@ html, body, #root {
   50%      { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
 }
 
-/* ── MOB overlay ── */
+/* ── MOB overlay ──
+   MOB er hoyeste prioritet nar aktiv: konkurrerende topp-element skjules
+   (se .mob-active lenger ned). Staende: bredt, luftig kort under hjornerad. */
 .mob-overlay {
   position: absolute;
-  top: 10px; left: 50%;
-  transform: translateX(-50%);
+  top: calc(max(14px, env(safe-area-inset-top) + 8px) + 60px);
+  left: max(8px, env(safe-area-inset-left));
+  right: max(8px, env(safe-area-inset-right));
   z-index: 450;
   background: #dc2626;
   color: white;
-  border-radius: 12px;
-  padding: 8px 12px;
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  width: max-content; max-width: min(280px, calc(100vw - 24px));
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.55);
   text-align: center;
 }
 .mob-title {
-  font-size: 14px; font-weight: 800; letter-spacing: 0.05em;
+  font-size: 15px; font-weight: 800; letter-spacing: 0.05em;
   animation: mob-flash 1s infinite;
 }
 @keyframes mob-flash {
   0%,100% { opacity: 1; }
   50%      { opacity: 0.7; }
 }
-.mob-stats { display: flex; gap: 8px; font-size: 13px; font-weight: 600; }
+.mob-body { display: flex; flex-direction: column; gap: 8px; }
+.mob-info { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.mob-buttons { display: flex; flex-direction: column; gap: 6px; }
+.mob-stats { display: flex; gap: 8px; font-size: 14px; font-weight: 600; justify-content: center; }
 .mob-stat { background: rgba(0,0,0,0.25); border-radius: 6px; padding: 2px 8px; }
 .mob-elapsed { opacity: 0.85; }
 .mob-drift {
@@ -394,6 +399,10 @@ html, body, #root {
   border: 1px solid rgba(255,255,255,0.4); border-radius: 7px;
   padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
 }
+/* Rydd toppen mens MOB er aktiv — MOB-kortet eier topp-lanen */
+.mob-active .ais-status,
+.mob-active .map-banner,
+.mob-active .speed-badge { display: none !important; }
 
 /* ── Spot list panel — primary actions ── */
 .spots-actions {
@@ -1704,20 +1713,25 @@ html, body, #root {
     top: max(14px, calc(env(safe-area-inset-top) + 8px));
     left: max(4px, env(safe-area-inset-left));
   }
-  /* MOB alarm: narrow card on the left of the map (clear of the status column),
-     with the action buttons stacked vertically for breathing room — keeps the
-     map centre (pin + boat) free on a short landscape screen. */
+  /* MOB alarm i landscape: lav vannrett stripe pa tvers av toppen, til hoyre
+     for venstre statuskolonne. Innhold pa EN rad (tittel · info · knapper) sa
+     kortet blir lavt og ikke dekker bat/punkt midt pa skjermen. */
   .mob-overlay {
     top: max(8px, env(safe-area-inset-top));
     left: calc(max(76px, env(safe-area-inset-left) + 56px) + 8px);
-    transform: none;
-    width: max-content;
-    max-width: 240px;
-    gap: 4px; padding: 7px 10px;
+    right: max(8px, env(safe-area-inset-right));
+    flex-direction: row; align-items: center;
+    gap: 12px; padding: 6px 12px;
   }
-  /* Hold knappene vannrett i landscape → lavt kort som ikke dekker båten */
+  .mob-overlay .mob-title { flex-shrink: 0; }
+  .mob-overlay .mob-body { flex: 1; flex-direction: row; align-items: center; gap: 12px; }
+  .mob-overlay .mob-info { flex-direction: row; flex-wrap: wrap; gap: 8px; flex: 1; justify-content: flex-start; }
+  .mob-overlay .mob-emergency { width: auto; flex: 1; min-width: 140px; text-align: left; }
+  .mob-overlay .mob-buttons { flex-direction: row; align-items: center; gap: 6px; flex-shrink: 0; }
   .mob-overlay .mob-actions { flex-direction: row; gap: 6px; }
-  .mob-overlay .mob-goto { flex: 1; padding: 6px 8px; }
+  .mob-overlay .mob-coords-copy { width: auto; margin: 0; white-space: nowrap; }
+  .mob-overlay .mob-clear { margin-top: 0; white-space: nowrap; }
+  .mob-overlay .mob-confirm { width: auto; margin-top: 0; flex-direction: row; align-items: center; }
   .wx-tide-toggle {
     top: max(14px, calc(env(safe-area-inset-top) + 8px));
     bottom: auto;
