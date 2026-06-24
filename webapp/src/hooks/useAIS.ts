@@ -5,6 +5,7 @@ import type { DistUnit, SpeedUnit } from '../store/useMapStore'
 import { getMapInstance } from '../mapInstance'
 import { collisionAlarm } from '../audio'
 import { formatDist } from '../components/NavOverlay'
+import { destPoint, cardinal } from '../geo'
 
 // ── Data model ────────────────────────────────────────────────────────────────
 
@@ -205,12 +206,6 @@ function formatETA(eta: string): string {
   return eta
 }
 
-// Degrees → enkel kardinalretning
-function cardinal(deg: number): string {
-  const dirs = ['N','NØ','Ø','SØ','S','SV','V','NV']
-  return dirs[Math.round(((deg % 360) + 360) % 360 / 45) % 8]
-}
-
 // Human-readable age of AIS position fix
 function dataAge(msgtime: string): string {
   if (!msgtime) return ''
@@ -257,14 +252,6 @@ function navStatusLabel(code: number): string | undefined {
     case 7: return 'Fisker'
     default: return undefined
   }
-}
-
-function destPointAIS(lat: number, lng: number, headingDeg: number, meters: number): [number, number] {
-  const R = 6371000, δ = meters / R, θ = headingDeg * Math.PI / 180
-  const φ1 = lat * Math.PI / 180, λ1 = lng * Math.PI / 180
-  const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(θ))
-  const λ2 = λ1 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2))
-  return [φ2 * 180 / Math.PI, λ2 * 180 / Math.PI]
 }
 
 function vesselIcon(vessel: AISVessel, danger: boolean, zoom: number): L.DivIcon {
@@ -521,7 +508,7 @@ export function useAIS() {
           // Minimum synlig lengde skalerer med zoom; maks 1500 m for å unngå rot
           const minLineM = Math.max(80, Math.pow(2, 22 - zoom) / 8)
           const lineM    = Math.max(minLineM, Math.min(sog * KN_TO_MS * 120, 1500))
-          const lineEnd = destPointAIS(lat, lng, lineDir, lineM)
+          const lineEnd = destPoint(lat, lng, lineDir, lineM)
           const lineColor = danger ? '#ef4444' : vesselTypeColor(vessel.shipType)
 
           vesselsRef.current.set(mmsi, vessel)

@@ -3,43 +3,16 @@ import { useMapStore } from '../store/useMapStore'
 import { waveClass, seriesRange, WindSparkline, WaveBars } from './forecastCharts'
 import { track } from '../analytics'
 import type { SeriesPoint } from './forecastCharts'
-
-interface WxData {
-  windSpeed: number
-  windDir: number
-  temp: number
-  symbol: string
-}
-
-interface WaveData {
-  height: number
-  dir: number
-  seaTemp?: number
-}
-
-function wxEmoji(code: string): string {
-  if (!code) return ''
-  if (code.includes('thunder'))      return '⛈️'
-  if (code.includes('snow'))         return '❄️'
-  if (code.includes('sleet'))        return '🌨️'
-  if (code.includes('heavyrain'))    return '🌧️'
-  if (code.includes('rain'))         return '🌧️'
-  if (code.includes('lightrain') || code.includes('drizzle')) return '🌦️'
-  if (code.includes('fog'))          return '🌫️'
-  if (code.startsWith('clearsky'))   return '☀️'
-  if (code.startsWith('fair'))       return '🌤️'
-  if (code.includes('partlycloudy')) return '⛅'
-  if (code.includes('cloudy'))       return '☁️'
-  return '🌡️'
-}
+import { fetchWeather, fetchOcean, wxEmoji } from '../weather'
+import type { WxPoint, WavePoint } from '../weather'
 
 export default function WeatherOverlay() {
   const weatherVisible    = useMapStore((s) => s.weatherVisible)
   const hideWxTide        = useMapStore((s) => s.hideWxTide)
   const position          = useMapStore((s) => s.position)
   const setCurrentWeather = useMapStore((s) => s.setCurrentWeather)
-  const [wx, setWx]       = useState<WxData | null>(null)
-  const [wave, setWave]   = useState<WaveData | null>(null)
+  const [wx, setWx]       = useState<WxPoint | null>(null)
+  const [wave, setWave]   = useState<WavePoint | null>(null)
   const [windSeries, setWindSeries] = useState<SeriesPoint[]>([])
   const [waveSeries, setWaveSeries] = useState<SeriesPoint[]>([])
   const [expanded, setExpanded] = useState(false)
@@ -59,25 +32,12 @@ export default function WeatherOverlay() {
     setWx(null)
     setWindSeries([])
 
-    fetch(
-      `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${position.lat.toFixed(4)}&lon=${position.lng.toFixed(4)}`,
-      { headers: { 'User-Agent': 'BaatKart/1.0 frode.sighaug@gmail.com' } }
-    )
-      .then((r) => r.json())
-      .then((data) => {
-        const series = data.properties.timeseries
-        const ts0 = series[0].data
-        const d = ts0.instant.details
-        const symbol = ts0.next_1_hours?.summary?.symbol_code
-          ?? ts0.next_6_hours?.summary?.symbol_code
-          ?? ''
-        const w = { windSpeed: d.wind_speed, windDir: d.wind_from_direction, temp: d.air_temperature, symbol }
-        setWx(w)
-        setCurrentWeather(w)
+    fetchWeather(position.lat, position.lng)
+      .then(({ wx, windSeries }) => {
+        setWx(wx)
+        setCurrentWeather({ windSpeed: wx.windSpeed, windDir: wx.windDir, temp: wx.temp })
         setErr(null)
-        setWindSeries(
-          series.slice(0, 8).map((p: any, i: number) => ({ hour: i, v: p.data.instant.details.wind_speed }))
-        )
+        setWindSeries(windSeries)
       })
       .catch(() => setErr('api'))
   }, [weatherVisible, position?.lat, position?.lng, setCurrentWeather])
@@ -90,26 +50,8 @@ export default function WeatherOverlay() {
     setWave(null)
     setWaveSeries([])
 
-    fetch(
-      `https://api.met.no/weatherapi/oceanforecast/2.0/complete?lat=${position.lat.toFixed(4)}&lon=${position.lng.toFixed(4)}`,
-      { headers: { 'User-Agent': 'BaatKart/1.0 frode.sighaug@gmail.com' } }
-    )
-      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
-      .then((data) => {
-        const series = data.properties?.timeseries ?? []
-        const d = series[0]?.data?.instant?.details
-        if (!d || d.sea_surface_wave_height == null) return
-        setWave({
-          height:  d.sea_surface_wave_height,
-          dir:     d.sea_surface_wave_from_direction ?? 0,
-          seaTemp: d.sea_water_temperature,
-        })
-        setWaveSeries(
-          series.slice(0, 8)
-            .filter((p: any) => p.data?.instant?.details?.sea_surface_wave_height != null)
-            .map((p: any, i: number) => ({ hour: i, v: p.data.instant.details.sea_surface_wave_height }))
-        )
-      })
+    fetchOcean(position.lat, position.lng)
+      .then((ocean) => { if (ocean) { setWave(ocean.wave); setWaveSeries(ocean.waveSeries) } })
       .catch(() => {}) // wave er valgfritt — stille feil utenfor kystdekning
   }, [weatherVisible, position?.lat, position?.lng])
 

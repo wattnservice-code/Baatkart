@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { haversineM } from '../geo'
 
 interface Position {
   lat: number
@@ -58,14 +59,6 @@ export interface SavedTrack {
   maxSpeedMs?: number    // peak speed in m/s
   avgSpeedMs?: number    // average moving speed in m/s
   icon?: string          // category key from spotIcons
-}
-
-function _haversineM(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371000
-  const φ1 = (lat1 * Math.PI) / 180, φ2 = (lat2 * Math.PI) / 180
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180, Δλ = ((lng2 - lng1) * Math.PI) / 180
-  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
 const RING_CYCLE = [null, 200, 500, 1000, 2000, 5000] as const
@@ -299,7 +292,7 @@ export const useMapStore = create<MapStore>((set) => ({
         updates.track = track
         if (state.track.length > 0) {
           const prev = state.track[state.track.length - 1]
-          updates.trackDistanceM = state.trackDistanceM + _haversineM(prev.lat, prev.lng, pos.lat, pos.lng)
+          updates.trackDistanceM = state.trackDistanceM + haversineM(prev.lat, prev.lng, pos.lat, pos.lng)
         }
         if (pos.speed > state.trackMaxSpeed) updates.trackMaxSpeed = pos.speed
       }
@@ -315,7 +308,7 @@ export const useMapStore = create<MapStore>((set) => ({
   startTracking: () => set((s) => {
     let d = 0
     for (let i = 1; i < s.track.length; i++)
-      d += _haversineM(s.track[i-1].lat, s.track[i-1].lng, s.track[i].lat, s.track[i].lng)
+      d += haversineM(s.track[i-1].lat, s.track[i-1].lng, s.track[i].lat, s.track[i].lng)
     return { isTracking: true, trackDistanceM: d, trackMaxSpeed: 0 }
   }),
   stopTracking: () => set((s) => { flushTrackSave(s.track); return { isTracking: false } }),
@@ -425,7 +418,7 @@ export const useMapStore = create<MapStore>((set) => ({
   toggleSpotsVisible: () => set((s) => { const v = !s.spotsVisible; localStorage.setItem('spotsVisible', String(v)); return { spotsVisible: v } }),
   addQuickPin: (p) => set((s) => {
     // Skip if there's already a pin within 20 m (double-tap guard)
-    const tooClose = s.quickPins.some((q) => _haversineM(q.lat, q.lng, p.lat, p.lng) < 20)
+    const tooClose = s.quickPins.some((q) => haversineM(q.lat, q.lng, p.lat, p.lng) < 20)
     if (tooClose) return {}
     const label = new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
     const pin: QuickPin = { id: Date.now().toString(), ...p, timestamp: Date.now(), label }

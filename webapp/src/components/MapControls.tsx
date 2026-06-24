@@ -13,39 +13,8 @@ import SettingsPanel from './SettingsPanel'
 import { waveClass, seriesRange, WindSparkline, WaveBars } from './forecastCharts'
 import type { SeriesPoint } from './forecastCharts'
 import { track } from '../analytics'
-
-function cardinal(deg: number): string {
-  return ['N','NØ','Ø','SØ','S','SV','V','NV'][Math.round(deg / 45) % 8]
-}
-function wxEmoji(code: string): string {
-  if (!code) return ''
-  if (code.includes('thunder')) return '⛈️'
-  if (code.includes('snow')) return '❄️'
-  if (code.includes('sleet')) return '🌨️'
-  if (code.includes('rain') || code.includes('drizzle')) return '🌧️'
-  if (code.includes('fog')) return '🌫️'
-  if (code.startsWith('clearsky')) return '☀️'
-  if (code.startsWith('fair')) return '🌤️'
-  if (code.includes('partlycloudy')) return '⛅'
-  if (code.includes('cloudy')) return '☁️'
-  return ''
-}
-
-function bearingDeg(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180
-  const Δλ = (lng2 - lng1) * Math.PI / 180
-  const y = Math.sin(Δλ) * Math.cos(φ2)
-  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ)
-  return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
-}
-
-function distanceM(aLat: number, aLng: number, bLat: number, bLng: number): number {
-  const R = 6371000
-  const φ1 = (aLat * Math.PI) / 180, φ2 = (bLat * Math.PI) / 180
-  const dφ = ((bLat - aLat) * Math.PI) / 180, dλ = ((bLng - aLng) * Math.PI) / 180
-  const x = Math.sin(dφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(dλ / 2) ** 2
-  return 2 * R * Math.asin(Math.sqrt(x))
-}
+import { haversineM, bearingDeg, cardinal } from '../geo'
+import { fetchWeather, fetchOcean, wxEmoji } from '../weather'
 
 // Returns formatted ETA string or null if speed is too low to be meaningful
 function formatEta(distM: number, speedMs: number): string | null {
@@ -161,33 +130,11 @@ export default function MapControls() {
     setSpotWx(null); setSpotWave(null)
     setSpotWindSeries([]); setSpotWaveSeries([]); setSpotForecastOpen(false)
     const { lat, lng } = spotMenu
-    const ua = { 'User-Agent': 'BaatKart/1.0 frode.sighaug@gmail.com' }
-    fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}`, { headers: ua })
-      .then(r => r.json())
-      .then(data => {
-        const series = data.properties.timeseries
-        const ts0 = series[0].data
-        const d = ts0.instant.details
-        const symbol = ts0.next_1_hours?.summary?.symbol_code ?? ts0.next_6_hours?.summary?.symbol_code ?? ''
-        setSpotWx({ windSpeed: d.wind_speed, windDir: d.wind_from_direction, temp: d.air_temperature, symbol })
-        setSpotWindSeries(
-          series.slice(0, 8).map((p: any, i: number) => ({ hour: i, v: p.data.instant.details.wind_speed }))
-        )
-      })
+    fetchWeather(lat, lng)
+      .then(({ wx, windSeries }) => { setSpotWx(wx); setSpotWindSeries(windSeries) })
       .catch(() => {})
-    fetch(`https://api.met.no/weatherapi/oceanforecast/2.0/complete?lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}`, { headers: ua })
-      .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then(data => {
-        const series = data.properties?.timeseries ?? []
-        const d = series[0]?.data?.instant?.details
-        if (!d || d.sea_surface_wave_height == null) return
-        setSpotWave({ height: d.sea_surface_wave_height, dir: d.sea_surface_wave_from_direction ?? 0, seaTemp: d.sea_water_temperature })
-        setSpotWaveSeries(
-          series.slice(0, 8)
-            .filter((p: any) => p.data?.instant?.details?.sea_surface_wave_height != null)
-            .map((p: any, i: number) => ({ hour: i, v: p.data.instant.details.sea_surface_wave_height }))
-        )
-      })
+    fetchOcean(lat, lng)
+      .then((ocean) => { if (ocean) { setSpotWave(ocean.wave); setSpotWaveSeries(ocean.waveSeries) } })
       .catch(() => {})
   }, [spotMenu?.lat, spotMenu?.lng, isOnline])
 
@@ -336,7 +283,7 @@ export default function MapControls() {
       {quickPinListOpen && (() => {
         const withDist = quickPins.map((p) => ({
           pin: p,
-          dist: position ? distanceM(position.lat, position.lng, p.lat, p.lng) : null,
+          dist: position ? haversineM(position.lat, position.lng, p.lat, p.lng) : null,
           brg:  position ? bearingDeg(position.lat, position.lng, p.lat, p.lng) : null,
         }))
         return (
@@ -411,7 +358,7 @@ export default function MapControls() {
             <button className="spot-action-close" onClick={closeSpotMenu}><X size={18} /></button>
           </div>
           {position && (() => {
-            const dist = distanceM(position.lat, position.lng, spotMenu.lat, spotMenu.lng)
+            const dist = haversineM(position.lat, position.lng, spotMenu.lat, spotMenu.lng)
             const eta  = formatEta(dist, position.speed ?? 0)
             return (
               <div className="spot-action-dist-block">

@@ -9,6 +9,7 @@ import { getTile } from '../offline/tileDb'
 import { tileKey } from '../offline/tileCalc'
 import { setMapInstance } from '../mapInstance'
 import { iconEmoji } from '../spotIcons'
+import { haversineM, destPoint } from '../geo'
 
 // Track cache vs network tile loads and report to store (debounced)
 let _cacheHits = 0
@@ -130,26 +131,6 @@ function shortestAngle(from: number, to: number): number {
   if (d > 180) d -= 360
   if (d < -180) d += 360
   return d
-}
-
-function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371000
-  const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180
-  const Δφ = (lat2 - lat1) * Math.PI / 180, Δλ = (lng2 - lng1) * Math.PI / 180
-  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-}
-
-// Compute endpoint given start, heading (degrees), distance (meters)
-function destPoint(lat: number, lng: number, heading: number, meters: number): L.LatLngExpression {
-  const R = 6371000
-  const δ = meters / R
-  const θ = (heading * Math.PI) / 180
-  const φ1 = (lat * Math.PI) / 180
-  const λ1 = (lng * Math.PI) / 180
-  const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(θ))
-  const λ2 = λ1 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2))
-  return [φ2 * 180 / Math.PI, λ2 * 180 / Math.PI]
 }
 
 // Keep the boat on screen in follow mode, on any size/orientation. When moving

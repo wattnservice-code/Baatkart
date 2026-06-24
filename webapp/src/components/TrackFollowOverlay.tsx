@@ -2,15 +2,9 @@ import { useMemo } from 'react'
 import { useMapStore } from '../store/useMapStore'
 import type { SavedTrack } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
+import { haversineM } from '../geo'
 
-const R = 6371000
-
-function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const φ1 = (lat1 * Math.PI) / 180, φ2 = (lat2 * Math.PI) / 180
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180, Δλ = ((lng2 - lng1) * Math.PI) / 180
-  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
+const R = 6371000 // Earth radius (m) — used by the cross-track math below
 
 function bearingRad(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const φ1 = (lat1 * Math.PI) / 180, φ2 = (lat2 * Math.PI) / 180

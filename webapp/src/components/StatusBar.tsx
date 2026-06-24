@@ -2,11 +2,7 @@ import { useEffect, useState } from 'react'
 import { MapPin, Compass, WifiOff, Wifi, Copy, Check, Circle } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
-
-function headingLabel(deg: number): string {
-  const dirs = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV']
-  return dirs[Math.round(deg / 45) % 8]
-}
+import { cardinal } from '../geo'
 
 export default function StatusBar() {
   const position          = useMapStore((s) => s.position)
@@ -86,7 +82,7 @@ export default function StatusBar() {
           const deg = useCompass ? compassHeading! : position?.heading
           return <>
             <span className="status-value">{deg != null ? `${Math.round(deg)}°` : '--'}</span>
-            <span className="status-unit">{deg != null ? headingLabel(deg) : ''}</span>
+            <span className="status-unit">{deg != null ? cardinal(deg) : ''}</span>
             {useCompass && <span className="status-unit" style={{ marginLeft: 2, opacity: 0.6 }}>KMP</span>}
           </>
         })()}

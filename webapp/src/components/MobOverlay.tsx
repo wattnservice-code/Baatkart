@@ -2,30 +2,7 @@ import { useEffect, useState } from 'react'
 import { Copy, Check } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
-
-function windDirLabel(deg: number): string {
-  const dirs = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV']
-  return dirs[Math.round(deg / 45) % 8]
-}
-
-function haversineM(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371000
-  const φ1 = (lat1 * Math.PI) / 180
-  const φ2 = (lat2 * Math.PI) / 180
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180
-  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
-
-function bearingDeg(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const φ1 = (lat1 * Math.PI) / 180
-  const φ2 = (lat2 * Math.PI) / 180
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180
-  const y = Math.sin(Δλ) * Math.cos(φ2)
-  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ)
-  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360
-}
+import { haversineM, bearingDeg, cardinal } from '../geo'
 
 function formatElapsed(ts: number) {
   const s = Math.floor((Date.now() - ts) / 1000)
@@ -66,7 +43,7 @@ export default function MobOverlay() {
     }
     lines.push(`Posisjon: ${mobPoint.lat.toFixed(5)}°N ${mobPoint.lng.toFixed(5)}°E`)
     if (currentWeather) {
-      const dir = windDirLabel(currentWeather.windDir)
+      const dir = cardinal(currentWeather.windDir)
       lines.push(`Vær: ${currentWeather.windSpeed.toFixed(1)} m/s ${dir}, ${Math.round(currentWeather.temp)}°C`)
     }
     if (boatInfo.phone) lines.push(`Kontakt: ${boatInfo.phone}`)
