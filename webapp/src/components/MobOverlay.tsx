@@ -25,6 +25,8 @@ export default function MobOverlay() {
   const [copied, setCopied] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
   const [now, setNow] = useState(Date.now())
+  // Auto-åpent ved aktivering (valg umiddelbart i krise), kollapser når du velger
+  const [expanded, setExpanded] = useState(true)
 
   useEffect(() => {
     if (!mobPoint) return
@@ -36,14 +38,8 @@ export default function MobOverlay() {
     return () => clearInterval(id)
   }, [mobPoint])
 
-  // Nullstill bekreftelse hvis MOB endres/forsvinner
-  useEffect(() => { setConfirmClear(false) }, [mobPoint])
-
-  // Marker MOB-aktiv på <body> så konkurrerende topp-element kan skjules via CSS
-  useEffect(() => {
-    document.body.classList.toggle('mob-active', !!mobPoint)
-    return () => document.body.classList.remove('mob-active')
-  }, [mobPoint])
+  // Ny MOB: nullstill bekreftelse og åpne panelet automatisk
+  useEffect(() => { setConfirmClear(false); setExpanded(true) }, [mobPoint])
 
   const copyMobPos = () => {
     if (!mobPoint) return
@@ -78,60 +74,79 @@ export default function MobOverlay() {
   const wind = currentWeather ? { windSpeed: currentWeather.windSpeed, windDir: currentWeather.windDir } : null
   const drift = mobDrift(mobPoint.lat, mobPoint.lng, elapsedSec, wind, currentSea)
 
+  // Kollapset: liten pulserende MOB-knapp øverst venstre. Dekker ikke båt/FAB.
+  if (!expanded) {
+    return (
+      <button className="mob-badge" onClick={() => setExpanded(true)} title="Mann over bord – trykk for valg">
+        <span className="mob-badge-icon">⚠</span>
+        <span className="mob-badge-meta">
+          <span className="mob-badge-label">MOB</span>
+          {dist !== null && <span className="mob-badge-dist">{formatDist(dist, distUnit)}</span>}
+        </span>
+      </button>
+    )
+  }
+
+  // Utvidet: «Hva vil du gjøre?»-panel. Lukk → tilbake til knapp, fortsatt MOB.
   return (
     <div className="mob-overlay">
-      <div className="mob-title">⚠ MANN OVER BORD</div>
-
-      <div className="mob-body">
-        <div className="mob-info">
-          <div className="mob-stats">
-            {dist !== null && <span className="mob-stat">{formatDist(dist, distUnit)}</span>}
-            {brg !== null && <span className="mob-stat">{Math.round(brg)}°</span>}
-            <span className="mob-stat mob-elapsed">{elapsed}</span>
-          </div>
-
-          {drift && drift.distance >= 15 && (
-            <div className="mob-drift" title="Estimert drift fra vind + strøm">
-              ➤ Drift: {formatDist(drift.distance, distUnit)} {cardinal(drift.bearing)}
-              <span className="mob-drift-sub">±{Math.round(drift.radius)} m</span>
-            </div>
-          )}
-
-          <a className="mob-emergency" href="tel:120">
-            ⚠ Estimat – ring nødnummer sjø <strong>120</strong>
-          </a>
-        </div>
-
-        <div className="mob-buttons">
-          <button className="mob-coords-copy" onClick={copyMobPos} title="Kopier posisjon til utklippstavle">
-            {copied
-              ? <><Check size={16} /> Kopiert!</>
-              : <><Copy size={16} /> Kopier posisjon</>
-            }
-          </button>
-
-          <div className="mob-actions">
-            <button className="mob-goto" onClick={() => setNavTarget({ lat: mobPoint.lat, lng: mobPoint.lng, name: 'MOB' })}>
-              Naviger dit
-            </button>
-            <button className="mob-goto" onClick={() => setFlyTo({ lat: mobPoint.lat, lng: mobPoint.lng })}>
-              Vis på kart
-            </button>
-          </div>
-
-          {confirmClear ? (
-            <div className="mob-confirm">
-              <span className="mob-confirm-q">Er personen funnet? Posisjonen slettes.</span>
-              <div className="mob-confirm-btns">
-                <button className="mob-confirm-yes" onClick={clearMob}>Ja, avslutt</button>
-                <button className="mob-confirm-no" onClick={() => setConfirmClear(false)}>Avbryt</button>
-              </div>
-            </div>
-          ) : (
-            <button className="mob-clear" onClick={() => setConfirmClear(true)}>Person funnet ✓</button>
-          )}
-        </div>
+      <div className="mob-head">
+        <span className="mob-title">⚠ MANN OVER BORD</span>
+        <button className="mob-collapse" onClick={() => setExpanded(false)} title="Lukk – fortsatt i MOB-modus">✕</button>
       </div>
+
+      <div className="mob-stats">
+        {dist !== null && <span className="mob-stat">{formatDist(dist, distUnit)}</span>}
+        {brg !== null && <span className="mob-stat">{Math.round(brg)}°</span>}
+        <span className="mob-stat mob-elapsed">{elapsed}</span>
+      </div>
+
+      {drift && drift.distance >= 15 && (
+        <div className="mob-drift" title="Estimert drift fra vind + strøm">
+          ➤ Drift: {formatDist(drift.distance, distUnit)} {cardinal(drift.bearing)}
+          <span className="mob-drift-sub">±{Math.round(drift.radius)} m</span>
+        </div>
+      )}
+
+      <a className="mob-emergency" href="tel:120">
+        ⚠ Estimat – ring nødnummer sjø <strong>120</strong>
+      </a>
+
+      <div className="mob-prompt">Hva vil du gjøre?</div>
+
+      <div className="mob-actions">
+        <button
+          className="mob-goto"
+          onClick={() => { setNavTarget({ lat: mobPoint.lat, lng: mobPoint.lng, name: 'MOB' }); setExpanded(false) }}
+        >
+          Naviger dit
+        </button>
+        <button
+          className="mob-goto"
+          onClick={() => { setFlyTo({ lat: mobPoint.lat, lng: mobPoint.lng }); setExpanded(false) }}
+        >
+          Vis på kart
+        </button>
+      </div>
+
+      <button className="mob-coords-copy" onClick={copyMobPos} title="Kopier posisjon til utklippstavle">
+        {copied
+          ? <><Check size={16} /> Posisjon kopiert!</>
+          : <><Copy size={16} /> Kopier posisjon</>
+        }
+      </button>
+
+      {confirmClear ? (
+        <div className="mob-confirm">
+          <span className="mob-confirm-q">Er personen funnet? Posisjonen slettes.</span>
+          <div className="mob-confirm-btns">
+            <button className="mob-confirm-yes" onClick={clearMob}>Ja, avslutt</button>
+            <button className="mob-confirm-no" onClick={() => setConfirmClear(false)}>Avbryt</button>
+          </div>
+        </div>
+      ) : (
+        <button className="mob-clear" onClick={() => setConfirmClear(true)}>Person funnet ✓</button>
+      )}
     </div>
   )
 }

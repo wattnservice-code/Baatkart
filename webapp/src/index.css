@@ -315,39 +315,70 @@ html, body, #root {
   50%      { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
 }
 
-/* ── MOB overlay ──
-   MOB er hoyeste prioritet nar aktiv: konkurrerende topp-element skjules
-   (se .mob-active lenger ned). Staende: bredt, luftig kort under hjornerad. */
-.mob-overlay {
-  position: absolute;
-  top: calc(max(14px, env(safe-area-inset-top) + 8px) + 60px);
-  left: max(8px, env(safe-area-inset-left));
-  right: max(8px, env(safe-area-inset-right));
-  z-index: 450;
-  background: #dc2626;
-  color: white;
-  border-radius: 14px;
-  padding: 10px 14px;
-  display: flex; flex-direction: column; align-items: stretch; gap: 8px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.55);
-  text-align: center;
-}
-.mob-title {
-  font-size: 15px; font-weight: 800; letter-spacing: 0.05em;
-  animation: mob-flash 1s infinite;
-}
+/* ── MOB ──
+   To tilstander: kollapset knapp (.mob-badge) som default-indikator, og
+   utvidet «Hva vil du gjore»-panel (.mob-overlay). Begge ligger oppe til
+   venstre sa de IKKE dekker baten (senter) eller FAB-kolonnen (nede hoyre). */
 @keyframes mob-flash {
   0%,100% { opacity: 1; }
   50%      { opacity: 0.7; }
 }
-.mob-body { display: flex; flex-direction: column; gap: 8px; }
-.mob-info { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.mob-buttons { display: flex; flex-direction: column; gap: 6px; }
+
+/* Kollapset knapp — kompakt pille, pulserende */
+.mob-badge {
+  position: absolute;
+  top: max(14px, calc(env(safe-area-inset-top) + 8px));
+  left: max(8px, env(safe-area-inset-left));
+  z-index: 450;
+  display: flex; align-items: center; gap: 7px;
+  background: #dc2626; color: white;
+  border: 2px solid #fca5a5; border-radius: 999px;
+  padding: 5px 12px 5px 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.45);
+  animation: mob-idle 2.5s infinite;
+}
+.mob-badge:active { transform: scale(0.95); }
+.mob-badge-icon { font-size: 18px; line-height: 1; }
+.mob-badge-meta { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
+.mob-badge-label { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; }
+.mob-badge-dist { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Utvidet panel — kompakt, oppe til venstre, ruller ved behov */
+.mob-overlay {
+  position: absolute;
+  top: max(10px, calc(env(safe-area-inset-top) + 6px));
+  left: max(8px, env(safe-area-inset-left));
+  z-index: 450;
+  width: min(280px, calc(100vw - 24px));
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  background: #dc2626;
+  color: white;
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 7px;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.6);
+  text-align: center;
+}
+.mob-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mob-title {
+  font-size: 14px; font-weight: 800; letter-spacing: 0.04em;
+  animation: mob-flash 1s infinite;
+}
+.mob-collapse {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  background: rgba(0,0,0,0.25); border: none; border-radius: 8px;
+  color: white; font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.mob-collapse:active { background: rgba(0,0,0,0.45); }
 .mob-stats { display: flex; gap: 8px; font-size: 14px; font-weight: 600; justify-content: center; }
 .mob-stat { background: rgba(0,0,0,0.25); border-radius: 6px; padding: 2px 8px; }
 .mob-elapsed { opacity: 0.85; }
 .mob-drift {
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
   font-size: 12px; font-weight: 600;
   background: rgba(245,158,11,0.25); border: 1px solid rgba(245,158,11,0.6);
   border-radius: 7px; padding: 3px 9px;
@@ -362,47 +393,46 @@ html, body, #root {
 }
 .mob-emergency strong { font-size: 14px; letter-spacing: 0.04em; }
 .mob-emergency:active { background: rgba(0,0,0,0.5); }
+.mob-prompt { font-size: 11px; font-weight: 700; opacity: 0.85; letter-spacing: 0.03em; margin-top: 1px; }
 .mob-coords-copy {
   display: flex; align-items: center; justify-content: center; gap: 6px;
-  width: 100%; margin: 2px 0;
+  width: 100%;
   background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
-  color: white; border-radius: 8px; padding: 7px 10px;
+  color: white; border-radius: 8px; padding: 8px 10px;
   font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .mob-coords-copy:active { background: rgba(0,0,0,0.45); }
 .mob-actions { display: flex; gap: 8px; }
 .mob-goto {
+  flex: 1;
   background: rgba(255,255,255,0.2); color: white;
   border: 1px solid rgba(255,255,255,0.4); border-radius: 8px;
-  padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 9px 10px; font-size: 13px; font-weight: 600; cursor: pointer;
 }
+.mob-goto:active { background: rgba(255,255,255,0.32); }
 .mob-clear {
   background: white; color: #dc2626;
   border: none; border-radius: 8px;
-  padding: 7px 16px; font-size: 13px; font-weight: 700;
-  cursor: pointer; margin-top: 2px;
+  padding: 9px 16px; font-size: 13px; font-weight: 700;
+  cursor: pointer;
 }
 .mob-confirm {
   display: flex; flex-direction: column; gap: 6px; align-items: stretch;
-  width: 100%; margin-top: 2px;
+  width: 100%;
   background: rgba(0,0,0,0.25); border-radius: 8px; padding: 8px;
 }
 .mob-confirm-q { font-size: 12px; font-weight: 600; }
 .mob-confirm-btns { display: flex; gap: 8px; }
 .mob-confirm-yes {
   flex: 1; background: white; color: #dc2626;
-  border: none; border-radius: 7px; padding: 8px; font-size: 13px;
+  border: none; border-radius: 7px; padding: 9px; font-size: 13px;
   font-weight: 700; cursor: pointer;
 }
 .mob-confirm-no {
   flex: 1; background: rgba(255,255,255,0.15); color: white;
   border: 1px solid rgba(255,255,255,0.4); border-radius: 7px;
-  padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer;
 }
-/* Rydd toppen mens MOB er aktiv — MOB-kortet eier topp-lanen */
-.mob-active .ais-status,
-.mob-active .map-banner,
-.mob-active .speed-badge { display: none !important; }
 
 /* ── Spot list panel — primary actions ── */
 .spots-actions {
@@ -1713,25 +1743,17 @@ html, body, #root {
     top: max(14px, calc(env(safe-area-inset-top) + 8px));
     left: max(4px, env(safe-area-inset-left));
   }
-  /* MOB alarm i landscape: lav vannrett stripe pa tvers av toppen, til hoyre
-     for venstre statuskolonne. Innhold pa EN rad (tittel · info · knapper) sa
-     kortet blir lavt og ikke dekker bat/punkt midt pa skjermen. */
+  /* MOB i landscape: bade knapp og panel forskyves til hoyre for venstre
+     statuskolonne, slik at de ikke ligger oppa den. */
+  .mob-badge {
+    top: max(8px, env(safe-area-inset-top));
+    left: calc(max(76px, env(safe-area-inset-left) + 56px) + 8px);
+  }
   .mob-overlay {
     top: max(8px, env(safe-area-inset-top));
     left: calc(max(76px, env(safe-area-inset-left) + 56px) + 8px);
-    right: max(8px, env(safe-area-inset-right));
-    flex-direction: row; align-items: center;
-    gap: 12px; padding: 6px 12px;
+    max-height: calc(100vh - 24px);
   }
-  .mob-overlay .mob-title { flex-shrink: 0; }
-  .mob-overlay .mob-body { flex: 1; flex-direction: row; align-items: center; gap: 12px; }
-  .mob-overlay .mob-info { flex-direction: row; flex-wrap: wrap; gap: 8px; flex: 1; justify-content: flex-start; }
-  .mob-overlay .mob-emergency { width: auto; flex: 1; min-width: 140px; text-align: left; }
-  .mob-overlay .mob-buttons { flex-direction: row; align-items: center; gap: 6px; flex-shrink: 0; }
-  .mob-overlay .mob-actions { flex-direction: row; gap: 6px; }
-  .mob-overlay .mob-coords-copy { width: auto; margin: 0; white-space: nowrap; }
-  .mob-overlay .mob-clear { margin-top: 0; white-space: nowrap; }
-  .mob-overlay .mob-confirm { width: auto; margin-top: 0; flex-direction: row; align-items: center; }
   .wx-tide-toggle {
     top: max(14px, calc(env(safe-area-inset-top) + 8px));
     bottom: auto;
