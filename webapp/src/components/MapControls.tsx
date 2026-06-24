@@ -127,6 +127,21 @@ export default function MapControls() {
   const useGpsPos = () => { if (position) setGpsSpot({ lat: position.lat, lng: position.lng }) }
   const useMapPos = () => { setAddingSpot(true) }
 
+  // Pan map so the tapped pin stays visible above the spot-action-card.
+  // Card is ~220px tall + 20px bottom gap = 240px from bottom of map-wrapper.
+  // Only pan if pin is already hidden behind or near the card.
+  useEffect(() => {
+    if (!spotMenu) return
+    const map = getMapInstance()
+    if (!map) return
+    const size = map.getSize()
+    const pinPt = map.latLngToContainerPoint([spotMenu.lat, spotMenu.lng])
+    const targetY = (size.y - 260) * 0.5
+    if (pinPt.y > targetY) {
+      map.panBy([0, pinPt.y - targetY], { animate: true, duration: 0.25 })
+    }
+  }, [spotMenu?.lat, spotMenu?.lng])
+
   useEffect(() => {
     if (!spotMenu || !isOnline) {
       setSpotWx(null); setSpotWave(null)
