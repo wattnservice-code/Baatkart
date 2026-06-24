@@ -190,7 +190,6 @@ export default function MapView() {
   const rangeRingRef    = useRef<L.Circle | null>(null)
   const accuracyRingRef = useRef<L.Circle | null>(null)
   const ringLabelRef    = useRef<L.Marker | null>(null)
-  const mobTrackLineRef   = useRef<L.Polyline | null>(null)
   const mobMarkerRef      = useRef<L.Marker | null>(null)
   const mobDriftLineRef   = useRef<L.Polyline | null>(null)
   const mobDriftMarkerRef = useRef<L.Marker | null>(null)
@@ -220,7 +219,6 @@ export default function MapView() {
   const position         = useMapStore((s) => s.position)
   const positionRef      = useRef(position)
   const track            = useMapStore((s) => s.track)
-  const mobTrack         = useMapStore((s) => s.mobTrack)
   const mobPoint         = useMapStore((s) => s.mobPoint)
   const currentWeather   = useMapStore((s) => s.currentWeather)
   const currentSea       = useMapStore((s) => s.currentSea)
@@ -589,22 +587,6 @@ export default function MapView() {
     ).addTo(mapRef.current)
     return () => { followTrackLineRef.current?.remove(); followTrackLineRef.current = null }
   }, [followingTrack])
-
-  // MOB rescue track (red)
-  useEffect(() => {
-    if (!mapRef.current) return
-    if (mobTrack.length < 2) {
-      mobTrackLineRef.current?.remove()
-      mobTrackLineRef.current = null
-      return
-    }
-    const pts = mobTrack.map((p) => [p.lat, p.lng] as L.LatLngExpression)
-    if (!mobTrackLineRef.current) {
-      mobTrackLineRef.current = L.polyline(pts, { color: '#ef4444', weight: 3, opacity: 0.9, dashArray: '8, 5' }).addTo(mapRef.current)
-    } else {
-      mobTrackLineRef.current.setLatLngs(pts)
-    }
-  }, [mobTrack])
 
   // Navigation line
   useEffect(() => {

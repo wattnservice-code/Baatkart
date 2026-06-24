@@ -3,6 +3,7 @@ import { Copy, Check } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
 import { haversineM, bearingDeg, cardinal, mobDrift } from '../geo'
+import { fetchWeather, fetchOcean } from '../weather'
 
 function formatElapsed(ts: number) {
   const s = Math.floor((Date.now() - ts) / 1000)
@@ -20,6 +21,8 @@ export default function MobOverlay() {
   const setNavTarget  = useMapStore((s) => s.setNavTarget)
   const currentWeather = useMapStore((s) => s.currentWeather)
   const currentSea     = useMapStore((s) => s.currentSea)
+  const setCurrentWeather = useMapStore((s) => s.setCurrentWeather)
+  const setCurrentSea     = useMapStore((s) => s.setCurrentSea)
   const boatInfo       = useMapStore((s) => s.boatInfo)
   const [elapsed, setElapsed] = useState('')
   const [copied, setCopied] = useState(false)
@@ -40,6 +43,18 @@ export default function MobOverlay() {
 
   // Ny MOB: nullstill bekreftelse og åpne panelet automatisk
   useEffect(() => { setConfirmClear(false); setExpanded(true) }, [mobPoint])
+
+  // Hent vind + strøm ved MOB-punktet så driftestimatet alltid virker,
+  // også når værpanelet er av. Henter én gang per ny MOB.
+  useEffect(() => {
+    if (!mobPoint) return
+    fetchWeather(mobPoint.lat, mobPoint.lng)
+      .then(({ wx }) => setCurrentWeather({ windSpeed: wx.windSpeed, windDir: wx.windDir, temp: wx.temp }))
+      .catch(() => {})
+    fetchOcean(mobPoint.lat, mobPoint.lng)
+      .then((ocean) => { if (ocean) setCurrentSea(ocean.current) })
+      .catch(() => {})
+  }, [mobPoint, setCurrentWeather, setCurrentSea])
 
   const copyMobPos = () => {
     if (!mobPoint) return

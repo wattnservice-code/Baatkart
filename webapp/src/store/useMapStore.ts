@@ -71,7 +71,6 @@ interface MapStore {
   track: TrackPoint[]
   savedSpots: SavedSpot[]
   mobPoint: MobPoint | null
-  mobTrack: TrackPoint[]
   followBoat: boolean
   addingSpot: boolean
   activePanel: 'spots' | 'turer' | 'meg' | null
@@ -248,7 +247,6 @@ export const useMapStore = create<MapStore>((set) => ({
   track: loadTrack(),
   savedSpots: loadSpots(),
   mobPoint: loadMob(),
-  mobTrack: [],
   followBoat: true,
   addingSpot: false,
   activePanel: null,
@@ -302,9 +300,6 @@ export const useMapStore = create<MapStore>((set) => ({
         }
         if (pos.speed > state.trackMaxSpeed) updates.trackMaxSpeed = pos.speed
       }
-      if (state.mobPoint) {
-        updates.mobTrack = [...state.mobTrack, { lat: pos.lat, lng: pos.lng, timestamp: pos.timestamp }]
-      }
       return updates
     }),
 
@@ -338,9 +333,9 @@ export const useMapStore = create<MapStore>((set) => ({
   setMob: (pos) => {
     const mob = { ...pos, timestamp: Date.now() }
     saveMob(mob)
-    return set({ mobPoint: mob, mobTrack: [] })
+    return set({ mobPoint: mob })
   },
-  clearMob: () => { saveMob(null); return set({ mobPoint: null, mobTrack: [] }) },
+  clearMob: () => { saveMob(null); return set({ mobPoint: null }) },
 
   setFollowBoat: (v) => set({ followBoat: v }),
   setAddingSpot: (v) => set({ addingSpot: v }),
