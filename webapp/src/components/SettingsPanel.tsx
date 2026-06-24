@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import pkgJson from '../../package.json'
+import { APP_VERSION } from '../version'
 import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, User, Info } from 'lucide-react'
 import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
@@ -121,7 +121,7 @@ export default function SettingsPanel({ onClose }: Props) {
           </button>
 
           <div style={{ padding: '20px 16px 4px', textAlign: 'center', fontSize: 11, color: '#475569' }}>
-            Båtkart v{pkgJson.version}
+            Båtkart v{APP_VERSION}
           </div>
 
         </div>
