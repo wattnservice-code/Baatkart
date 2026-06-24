@@ -385,8 +385,9 @@ export default function MapView() {
     if (!searchPinRef.current) {
       searchPinRef.current = L.marker([searchPin.lat, searchPin.lng], { icon, zIndexOffset: 600 }).addTo(map)
       searchPinRef.current.on('click', () => {
-        const sp = useMapStore.getState().searchPin
-        if (sp) useMapStore.getState().setSpotMenu({ lat: sp.lat, lng: sp.lng, name: sp.name })
+        const s = useMapStore.getState()
+        if (s.mobPoint) return
+        if (s.searchPin) s.setSpotMenu({ lat: s.searchPin.lat, lng: s.searchPin.lng, name: s.searchPin.name })
       })
     } else {
       searchPinRef.current.setLatLng([searchPin.lat, searchPin.lng]).setIcon(icon)
@@ -770,6 +771,7 @@ export default function MapView() {
         const marker = L.marker([spot.lat, spot.lng], { icon, zIndexOffset: 500 }).addTo(map)
         marker.on('click', () => {
           const s = useMapStore.getState()
+          if (s.mobPoint) return
           s.setActiveSpot(spot.id)
           s.setSpotMenu({ lat: spot.lat, lng: spot.lng, name: spot.name, id: spot.id })
         })
@@ -815,6 +817,7 @@ export default function MapView() {
       if (addingSpot) { setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng }); return }
       const s = useMapStore.getState()
       if (s.spotMenu) return
+      if (s.mobPoint) return
       const lat = e.latlng.lat, lng = e.latlng.lng
       const name = 'Valgt punkt'
       s.setSearchPin({ lat, lng, name })
