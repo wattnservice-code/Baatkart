@@ -10,7 +10,6 @@ import SpotListPanel from './SpotListPanel'
 import TripsPanel from './TripsPanel'
 import SpotDialog from './SpotDialog'
 import SettingsPanel from './SettingsPanel'
-import QuickPinBar from './QuickPinBar'
 import { waveClass, seriesRange, WindSparkline, WaveBars } from './forecastCharts'
 import type { SeriesPoint } from './forecastCharts'
 import { track } from '../analytics'
@@ -30,6 +29,14 @@ function wxEmoji(code: string): string {
   if (code.includes('partlycloudy')) return '⛅'
   if (code.includes('cloudy')) return '☁️'
   return ''
+}
+
+function bearingDeg(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180
+  const Δλ = (lng2 - lng1) * Math.PI / 180
+  const y = Math.sin(Δλ) * Math.cos(φ2)
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ)
+  return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
 }
 
 function distanceM(aLat: number, aLng: number, bLat: number, bLng: number): number {
@@ -116,6 +123,9 @@ export default function MapControls() {
   const setNavPreview    = useMapStore((s) => s.setNavPreview)
   const setSearchPin     = useMapStore((s) => s.setSearchPin)
   const removeSpot       = useMapStore((s) => s.removeSpot)
+  const setNavTarget     = useMapStore((s) => s.setNavTarget)
+  const removeQuickPin   = useMapStore((s) => s.removeQuickPin)
+  const clearQuickPins   = useMapStore((s) => s.clearQuickPins)
 
   // Close the card. For a dropped/search pin (no saved id) also remove the
   // blue pin from the map; for a saved spot just close (keep its yellow pin).
@@ -318,7 +328,67 @@ export default function MapControls() {
       {activePanel === 'turer' && <TripsPanel onClose={() => setActivePanel(null)} />}
       {activePanel === 'meg' && <SettingsPanel onClose={() => setActivePanel(null)} />}
       {gpsSpot && <SpotDialog lat={gpsSpot.lat} lng={gpsSpot.lng} onClose={() => setGpsSpot(null)} />}
-      {quickPinListOpen && <QuickPinBar onClose={() => setQuickPinListOpen(false)} />}
+
+      {quickPinListOpen && (() => {
+        const withDist = quickPins.map((p) => ({
+          pin: p,
+          dist: position ? distanceM(position.lat, position.lng, p.lat, p.lng) : null,
+          brg:  position ? bearingDeg(position.lat, position.lng, p.lat, p.lng) : null,
+        }))
+        return (
+          <div className="quickpin-popup">
+            <div className="quickpin-popup-head">
+              <span>⊕ Merker ({quickPins.length})</span>
+              <button className="quickpin-popup-close" onClick={() => setQuickPinListOpen(false)}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className="quickpin-popup-list">
+              {withDist.map(({ pin, dist, brg }, idx) => (
+                <div
+                  key={pin.id}
+                  className="quickpin-popup-row"
+                  onClick={() => setFlyTo({ lat: pin.lat, lng: pin.lng })}
+                >
+                  <span className="quickpin-popup-num">{idx + 1}</span>
+                  <div className="quickpin-popup-info">
+                    <span className="quickpin-popup-label">{pin.label}</span>
+                    {dist !== null && (
+                      <span className="quickpin-popup-dist">
+                        {formatDist(dist, distUnit as 'nm' | 'm' | 'km')} · {Math.round(brg!)}°
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    className="quickpin-popup-nav"
+                    title="Navigér hit"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setNavTarget({ lat: pin.lat, lng: pin.lng, name: `Merke ${pin.label}` })
+                      removeQuickPin(pin.id)
+                      setQuickPinListOpen(false)
+                    }}
+                  >
+                    <Navigation size={16} />
+                  </button>
+                  <button
+                    className="quickpin-popup-del"
+                    title="Fjern merke"
+                    onClick={(e) => { e.stopPropagation(); removeQuickPin(pin.id) }}
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            {quickPins.length > 1 && (
+              <button className="quickpin-popup-clear" onClick={clearQuickPins}>
+                <Trash2 size={13} /> Fjern alle
+              </button>
+            )}
+          </div>
+        )
+      })()}
 
       {spotMenu && <div className="spot-action-backdrop" onClick={closeSpotMenu} />}
       {spotMenu && (
