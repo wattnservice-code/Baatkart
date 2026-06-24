@@ -160,7 +160,7 @@ interface MapStore {
   toggleAis: () => void
   toggleAisShowStationary: () => void
   setAisKey: (key: string) => void
-  setAisStatus: (s: { state: 'idle' | 'connecting' | 'live' | 'warn' | 'error'; count: number; message: string }) => void
+  setAisStatus: (s: { state: 'idle' | 'connecting' | 'live' | 'warn' | 'error'; count: number; message: string; dangerPos?: { lat: number; lng: number } }) => void
   setBoatInfo: (info: Partial<BoatInfo>) => void
   toggleLookAhead: () => void
   toggleHeadingUp: () => void
