@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import pkgJson from '../../package.json'
 import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, User, Info } from 'lucide-react'
 import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
@@ -118,6 +119,10 @@ export default function SettingsPanel({ onClose }: Props) {
           <button className="menu-item" onClick={cycleDistUnit}>
             <Gauge size={20} /><span>Avstand: {distUnit === 'nm' ? 'nm → m' : distUnit === 'm' ? 'm → km' : 'km → nm'}</span>
           </button>
+
+          <div style={{ padding: '20px 16px 4px', textAlign: 'center', fontSize: 11, color: '#475569' }}>
+            Båtkart v{pkgJson.version}
+          </div>
 
         </div>
       </div>
