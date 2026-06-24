@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, X, Plus, Minus, LocateFixed, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye, Crosshair, List } from 'lucide-react'
+import { Navigation, X, Plus, Minus, LocateFixed, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye, Crosshair } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -191,6 +191,11 @@ export default function MapControls() {
       .catch(() => {})
   }, [spotMenu?.lat, spotMenu?.lng, isOnline])
 
+  // Auto-close quick pin popup when last pin is removed
+  useEffect(() => {
+    if (quickPins.length === 0) setQuickPinListOpen(false)
+  }, [quickPins.length])
+
   // 3-state cycle: nord-opp → GPS kjøreretning → kompassretning → nord-opp
   const nordMode: NordMode = compassEnabled ? 'krs' : headingUp ? 'gps' : 'off'
 
@@ -301,21 +306,20 @@ export default function MapControls() {
         <div className="fab-divider" />
         <button
           className={`fab ${quickPins.length > 0 ? 'fab-quickpin' : ''}`}
-          onClick={() => { if (position) { track('quickpin_added'); addQuickPin({ lat: position.lat, lng: position.lng }) } }}
-          title="Merk posisjon (blåse, holdeplass…)"
+          onClick={() => {
+            if (quickPins.length > 0) {
+              setQuickPinListOpen((v) => !v)
+            } else if (position) {
+              track('quickpin_added')
+              addQuickPin({ lat: position.lat, lng: position.lng })
+              setQuickPinListOpen(true)
+            }
+          }}
+          title={quickPins.length > 0 ? 'Vis merker' : 'Merk posisjon'}
         >
           <Crosshair size={20} />
           {quickPins.length > 0 && <span className="fab-badge">{quickPins.length}</span>}
         </button>
-        {quickPins.length > 0 && (
-          <button
-            className="fab fab-quickpin"
-            onClick={() => { track('panel_open', { panel: 'quickpins' }); setQuickPinListOpen(true) }}
-            title="Vis alle merker"
-          >
-            <List size={20} />
-          </button>
-        )}
       </div>
 
       {activePanel === 'spots' && (
@@ -339,9 +343,18 @@ export default function MapControls() {
           <div className="quickpin-popup">
             <div className="quickpin-popup-head">
               <span>⊕ Merker ({quickPins.length})</span>
-              <button className="quickpin-popup-close" onClick={() => setQuickPinListOpen(false)}>
-                <X size={16} />
-              </button>
+              <div style={{ display: 'flex' }}>
+                {position && (
+                  <button className="quickpin-popup-close" title="Legg til merke her"
+                    onClick={() => { track('quickpin_added'); addQuickPin({ lat: position.lat, lng: position.lng }) }}
+                  >
+                    <Plus size={16} />
+                  </button>
+                )}
+                <button className="quickpin-popup-close" onClick={() => setQuickPinListOpen(false)}>
+                  <X size={16} />
+                </button>
+              </div>
             </div>
             <div className="quickpin-popup-list">
               {withDist.map(({ pin, dist, brg }, idx) => (
