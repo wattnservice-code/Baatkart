@@ -811,7 +811,9 @@ html, body, #root {
 }
 .spot-action-close {
   background: none; border: none; color: #94a3b8;
-  cursor: pointer; padding: 4px; flex-shrink: 0;
+  cursor: pointer; flex-shrink: 0;
+  min-width: 44px; min-height: 44px;
+  display: flex; align-items: center; justify-content: center;
 }
 .spot-wx-block {
   display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center;
@@ -1128,7 +1130,8 @@ html, body, #root {
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .search-close-btn {
   background: none; border: none; color: #94a3b8;
-  cursor: pointer; display: flex; padding: 2px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px;
 }
 
 .search-results {
@@ -1751,14 +1754,14 @@ html, body, #root {
 .settings-title { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; }
 .settings-close {
   background: rgba(255,255,255,0.08); border: none; color: #cbd5e1; cursor: pointer;
-  width: 40px; height: 40px; border-radius: 50%;
+  width: 44px; height: 44px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
 }
 .settings-close:active { background: rgba(255,255,255,0.16); }
 .settings-close svg { width: 24px; height: 24px; }
 .settings-head-icon-btn {
   background: rgba(255,255,255,0.08); border: none; color: #94a3b8; cursor: pointer;
-  width: 36px; height: 36px; border-radius: 50%; margin-left: auto; margin-right: 8px;
+  width: 44px; height: 44px; border-radius: 50%; margin-left: auto; margin-right: 8px;
   display: flex; align-items: center; justify-content: center;
 }
 .settings-head-icon-btn:active { background: rgba(255,255,255,0.16); }
