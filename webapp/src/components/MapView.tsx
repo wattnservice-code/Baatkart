@@ -735,10 +735,11 @@ export default function MapView() {
       mobDriftCircleRef.current.setLatLng(to).setRadius(drift.radius)
     }
 
+    // Lite rodt person-ikon = der personen trolig er na (estimert drift)
     const dIcon = L.divIcon({
       className: '',
-      html: `<div class="mob-drift-marker" style="transform:rotate(${drift.bearing}deg)">➤</div>`,
-      iconSize: [28, 28], iconAnchor: [14, 14],
+      html: `<div class="mob-drift-marker"><svg viewBox="0 0 24 24" width="15" height="15" fill="white"><circle cx="12" cy="6" r="3.3"/><path d="M12 10.5c-3.2 0-5.5 2.1-5.5 5.2V19h11v-3.3c0-3.1-2.3-5.2-5.5-5.2z"/></svg></div>`,
+      iconSize: [26, 26], iconAnchor: [13, 13],
     })
     if (!mobDriftMarkerRef.current) {
       mobDriftMarkerRef.current = L.marker(to, { icon: dIcon, zIndexOffset: 1500 }).addTo(map)
