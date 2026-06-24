@@ -104,7 +104,10 @@ export default function MobOverlay() {
 
   // Utvidet: «Hva vil du gjøre?»-panel. Lukk → tilbake til knapp, fortsatt MOB.
   return (
-    <div className="mob-overlay">
+    <>
+      {/* Fanger trykk på kartet bak panelet → kollaps, ingen "Valgt punkt"-meny */}
+      <div className="mob-backdrop" onClick={() => setExpanded(false)} />
+      <div className="mob-overlay">
       <div className="mob-head">
         <span className="mob-title">⚠ MANN OVER BORD</span>
         <button className="mob-collapse" onClick={() => setExpanded(false)} title="Lukk – fortsatt i MOB-modus">✕</button>
@@ -162,6 +165,7 @@ export default function MobOverlay() {
       ) : (
         <button className="mob-clear" onClick={() => setConfirmClear(true)}>Person funnet ✓</button>
       )}
-    </div>
+      </div>
+    </>
   )
 }

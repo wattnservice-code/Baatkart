@@ -344,6 +344,13 @@ html, body, #root {
 .mob-badge-label { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; }
 .mob-badge-dist { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
+/* Gjennomsiktig backdrop bak panelet — fanger kart-trykk sa det ikke lager
+   "Valgt punkt"-meny; trykk utenfor kollapser panelet. */
+.mob-backdrop {
+  position: absolute; inset: 0;
+  z-index: 449;
+}
+
 /* Utvidet panel — kompakt, oppe til venstre, ruller ved behov */
 .mob-overlay {
   position: absolute;
