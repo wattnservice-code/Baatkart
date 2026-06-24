@@ -23,6 +23,7 @@ export default function App() {
   useWakeLock()
   useAIS()
   const compassEnabled   = useMapStore((s) => s.compassEnabled)
+  const mobPoint         = useMapStore((s) => s.mobPoint)
   const darkMode         = useMapStore((s) => s.darkMode)
   const nightVision      = useMapStore((s) => s.nightVision)
   const weatherVisible   = useMapStore((s) => s.weatherVisible)
@@ -61,7 +62,7 @@ export default function App() {
   }, [])
 
   return (
-    <div className={`app-root ${darkMode ? '' : 'day'}${nightVision ? ' night-vision' : ''}`}>
+    <div className={`app-root ${darkMode ? '' : 'day'}${nightVision ? ' night-vision' : ''}${mobPoint ? ' mob-active' : ''}`}>
       <div className="map-wrapper">
         <MapView />
         <MapControls />

@@ -315,6 +315,18 @@ html, body, #root {
   50%      { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
 }
 
+/* ── MOB-modus: skjul alt ikke-kritisk når MOB er aktivt ──
+   Behold: kart, MOB-overlay, status-bar, NavOverlay (navigasjon mot personen).
+   Skjul: FAB-kolonnen, vær/tidevann, AIS-pille, hastighet, bunnmeny, sporing. */
+.mob-active .map-controls        { display: none !important; }
+.mob-active .ais-status          { display: none !important; }
+.mob-active .speed-badge         { display: none !important; }
+.mob-active .wx-tide-toggle      { display: none !important; }
+.mob-active .map-left-panels     { display: none !important; }
+.mob-active .bottom-nav          { display: none !important; }
+.mob-active .nav-preview-bar     { display: none !important; }
+.mob-active .track-follow-overlay { display: none !important; }
+
 /* ── MOB ──
    To tilstander: kollapset knapp (.mob-badge) som default-indikator, og
    utvidet «Hva vil du gjore»-panel (.mob-overlay). Begge ligger oppe til
