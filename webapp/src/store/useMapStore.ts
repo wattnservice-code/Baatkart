@@ -94,6 +94,7 @@ interface MapStore {
   activeSpotId: string | null
   compassHeading: number | null
   currentWeather: { windSpeed: number; windDir: number; temp: number } | null
+  currentSea: { speed: number; dir: number } | null
   offlineOnly: boolean
   offlineDownload: { status: 'downloading' | 'done' | 'error'; progress: number; total: number; skipped: number; areaName: string } | null
   aisVisible: boolean
@@ -148,6 +149,7 @@ interface MapStore {
   setActiveSpot: (id: string | null) => void
   setCompassHeading: (h: number) => void
   setCurrentWeather: (w: { windSpeed: number; windDir: number; temp: number } | null) => void
+  setCurrentSea: (c: { speed: number; dir: number } | null) => void
   toggleOfflineOnly: () => void
   setOfflineOnly: (v: boolean) => void
   setOfflineDownload: (d: { status: 'downloading' | 'done' | 'error'; progress: number; total: number; skipped: number; areaName: string } | null) => void
@@ -269,6 +271,7 @@ export const useMapStore = create<MapStore>((set) => ({
   activeSpotId: null,
   compassHeading: null,
   currentWeather: null,
+  currentSea: null,
   offlineOnly: loadBool('offlineOnly', false),
   offlineDownload: null,
   aisVisible: loadBool('aisVisible', false),
@@ -404,6 +407,7 @@ export const useMapStore = create<MapStore>((set) => ({
   setActiveSpot: (id) => set({ activeSpotId: id }),
   setCompassHeading: (h) => set({ compassHeading: h }),
   setCurrentWeather: (w) => set({ currentWeather: w }),
+  setCurrentSea: (c) => set({ currentSea: c }),
   toggleOfflineOnly: () => set((s) => { const v = !s.offlineOnly; localStorage.setItem('offlineOnly', String(v)); return { offlineOnly: v } }),
   setOfflineOnly: (v) => { localStorage.setItem('offlineOnly', String(v)); set({ offlineOnly: v }) },
   setOfflineDownload: (d) => set({ offlineDownload: d }),

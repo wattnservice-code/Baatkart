@@ -6,6 +6,9 @@ const MET_HEADERS = { 'User-Agent': 'BaatKart/1.0 frode.sighaug@gmail.com' }
 
 export interface WxPoint { windSpeed: number; windDir: number; temp: number; symbol: string }
 export interface WavePoint { height: number; dir: number; seaTemp?: number }
+// Strøm rir gratis på samme oceanforecast-kall som bølger.
+// dir = retning strømmen går MOT (grader), speed i m/s.
+export interface CurrentPoint { speed: number; dir: number }
 
 // MET symbol_code → emoji.
 export function wxEmoji(code: string): string {
@@ -39,8 +42,12 @@ export async function fetchWeather(lat: number, lng: number): Promise<{ wx: WxPo
   return { wx, windSeries }
 }
 
-// Wave/sea-temp forecast at a point. Returns null outside coastal coverage.
-export async function fetchOcean(lat: number, lng: number): Promise<{ wave: WavePoint; waveSeries: SeriesPoint[] } | null> {
+// Wave/sea-temp/current forecast at a point. Returns null outside coastal coverage.
+// Strøm (sea_water_speed/to_direction) ligger i samme payload som bølger.
+export async function fetchOcean(
+  lat: number,
+  lng: number,
+): Promise<{ wave: WavePoint; waveSeries: SeriesPoint[]; current: CurrentPoint | null } | null> {
   const res = await fetch(
     `https://api.met.no/weatherapi/oceanforecast/2.0/complete?lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}`,
     { headers: MET_HEADERS }
@@ -55,8 +62,11 @@ export async function fetchOcean(lat: number, lng: number): Promise<{ wave: Wave
     dir:     d.sea_surface_wave_from_direction ?? 0,
     seaTemp: d.sea_water_temperature,
   }
+  const current: CurrentPoint | null = d.sea_water_speed != null
+    ? { speed: d.sea_water_speed, dir: d.sea_water_to_direction ?? 0 }
+    : null
   const waveSeries: SeriesPoint[] = series.slice(0, 8)
     .filter((p: any) => p.data?.instant?.details?.sea_surface_wave_height != null)
     .map((p: any, i: number) => ({ hour: i, v: p.data.instant.details.sea_surface_wave_height }))
-  return { wave, waveSeries }
+  return { wave, waveSeries, current }
 }

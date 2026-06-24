@@ -38,3 +38,53 @@ export function cardinal(deg: number): string {
   const norm = ((deg % 360) + 360) % 360
   return dirs[Math.round(norm / 45) % 8]
 }
+
+// Person-in-water drift estimate (forenklet SAR-leeway-modell).
+// Driften er sum av to vektorer:
+//   – Vind-leeway: ~3,5 % av vindstyrke, nedvinds (windDir er "fra"-retning)
+//   – Strøm: 100 % av strømhastighet, i strømmens "mot"-retning (curDir)
+// Alle hastigheter i m/s, retninger i grader. Tid i sekunder.
+// Returnerer estimert posisjon, total driftretning/-distanse og en
+// usikkerhetsradius som vokser med tid (modellen er grov).
+export const LEEWAY_FACTOR = 0.035
+
+export interface DriftEstimate {
+  lat: number
+  lng: number
+  bearing: number   // retning driften går MOT, grader
+  distance: number  // meter
+  radius: number    // usikkerhetsradius, meter
+}
+
+export function mobDrift(
+  lat: number,
+  lng: number,
+  elapsedSec: number,
+  wind: { windSpeed: number; windDir: number } | null,
+  current: { speed: number; dir: number } | null,
+): DriftEstimate | null {
+  if (!wind && !current) return null
+
+  // Bygg nord/øst-komponenter (m/s) fra hver kilde.
+  let vN = 0, vE = 0
+  if (wind) {
+    const sp = LEEWAY_FACTOR * wind.windSpeed
+    const θ = ((wind.windDir + 180) * Math.PI) / 180 // nedvinds
+    vN += sp * Math.cos(θ)
+    vE += sp * Math.sin(θ)
+  }
+  if (current) {
+    const θ = (current.dir * Math.PI) / 180 // strøm "mot"-retning
+    vN += current.speed * Math.cos(θ)
+    vE += current.speed * Math.sin(θ)
+  }
+
+  const speed = Math.hypot(vN, vE)
+  if (speed < 0.001) return null
+  const bearing = ((Math.atan2(vE, vN) * 180) / Math.PI + 360) % 360
+  const distance = speed * elapsedSec
+  const [dLat, dLng] = destPoint(lat, lng, bearing, distance)
+  // Usikkerhet: 30 m base + 30 % av driftet — vokser med tid.
+  const radius = 30 + distance * 0.3
+  return { lat: dLat, lng: dLng, bearing, distance, radius }
+}

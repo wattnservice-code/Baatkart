@@ -9,7 +9,7 @@ import { getTile } from '../offline/tileDb'
 import { tileKey } from '../offline/tileCalc'
 import { setMapInstance } from '../mapInstance'
 import { iconEmoji } from '../spotIcons'
-import { haversineM, destPoint } from '../geo'
+import { haversineM, destPoint, mobDrift } from '../geo'
 
 // Track cache vs network tile loads and report to store (debounced)
 let _cacheHits = 0
@@ -192,6 +192,9 @@ export default function MapView() {
   const ringLabelRef    = useRef<L.Marker | null>(null)
   const mobTrackLineRef   = useRef<L.Polyline | null>(null)
   const mobMarkerRef      = useRef<L.Marker | null>(null)
+  const mobDriftLineRef   = useRef<L.Polyline | null>(null)
+  const mobDriftMarkerRef = useRef<L.Marker | null>(null)
+  const mobDriftCircleRef = useRef<L.Circle | null>(null)
   const navLineRef        = useRef<L.Polyline | null>(null)
   const navCasingRef      = useRef<L.Polyline | null>(null)
   const navMarkerRef      = useRef<L.Marker | null>(null)
@@ -208,6 +211,7 @@ export default function MapView() {
   const followTrackLineRef  = useRef<L.Polyline | null>(null)
 
   const [pendingSpot, setPendingSpot]       = useState<{ lat: number; lng: number } | null>(null)
+  const [driftTick, setDriftTick]           = useState(0)
   const bearingRef         = useRef(0)   // currently displayed map bearing (deg)
   const targetBearingRef   = useRef(0)   // desired bearing (deg)
   const appliedBearingRef  = useRef(0)   // last bearing pushed to the map
@@ -218,6 +222,8 @@ export default function MapView() {
   const track            = useMapStore((s) => s.track)
   const mobTrack         = useMapStore((s) => s.mobTrack)
   const mobPoint         = useMapStore((s) => s.mobPoint)
+  const currentWeather   = useMapStore((s) => s.currentWeather)
+  const currentSea       = useMapStore((s) => s.currentSea)
   const followBoat       = useMapStore((s) => s.followBoat)
   const addingSpot       = useMapStore((s) => s.addingSpot)
   const flyTo            = useMapStore((s) => s.flyTo)
@@ -702,6 +708,62 @@ export default function MapView() {
       mobMarkerRef.current.setLatLng([mobPoint.lat, mobPoint.lng]).setIcon(icon)
     }
   }, [mobPoint])
+
+  // Recompute drift periodically while a MOB is active (elapsed time grows).
+  useEffect(() => {
+    if (!mobPoint) return
+    const id = setInterval(() => setDriftTick((t) => t + 1), 15000)
+    return () => clearInterval(id)
+  }, [mobPoint])
+
+  // MOB drift estimate: dashed line + estimated position + uncertainty circle
+  useEffect(() => {
+    void driftTick // tving re-run når tiden går
+    const map = mapRef.current
+    const clear = () => {
+      mobDriftLineRef.current?.remove();   mobDriftLineRef.current = null
+      mobDriftMarkerRef.current?.remove(); mobDriftMarkerRef.current = null
+      mobDriftCircleRef.current?.remove(); mobDriftCircleRef.current = null
+    }
+    if (!map || !mobPoint) { clear(); return }
+
+    const elapsedSec = (Date.now() - mobPoint.timestamp) / 1000
+    const wind = currentWeather ? { windSpeed: currentWeather.windSpeed, windDir: currentWeather.windDir } : null
+    const drift = mobDrift(mobPoint.lat, mobPoint.lng, elapsedSec, wind, currentSea)
+    // Vis ikke før driften er meningsfull (>15 m), ellers rot rundt punktet.
+    if (!drift || drift.distance < 15) { clear(); return }
+
+    const from: L.LatLngExpression = [mobPoint.lat, mobPoint.lng]
+    const to: L.LatLngExpression = [drift.lat, drift.lng]
+
+    if (!mobDriftLineRef.current) {
+      mobDriftLineRef.current = L.polyline([from, to], {
+        color: '#f59e0b', weight: 3, opacity: 0.95, dashArray: '6, 6',
+      }).addTo(map)
+    } else {
+      mobDriftLineRef.current.setLatLngs([from, to])
+    }
+
+    if (!mobDriftCircleRef.current) {
+      mobDriftCircleRef.current = L.circle(to, {
+        radius: drift.radius, color: '#f59e0b', weight: 1.5,
+        fillColor: '#f59e0b', fillOpacity: 0.12, dashArray: '4, 4',
+      }).addTo(map)
+    } else {
+      mobDriftCircleRef.current.setLatLng(to).setRadius(drift.radius)
+    }
+
+    const dIcon = L.divIcon({
+      className: '',
+      html: `<div class="mob-drift-marker" style="transform:rotate(${drift.bearing}deg)">➤</div>`,
+      iconSize: [28, 28], iconAnchor: [14, 14],
+    })
+    if (!mobDriftMarkerRef.current) {
+      mobDriftMarkerRef.current = L.marker(to, { icon: dIcon, zIndexOffset: 1500 }).addTo(map)
+    } else {
+      mobDriftMarkerRef.current.setLatLng(to).setIcon(dIcon)
+    }
+  }, [mobPoint, currentWeather, currentSea, driftTick])
 
   // Saved spot markers — only when spotsVisible
   useEffect(() => {

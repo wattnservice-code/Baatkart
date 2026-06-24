@@ -4,15 +4,18 @@ import { waveClass, seriesRange, WindSparkline, WaveBars } from './forecastChart
 import { track } from '../analytics'
 import type { SeriesPoint } from './forecastCharts'
 import { fetchWeather, fetchOcean, wxEmoji } from '../weather'
-import type { WxPoint, WavePoint } from '../weather'
+import type { WxPoint, WavePoint, CurrentPoint } from '../weather'
+import { cardinal } from '../geo'
 
 export default function WeatherOverlay() {
   const weatherVisible    = useMapStore((s) => s.weatherVisible)
   const hideWxTide        = useMapStore((s) => s.hideWxTide)
   const position          = useMapStore((s) => s.position)
   const setCurrentWeather = useMapStore((s) => s.setCurrentWeather)
+  const setCurrentSea     = useMapStore((s) => s.setCurrentSea)
   const [wx, setWx]       = useState<WxPoint | null>(null)
   const [wave, setWave]   = useState<WavePoint | null>(null)
+  const [cur, setCur]     = useState<CurrentPoint | null>(null)
   const [windSeries, setWindSeries] = useState<SeriesPoint[]>([])
   const [waveSeries, setWaveSeries] = useState<SeriesPoint[]>([])
   const [expanded, setExpanded] = useState(false)
@@ -49,11 +52,19 @@ export default function WeatherOverlay() {
     waveKey.current = key
     setWave(null)
     setWaveSeries([])
+    setCur(null)
 
     fetchOcean(position.lat, position.lng)
-      .then((ocean) => { if (ocean) { setWave(ocean.wave); setWaveSeries(ocean.waveSeries) } })
-      .catch(() => {}) // wave er valgfritt — stille feil utenfor kystdekning
-  }, [weatherVisible, position?.lat, position?.lng])
+      .then((ocean) => {
+        if (ocean) {
+          setWave(ocean.wave)
+          setWaveSeries(ocean.waveSeries)
+          setCur(ocean.current)
+          setCurrentSea(ocean.current)
+        }
+      })
+      .catch(() => {}) // wave/strøm er valgfritt — stille feil utenfor kystdekning
+  }, [weatherVisible, position?.lat, position?.lng, setCurrentSea])
 
   useEffect(() => {
     if (!weatherVisible || !position) return
@@ -116,6 +127,14 @@ export default function WeatherOverlay() {
               {wave.seaTemp != null && (
                 <span className="wx-sub">{Math.round(wave.seaTemp)}° sjø</span>
               )}
+            </div>
+          )}
+          {cur && cur.speed >= 0.05 && (
+            <div className="wx-row">
+              {/* dir = retning strømmen går MOT → pil peker direkte i dir */}
+              <span className="wx-arrow" style={{ transform: `rotate(${cur.dir}deg)` }}>↑</span>
+              <span className="wx-val">🌀 {(cur.speed * 1.94384).toFixed(1)} kn</span>
+              <span className="wx-sub">{cardinal(cur.dir)}</span>
             </div>
           )}
           {(windSeries.length >= 2 || waveSeries.length >= 2) && (
