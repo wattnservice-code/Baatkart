@@ -241,7 +241,7 @@ export default function MapControls() {
           <Minus size={22} />
         </button>
         <button
-          className={`fab ${followBoat ? 'fab-active' : (position?.speed ?? 0) > 0.3 ? 'fab-locate-lost' : ''}`}
+          className={`fab fab-follow-boat ${followBoat ? 'fab-active' : (position?.speed ?? 0) > 0.3 ? 'fab-locate-lost' : ''}`}
           onClick={() => {
             const m = getMapInstance()
             if (!followBoat && m) m.setZoom(14)   // reset zoom when returning from nav
