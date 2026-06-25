@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Copy, Check } from 'lucide-react'
+import { Copy, Check, Share2 } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
 import { haversineM, bearingDeg, cardinal, mobDrift } from '../geo'
@@ -56,13 +56,14 @@ export default function MobOverlay() {
       .catch(() => {})
   }, [mobPoint, setCurrentWeather, setCurrentSea])
 
-  const copyMobPos = () => {
-    if (!mobPoint) return
+  // Bygger MOB-rapporten som både kopier og del bruker. Identisk innhold.
+  const buildMobText = () => {
+    if (!mobPoint) return ''
     const dt = new Date(mobPoint.timestamp).toLocaleString('nb-NO', {
       day: '2-digit', month: '2-digit', year: 'numeric',
       hour: '2-digit', minute: '2-digit', second: '2-digit',
     })
-    const lines = [`MOB ${dt}`]
+    const lines = [`MANN OVER BORD ${dt}`]
     if (boatInfo.name) {
       const boatLine = [`Båt: ${boatInfo.name}`, boatInfo.boatType, boatInfo.mmsi ? `MMSI: ${boatInfo.mmsi}` : ''].filter(Boolean).join('  ')
       lines.push(boatLine)
@@ -74,10 +75,31 @@ export default function MobOverlay() {
     }
     if (boatInfo.phone) lines.push(`Kontakt: ${boatInfo.phone}`)
     if (boatInfo.notes) lines.push(`Notat: ${boatInfo.notes}`)
-    navigator.clipboard?.writeText(lines.join('\n')).then(() => {
+    return lines.join('\n')
+  }
+
+  const copyMobPos = () => {
+    const text = buildMobText()
+    if (!text) return
+    navigator.clipboard?.writeText(text).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 3000)
     })
+  }
+
+  // Native delingsark (SMS/WhatsApp/e-post osv.). Faller tilbake til kopiering
+  // hvis nettleseren ikke støtter Web Share API (f.eks. desktop).
+  const shareMobPos = async () => {
+    const text = buildMobText()
+    if (!text) return
+    const url = mobPoint ? `https://www.google.com/maps?q=${mobPoint.lat},${mobPoint.lng}` : undefined
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Mann over bord', text, url })
+      } catch { /* bruker avbrøt – ignorer */ }
+    } else {
+      copyMobPos()
+    }
   }
 
   if (!mobPoint) return null
@@ -147,12 +169,17 @@ export default function MobOverlay() {
         </button>
       </div>
 
-      <button className="mob-coords-copy" onClick={copyMobPos} title="Kopier posisjon til utklippstavle">
-        {copied
-          ? <><Check size={16} /> Posisjon kopiert!</>
-          : <><Copy size={16} /> Kopier posisjon</>
-        }
-      </button>
+      <div className="mob-share-row">
+        <button className="mob-coords-copy" onClick={copyMobPos} title="Kopier posisjon til utklippstavle">
+          {copied
+            ? <><Check size={16} /> Kopiert!</>
+            : <><Copy size={16} /> Kopier</>
+          }
+        </button>
+        <button className="mob-coords-share" onClick={shareMobPos} title="Del posisjon via melding, e-post osv.">
+          <Share2 size={16} /> Del
+        </button>
+      </div>
 
       {confirmClear ? (
         <div className="mob-confirm">

@@ -417,14 +417,15 @@ html, body, #root {
 .mob-emergency strong { font-size: 14px; letter-spacing: 0.04em; }
 .mob-emergency:active { background: rgba(0,0,0,0.5); }
 .mob-prompt { font-size: 11px; font-weight: 700; opacity: 0.85; letter-spacing: 0.03em; margin-top: 1px; }
-.mob-coords-copy {
+.mob-share-row { display: flex; gap: 8px; }
+.mob-coords-copy, .mob-coords-share {
   display: flex; align-items: center; justify-content: center; gap: 6px;
-  width: 100%;
+  flex: 1;
   background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
   color: white; border-radius: 8px; padding: 8px 10px;
   font-size: 13px; font-weight: 600; cursor: pointer;
 }
-.mob-coords-copy:active { background: rgba(0,0,0,0.45); }
+.mob-coords-copy:active, .mob-coords-share:active { background: rgba(0,0,0,0.45); }
 .mob-actions { display: flex; gap: 8px; }
 .mob-goto {
   flex: 1;
