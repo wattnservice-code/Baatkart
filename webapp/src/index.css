@@ -2069,6 +2069,7 @@ html, body, #root {
 .leaflet-control-attribution { pointer-events: none !important; }
 /* Skjul den under MOB (samme hjorne som MOB-panelet) */
 .mob-active .leaflet-control-attribution { display: none !important; }
+.nav-preview-active .leaflet-control-attribution { display: none !important; }
 
 .night-vision .leaflet-tile {
   filter: saturate(0) brightness(0.55) sepia(1) hue-rotate(320deg) saturate(2.5) brightness(0.85);

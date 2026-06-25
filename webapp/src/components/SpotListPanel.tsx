@@ -40,9 +40,9 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
   const [loading, setLoading]     = useState(false)
   const debounceRef               = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const filtered = savedSpots.filter((s) =>
-    s.name.toLowerCase().includes(query.toLowerCase())
-  )
+  const filtered = savedSpots
+    .filter((s) => s.name.toLowerCase().includes(query.toLowerCase()))
+    .sort((a, b) => a.name.localeCompare(b.name, 'no'))
   const confirmSpot = savedSpots.find((s) => s.id === confirmId)
 
   // Online geocoding (Nominatim) — runs as you type, when online
