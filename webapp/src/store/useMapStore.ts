@@ -110,7 +110,7 @@ interface MapStore {
   spotsVisible: boolean
   quickPins: QuickPin[]
   highlightedQuickPinId: string | null
-  quickPinHintDismissed: boolean
+  mapHintDismissed: boolean
 
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
@@ -162,7 +162,7 @@ interface MapStore {
   toggleHeadingUp: () => void
   toggleSpotsVisible: () => void
   addQuickPin: (p: { lat: number; lng: number }) => void
-  dismissQuickPinHint: () => void
+  dismissMapHint: () => void
   removeQuickPin: (id: string) => void
   clearQuickPins: () => void
   setHighlightedQuickPin: (id: string | null) => void
@@ -287,7 +287,7 @@ export const useMapStore = create<MapStore>((set) => ({
   trackMaxSpeed: 0,
   spotsVisible: loadBool('spotsVisible', true),
   quickPins: loadQuickPins(),
-  quickPinHintDismissed: localStorage.getItem('quickPinHintDismissed') === '1',
+  mapHintDismissed: localStorage.getItem('mapHintDismissed') === '1',
   highlightedQuickPinId: null,
 
   setPosition: (pos) =>
@@ -437,10 +437,10 @@ export const useMapStore = create<MapStore>((set) => ({
     return { quickPins: pins }
   }),
   clearQuickPins: () => { localStorage.removeItem('quickPins'); set({ quickPins: [] }) },
-  dismissQuickPinHint: () => set((s) => {
-    if (s.quickPinHintDismissed) return {}
-    localStorage.setItem('quickPinHintDismissed', '1')
-    return { quickPinHintDismissed: true }
+  dismissMapHint: () => set((s) => {
+    if (s.mapHintDismissed) return {}
+    localStorage.setItem('mapHintDismissed', '1')
+    return { mapHintDismissed: true }
   }),
   setHighlightedQuickPin: (id) => set({ highlightedQuickPinId: id }),
 

@@ -233,8 +233,8 @@ export default function MapView() {
   const spotsVisible     = useMapStore((s) => s.spotsVisible)
   const quickPins               = useMapStore((s) => s.quickPins)
   const highlightedQuickPinId   = useMapStore((s) => s.highlightedQuickPinId)
-  const quickPinHintDismissed   = useMapStore((s) => s.quickPinHintDismissed)
-  const dismissQuickPinHint     = useMapStore((s) => s.dismissQuickPinHint)
+  const mapHintDismissed        = useMapStore((s) => s.mapHintDismissed)
+  const dismissMapHint          = useMapStore((s) => s.dismissMapHint)
   const compassEnabled          = useMapStore((s) => s.compassEnabled)
   const compassHeading   = useMapStore((s) => s.compassHeading)
   const darkMode         = useMapStore((s) => s.darkMode)
@@ -814,30 +814,24 @@ export default function MapView() {
       popupJustClosed.current = true
       setTimeout(() => { popupJustClosed.current = false }, 100)
     }
-    const longPressJustFired = { current: false }
+    // Enkelt-trykk gjør ingenting på kartet (unngår utilsiktet "Valgt punkt"
+    // mens du panorerer). Unntak: i "legg til sted"-modus plasserer det stedet.
     const onClick = (e: L.LeafletMouseEvent) => {
       if (popupJustClosed.current) return
-      if (longPressJustFired.current) return
       if (addingSpot) { setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng }); return }
-      const s = useMapStore.getState()
-      if (s.spotMenu) return
-      if (s.mobPoint) return
-      const lat = e.latlng.lat, lng = e.latlng.lng
-      const name = 'Valgt punkt'
-      s.setSearchPin({ lat, lng, name })
-      s.setSpotMenu({ lat, lng, name })
     }
     // Trykk-og-hold (Leaflet contextmenu på touch / høyreklikk på desktop) →
-    // slipp et hurtigmerke der du trykket. Undertrykk påfølgende klikk så
-    // "Valgt punkt"-menyen ikke åpnes samtidig.
+    // åpne "Valgt punkt"-menyen (naviger / Google Maps / lagre) der du trykket.
     const onLongPress = (e: L.LeafletMouseEvent) => {
       if (e.originalEvent) L.DomEvent.preventDefault(e.originalEvent)
       const s = useMapStore.getState()
       if (s.mobPoint || addingSpot) return
-      s.addQuickPin({ lat: e.latlng.lat, lng: e.latlng.lng })
-      useMapStore.getState().dismissQuickPinHint()
-      longPressJustFired.current = true
-      setTimeout(() => { longPressJustFired.current = false }, 400)
+      if (s.spotMenu) return
+      const lat = e.latlng.lat, lng = e.latlng.lng
+      const name = 'Valgt punkt'
+      s.setSearchPin({ lat, lng, name })
+      s.setSpotMenu({ lat, lng, name })
+      s.dismissMapHint()
     }
     map.on('popupclose', onPopupClose)
     map.on('click', onClick)
@@ -854,10 +848,10 @@ export default function MapView() {
     <>
       <div ref={containerRef} className="w-full h-full">
       </div>
-      {!quickPinHintDismissed && !mobPoint && (
+      {!mapHintDismissed && !mobPoint && (
         <div className="map-hint">
-          <span>Trykk og hold for å slippe et merke</span>
-          <button onClick={dismissQuickPinHint}>Vis ikke igjen</button>
+          <span>Trykk og hold på kartet for valg</span>
+          <button onClick={dismissMapHint}>Vis ikke igjen</button>
         </div>
       )}
       {pendingSpot && <SpotDialog lat={pendingSpot.lat} lng={pendingSpot.lng} onClose={() => setPendingSpot(null)} />}
