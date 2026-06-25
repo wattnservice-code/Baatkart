@@ -2081,3 +2081,31 @@ html, body, #root {
   color: #fb923c !important;
   animation: locatePulse 1.8s ease-out infinite;
 }
+
+/* ── Krasj-skjerm (ErrorBoundary) ── */
+.crash-screen {
+  position: fixed; inset: 0; z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  background: #0f172a;
+}
+.crash-card {
+  max-width: 360px; width: 100%;
+  background: #1e293b;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.crash-title { font-size: 18px; font-weight: 800; color: #f87171; margin-bottom: 10px; }
+.crash-text { font-size: 14px; color: #cbd5e1; line-height: 1.5; margin-bottom: 18px; }
+.crash-btn {
+  width: 100%;
+  background: #2563eb; color: white;
+  border: none; border-radius: 10px;
+  padding: 12px 16px; font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.crash-btn:active { background: #1d4ed8; }
+.crash-detail { margin-top: 14px; font-size: 11px; color: #64748b; word-break: break-word; }
