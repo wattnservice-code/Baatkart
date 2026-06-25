@@ -96,6 +96,7 @@ export default function MapControls() {
   const removeQuickPin          = useMapStore((s) => s.removeQuickPin)
   const clearQuickPins          = useMapStore((s) => s.clearQuickPins)
   const setHighlightedQuickPin  = useMapStore((s) => s.setHighlightedQuickPin)
+  const highlightedQuickPinId   = useMapStore((s) => s.highlightedQuickPinId)
 
   // Close the card. For a dropped/search pin (no saved id) also remove the
   // blue pin from the map; for a saved spot just close (keep its yellow pin).
@@ -143,6 +144,11 @@ export default function MapControls() {
   useEffect(() => {
     if (quickPins.length === 0) setQuickPinListOpen(false)
   }, [quickPins.length])
+
+  // Clear the selected-pin highlight whenever the list closes
+  useEffect(() => {
+    if (!quickPinListOpen) setHighlightedQuickPin(null)
+  }, [quickPinListOpen, setHighlightedQuickPin])
 
   // 3-state cycle: nord-opp → GPS kjøreretning → kompassretning → nord-opp
   const nordMode: NordMode = compassEnabled ? 'krs' : headingUp ? 'gps' : 'off'
@@ -308,11 +314,10 @@ export default function MapControls() {
               {withDist.map(({ pin, dist, brg }, idx) => (
                 <div
                   key={pin.id}
-                  className="quickpin-popup-row"
+                  className={`quickpin-popup-row ${pin.id === highlightedQuickPinId ? 'quickpin-popup-row--selected' : ''}`}
                   onClick={() => {
                     setFlyTo({ lat: pin.lat, lng: pin.lng })
                     setHighlightedQuickPin(pin.id)
-                    setTimeout(() => setHighlightedQuickPin(null), 3000)
                   }}
                 >
                   <span className="quickpin-popup-num">{idx + 1}</span>

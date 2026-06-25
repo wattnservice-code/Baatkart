@@ -910,6 +910,13 @@ html, body, #root {
   cursor: pointer; transition: background 0.1s;
 }
 .quickpin-popup-row:active { background: rgba(249,115,22,0.10); }
+/* Valgt merke – matcher den blaa ringen paa kartet */
+.quickpin-popup-row--selected {
+  background: rgba(37,99,235,0.18);
+  box-shadow: inset 3px 0 0 #2563eb;
+}
+.quickpin-popup-row--selected .quickpin-popup-num { background: #2563eb; }
+.day .quickpin-popup-row--selected { background: rgba(37,99,235,0.12); }
 .quickpin-popup-num {
   width: 22px; height: 22px; border-radius: 50%;
   background: #f97316; color: white;
@@ -2044,6 +2051,9 @@ html, body, #root {
   overflow: hidden;
 }
 .leaflet-bottom.leaflet-left { bottom: 4px; }
+/* Leaflet legger bunn-kontroller (attribusjon/maalestokk) paa z-index 1000 –
+   over panelene vaare. Senk dem saa de aldri dekker noe klikkbart. */
+.leaflet-bottom { z-index: 360 !important; }
 
 .night-vision .leaflet-tile {
   filter: saturate(0) brightness(0.55) sepia(1) hue-rotate(320deg) saturate(2.5) brightness(0.85);
