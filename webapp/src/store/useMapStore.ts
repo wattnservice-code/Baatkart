@@ -103,6 +103,7 @@ interface MapStore {
   boatInfo: BoatInfo
   lookAhead: boolean
   headingUp: boolean
+  rotateEnabled: boolean     // tillat to-finger-vri av kartet
   mapRotated: boolean        // kartet er manuelt vridd vekk fra nord (fri modus)
   northUpNonce: number       // økes for å be MapView rette kartet mot nord
   savedTracks: SavedTrack[]
@@ -162,6 +163,7 @@ interface MapStore {
   setBoatInfo: (info: Partial<BoatInfo>) => void
   toggleLookAhead: () => void
   toggleHeadingUp: () => void
+  toggleRotateEnabled: () => void
   setMapRotated: (v: boolean) => void
   requestNorthUp: () => void
   toggleSpotsVisible: () => void
@@ -285,6 +287,7 @@ export const useMapStore = create<MapStore>((set) => ({
   boatInfo: loadBoatInfo(),
   lookAhead: loadBool('lookAhead', false),
   headingUp: loadBool('headingUp', false),
+  rotateEnabled: loadBool('rotateEnabled', true),
   mapRotated: false,
   northUpNonce: 0,
   savedTracks: loadSavedTracks(),
@@ -426,6 +429,7 @@ export const useMapStore = create<MapStore>((set) => ({
   setAisStatus: (s) => set({ aisStatus: s }),
   toggleLookAhead: () => set((s) => { const v = !s.lookAhead; localStorage.setItem('lookAhead', String(v)); return { lookAhead: v } }),
   toggleHeadingUp: () => set((s) => { const v = !s.headingUp; localStorage.setItem('headingUp', String(v)); return { headingUp: v } }),
+  toggleRotateEnabled: () => set((s) => { const v = !s.rotateEnabled; localStorage.setItem('rotateEnabled', String(v)); return { rotateEnabled: v } }),
   setMapRotated: (v) => set({ mapRotated: v }),
   requestNorthUp: () => set((s) => ({ northUpNonce: s.northUpNonce + 1 })),
   toggleSpotsVisible: () => set((s) => { const v = !s.spotsVisible; localStorage.setItem('spotsVisible', String(v)); return { spotsVisible: v } }),

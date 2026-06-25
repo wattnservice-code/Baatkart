@@ -247,6 +247,7 @@ export default function MapView() {
   const lookAhead        = useMapStore((s) => s.lookAhead)
   const headingUp        = useMapStore((s) => s.headingUp)
   const northUpNonce     = useMapStore((s) => s.northUpNonce)
+  const rotateEnabled    = useMapStore((s) => s.rotateEnabled)
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
   const setFlyTo         = useMapStore((s) => s.setFlyTo)
 
@@ -255,7 +256,7 @@ export default function MapView() {
     if (!containerRef.current || mapRef.current) return
     const map = L.map(containerRef.current, {
       center: [59.9, 10.7], zoom: 13, zoomControl: false,
-      rotate: true, rotateControl: false, touchRotate: true, shiftKeyRotate: false, bearing: 0,
+      rotate: true, rotateControl: false, touchRotate: useMapStore.getState().rotateEnabled, shiftKeyRotate: false, bearing: 0,
     })
     // Move the OSM attribution to the bottom-left so it doesn't sit under the
     // right-edge FAB menu.
@@ -601,6 +602,19 @@ export default function MapView() {
     manualBearingRef.current = 0
     useMapStore.getState().setMapRotated(false)
   }, [northUpNonce])
+
+  // Toggle for to-finger-vri (Meg → Kartvisning). Av → deaktiver gesten og
+  // rett kartet mot nord.
+  useEffect(() => {
+    const map = mapRef.current as unknown as { touchRotate?: { enable: () => void; disable: () => void } } | null
+    if (!map?.touchRotate) return
+    if (rotateEnabled) {
+      map.touchRotate.enable()
+    } else {
+      map.touchRotate.disable()
+      if (useMapStore.getState().mapRotated) useMapStore.getState().requestNorthUp()
+    }
+  }, [rotateEnabled])
 
   // Redraw tiles when offlineOnly toggles so grey placeholders appear immediately
   useEffect(() => {

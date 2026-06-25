@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { APP_VERSION } from '../version'
-import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, User, Info } from 'lucide-react'
+import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, User, Info, RotateCw } from 'lucide-react'
 import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
 import OfflinePanel from './OfflinePanel'
@@ -28,8 +28,10 @@ export default function SettingsPanel({ onClose }: Props) {
   const speedUnit      = useMapStore((s) => s.speedUnit)
   const distUnit       = useMapStore((s) => s.distUnit)
   const customRingRadius = useMapStore((s) => s.customRingRadius)
+  const rotateEnabled  = useMapStore((s) => s.rotateEnabled)
   const toggleSeamark  = useMapStore((s) => s.toggleSeamark)
   const toggleCompass  = useMapStore((s) => s.toggleCompass)
+  const toggleRotateEnabled = useMapStore((s) => s.toggleRotateEnabled)
   const toggleSpeedUnit = useMapStore((s) => s.toggleSpeedUnit)
   const cycleDistUnit  = useMapStore((s) => s.cycleDistUnit)
   const autoTrack      = useMapStore((s) => s.autoTrack)
@@ -92,6 +94,9 @@ export default function SettingsPanel({ onClose }: Props) {
           </button>
           <button className="menu-item" style={{ color: compassEnabled ? '#60a5fa' : undefined }} onClick={handleCompassToggle}>
             <Compass size={20} /><span>Kompass {compassEnabled ? '(på)' : '(av)'}</span>
+          </button>
+          <button className="menu-item" style={{ color: rotateEnabled ? '#60a5fa' : undefined }} onClick={toggleRotateEnabled}>
+            <RotateCw size={20} /><span>Vri kart med to fingre {rotateEnabled ? '(på)' : '(av)'}</span>
           </button>
 
           <div className="menu-divider" />
