@@ -9,6 +9,7 @@ import NavOverlay from './components/NavOverlay'
 import TrackFollowOverlay from './components/TrackFollowOverlay'
 import MobButton from './components/MobButton'
 import NavPreviewBar from './components/NavPreviewBar'
+import DisclaimerModal from './components/DisclaimerModal'
 import WeatherOverlay from './components/WeatherOverlay'
 import TideOverlay from './components/TideOverlay'
 import { useGPS } from './hooks/useGPS'
@@ -64,6 +65,7 @@ export default function App() {
 
   return (
     <div className={`app-root ${darkMode ? '' : 'day'}${nightVision ? ' night-vision' : ''}${mobPoint ? ' mob-active' : ''}${navPreview ? ' nav-preview-active' : ''}`}>
+      <DisclaimerModal />
       <div className="map-wrapper">
         <MapView />
         <MapControls />

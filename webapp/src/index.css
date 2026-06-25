@@ -239,6 +239,22 @@ html, body, #root {
   padding: max(14px, calc(env(safe-area-inset-top) + 8px)) 16px 16px;
   overflow-y: auto;
 }
+/* ── Disclaimer modal ── */
+.disclaimer-overlay { align-items: center; background: rgba(0,0,0,0.85); }
+.disclaimer-dialog { max-width: 380px; border-color: #f59e0b44; }
+.disclaimer-text {
+  font-size: 14px; color: #cbd5e1; line-height: 1.6;
+  margin-bottom: 12px;
+}
+.disclaimer-text strong { color: white; }
+.disclaimer-small { font-size: 12px; color: #64748b; margin-bottom: 20px; }
+.disclaimer-accept {
+  width: 100%; padding: 12px;
+  background: #2563eb; color: white;
+  border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.disclaimer-accept:active { opacity: 0.85; }
 .dialog {
   background: #1e293b;
   border: 1px solid rgba(255,255,255,0.1);
