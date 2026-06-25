@@ -4,6 +4,11 @@ import type { SeriesPoint } from './components/forecastCharts'
 
 const MET_HEADERS = { 'User-Agent': 'BaatKart/1.0 frode.sighaug@gmail.com' }
 
+// Minimal form av MET-tidsserie-punktene vi faktisk leser.
+interface MetPoint {
+  data?: { instant?: { details?: Record<string, number> } }
+}
+
 export interface WxPoint { windSpeed: number; windDir: number; temp: number; symbol: string }
 export interface WavePoint { height: number; dir: number; seaTemp?: number }
 // Strøm rir gratis på samme oceanforecast-kall som bølger.
@@ -38,7 +43,7 @@ export async function fetchWeather(lat: number, lng: number): Promise<{ wx: WxPo
   const d = ts0.instant.details
   const symbol = ts0.next_1_hours?.summary?.symbol_code ?? ts0.next_6_hours?.summary?.symbol_code ?? ''
   const wx: WxPoint = { windSpeed: d.wind_speed, windDir: d.wind_from_direction, temp: d.air_temperature, symbol }
-  const windSeries: SeriesPoint[] = series.slice(0, 8).map((p: any, i: number) => ({ hour: i, v: p.data.instant.details.wind_speed }))
+  const windSeries: SeriesPoint[] = series.slice(0, 8).map((p: MetPoint, i: number) => ({ hour: i, v: p.data!.instant!.details!.wind_speed }))
   return { wx, windSeries }
 }
 
@@ -66,7 +71,7 @@ export async function fetchOcean(
     ? { speed: d.sea_water_speed, dir: d.sea_water_to_direction ?? 0 }
     : null
   const waveSeries: SeriesPoint[] = series.slice(0, 8)
-    .filter((p: any) => p.data?.instant?.details?.sea_surface_wave_height != null)
-    .map((p: any, i: number) => ({ hour: i, v: p.data.instant.details.sea_surface_wave_height }))
+    .filter((p: MetPoint) => p.data?.instant?.details?.sea_surface_wave_height != null)
+    .map((p: MetPoint, i: number) => ({ hour: i, v: p.data!.instant!.details!.sea_surface_wave_height }))
   return { wave, waveSeries, current }
 }
