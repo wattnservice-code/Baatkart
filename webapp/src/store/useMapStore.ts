@@ -103,6 +103,8 @@ interface MapStore {
   boatInfo: BoatInfo
   lookAhead: boolean
   headingUp: boolean
+  mapRotated: boolean        // kartet er manuelt vridd vekk fra nord (fri modus)
+  northUpNonce: number       // økes for å be MapView rette kartet mot nord
   savedTracks: SavedTrack[]
   followingTrack: SavedTrack | null
   trackDistanceM: number
@@ -160,6 +162,8 @@ interface MapStore {
   setBoatInfo: (info: Partial<BoatInfo>) => void
   toggleLookAhead: () => void
   toggleHeadingUp: () => void
+  setMapRotated: (v: boolean) => void
+  requestNorthUp: () => void
   toggleSpotsVisible: () => void
   addQuickPin: (p: { lat: number; lng: number }) => void
   dismissMapHint: () => void
@@ -281,6 +285,8 @@ export const useMapStore = create<MapStore>((set) => ({
   boatInfo: loadBoatInfo(),
   lookAhead: loadBool('lookAhead', false),
   headingUp: loadBool('headingUp', false),
+  mapRotated: false,
+  northUpNonce: 0,
   savedTracks: loadSavedTracks(),
   followingTrack: null,
   trackDistanceM: 0,
@@ -420,6 +426,8 @@ export const useMapStore = create<MapStore>((set) => ({
   setAisStatus: (s) => set({ aisStatus: s }),
   toggleLookAhead: () => set((s) => { const v = !s.lookAhead; localStorage.setItem('lookAhead', String(v)); return { lookAhead: v } }),
   toggleHeadingUp: () => set((s) => { const v = !s.headingUp; localStorage.setItem('headingUp', String(v)); return { headingUp: v } }),
+  setMapRotated: (v) => set({ mapRotated: v }),
+  requestNorthUp: () => set((s) => ({ northUpNonce: s.northUpNonce + 1 })),
   toggleSpotsVisible: () => set((s) => { const v = !s.spotsVisible; localStorage.setItem('spotsVisible', String(v)); return { spotsVisible: v } }),
   addQuickPin: (p) => set((s) => {
     // Skip if there's already a pin within 20 m (double-tap guard)

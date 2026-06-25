@@ -215,6 +215,8 @@ export default function MapView() {
   const targetBearingRef   = useRef(0)   // desired bearing (deg)
   const appliedBearingRef  = useRef(0)   // last bearing pushed to the map
   const rafRef             = useRef<number | null>(null)
+  const isManualRef        = useRef(false) // bruker har vridd kartet fritt (to-finger)
+  const manualBearingRef   = useRef(0)     // holdt vinkel i fri modus (deg)
 
   const position         = useMapStore((s) => s.position)
   const positionRef      = useRef(position)
@@ -244,6 +246,7 @@ export default function MapView() {
   const offlineOnly      = useMapStore((s) => s.offlineOnly)
   const lookAhead        = useMapStore((s) => s.lookAhead)
   const headingUp        = useMapStore((s) => s.headingUp)
+  const northUpNonce     = useMapStore((s) => s.northUpNonce)
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
   const setFlyTo         = useMapStore((s) => s.setFlyTo)
 
@@ -252,7 +255,7 @@ export default function MapView() {
     if (!containerRef.current || mapRef.current) return
     const map = L.map(containerRef.current, {
       center: [59.9, 10.7], zoom: 13, zoomControl: false,
-      rotate: true, rotateControl: false, touchRotate: false, shiftKeyRotate: false, bearing: 0,
+      rotate: true, rotateControl: false, touchRotate: true, shiftKeyRotate: false, bearing: 0,
     })
     // Move the OSM attribution to the bottom-left so it doesn't sit under the
     // right-edge FAB menu.
@@ -278,6 +281,24 @@ export default function MapView() {
           useMapStore.getState().setFollowBoat(true)
         }
       }, 10000)
+    })
+
+    // To-finger-vri: skill brukerens gest fra appens egen setBearing via
+    // touchGestures._rotating. Ved manuell vri kobles kjøreretning/kompass ut
+    // og vinkelen holdes (fri modus), så auto-rotasjonen ikke slåss imot.
+    map.on('rotate', () => {
+      const tg = (map as unknown as { touchGestures?: { _rotating?: boolean } }).touchGestures
+      if (!tg?._rotating) return // programmatisk rotasjon – ignorer
+      const st = useMapStore.getState()
+      if (st.headingUp) st.toggleHeadingUp()
+      if (st.compassEnabled) st.toggleCompass()
+      const disp = ((-map.getBearing() % 360) + 360) % 360
+      isManualRef.current = true
+      manualBearingRef.current = disp
+      bearingRef.current = disp
+      appliedBearingRef.current = disp
+      setCurrentBearing(disp)
+      if (!st.mapRotated) st.setMapRotated(true)
     })
 
     const updateBounds = () => {
@@ -540,7 +561,17 @@ export default function MapView() {
     const isCompassActive = compassEnabled && compassHeading !== null && !isNaN(compassHeading)
     const ease = isCompassActive ? 0.06 : 0.1
 
-    const target = () => (headingUp ? targetBearingRef.current : 0)
+    // Heading-modus overstyrer fri rotasjon: rydd manuell-flagget når den slås på.
+    if (headingUp) {
+      isManualRef.current = false
+      if (useMapStore.getState().mapRotated) useMapStore.getState().setMapRotated(false)
+    }
+
+    // Mål: kjøreretning (heading-up) → fri vinkel (manuell vri) → nord-opp (0).
+    const target = () =>
+      headingUp ? targetBearingRef.current
+      : isManualRef.current ? manualBearingRef.current
+      : 0
 
     const loop = () => {
       const diff = shortestAngle(bearingRef.current, target())
@@ -561,6 +592,15 @@ export default function MapView() {
 
     return () => { if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null } }
   }, [headingUp, compassEnabled, compassHeading])
+
+  // Reset til nord-opp når kompass-rosen trykkes mens kartet er fritt vridd.
+  // rAF-loopen over easer kartet tilbake til 0 når manuell-flagget ryddes.
+  useEffect(() => {
+    if (northUpNonce === 0) return
+    isManualRef.current = false
+    manualBearingRef.current = 0
+    useMapStore.getState().setMapRotated(false)
+  }, [northUpNonce])
 
   // Redraw tiles when offlineOnly toggles so grey placeholders appear immediately
   useEffect(() => {

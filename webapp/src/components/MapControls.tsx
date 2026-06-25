@@ -28,10 +28,10 @@ function formatEta(distM: number, speedMs: number): string | null {
 
 type NordMode = 'off' | 'gps' | 'krs'
 
-function CompassBtn({ mode }: { mode: NordMode }) {
+function CompassBtn({ mode, rotated }: { mode: NordMode; rotated: boolean }) {
   const elRef  = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number | null>(null)
-  const active = mode !== 'off'
+  const active = mode !== 'off' || rotated
 
   useEffect(() => {
     const el = elRef.current
@@ -68,6 +68,8 @@ export default function MapControls() {
   const toggleHeadingUp  = useMapStore((s) => s.toggleHeadingUp)
   const compassEnabled   = useMapStore((s) => s.compassEnabled)
   const toggleCompass    = useMapStore((s) => s.toggleCompass)
+  const mapRotated       = useMapStore((s) => s.mapRotated)
+  const requestNorthUp   = useMapStore((s) => s.requestNorthUp)
   const followBoat       = useMapStore((s) => s.followBoat)
   const addingSpot       = useMapStore((s) => s.addingSpot)
   const position         = useMapStore((s) => s.position)
@@ -154,6 +156,11 @@ export default function MapControls() {
   const nordMode: NordMode = compassEnabled ? 'krs' : headingUp ? 'gps' : 'off'
 
   const handleCompassBtn = async () => {
+    // Fritt vridd kart (off-modus): første trykk retter opp mot nord.
+    if (nordMode === 'off' && mapRotated) {
+      requestNorthUp()
+      return
+    }
     if (nordMode === 'off') {
       // → GPS kjøreretning (headingUp on, compass off)
       if (!headingUp) toggleHeadingUp()
@@ -215,11 +222,16 @@ export default function MapControls() {
 
       <div className="map-controls">
         <button
-          className={`fab compass-fab ${nordMode !== 'off' ? 'cmps-btn-krs' : ''}`}
+          className={`fab compass-fab ${nordMode !== 'off' || mapRotated ? 'cmps-btn-krs' : ''}`}
           onClick={handleCompassBtn}
-          title={nordMode === 'krs' ? 'Kompassretning – trykk for nord-opp' : nordMode === 'gps' ? 'GPS kjøreretning – trykk for kompass' : 'Nord-opp – trykk for kjøreretning'}
+          title={
+            nordMode === 'off' && mapRotated ? 'Kart vridd – trykk for nord-opp'
+            : nordMode === 'krs' ? 'Kompassretning – trykk for nord-opp'
+            : nordMode === 'gps' ? 'GPS kjøreretning – trykk for kompass'
+            : 'Nord-opp – trykk for kjøreretning'
+          }
         >
-          <CompassBtn mode={nordMode} />
+          <CompassBtn mode={nordMode} rotated={mapRotated} />
         </button>
         <button
           className={`fab ${aisVisible ? 'fab-active' : ''}`}
