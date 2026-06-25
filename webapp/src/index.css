@@ -192,6 +192,30 @@ html, body, #root {
 }
 .map-banner button { background: none; border: none; color: white; cursor: pointer; display: flex; }
 
+/* Engangs-hint: langtrykk slipper et merke. Toppmidtstilt, diskret. */
+.map-hint {
+  position: absolute;
+  top: max(12px, calc(env(safe-area-inset-top) + 8px)); left: 50%;
+  transform: translateX(-50%);
+  z-index: 410;
+  max-width: calc(100vw - 24px);
+  background: rgba(15,23,42,0.92);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: white;
+  padding: 8px 8px 8px 16px;
+  border-radius: 999px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.map-hint button {
+  background: rgba(255,255,255,0.12); border: none; color: #93c5fd;
+  cursor: pointer; font-size: 12px; font-weight: 600;
+  padding: 5px 12px; border-radius: 999px; white-space: nowrap;
+}
+.map-hint button:active { background: rgba(255,255,255,0.22); }
+
 /* ── Fishing spot marker ── */
 .spot-marker {
   display: flex; align-items: center; gap: 4px;

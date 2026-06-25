@@ -233,6 +233,8 @@ export default function MapView() {
   const spotsVisible     = useMapStore((s) => s.spotsVisible)
   const quickPins               = useMapStore((s) => s.quickPins)
   const highlightedQuickPinId   = useMapStore((s) => s.highlightedQuickPinId)
+  const quickPinHintDismissed   = useMapStore((s) => s.quickPinHintDismissed)
+  const dismissQuickPinHint     = useMapStore((s) => s.dismissQuickPinHint)
   const compassEnabled          = useMapStore((s) => s.compassEnabled)
   const compassHeading   = useMapStore((s) => s.compassHeading)
   const darkMode         = useMapStore((s) => s.darkMode)
@@ -812,8 +814,10 @@ export default function MapView() {
       popupJustClosed.current = true
       setTimeout(() => { popupJustClosed.current = false }, 100)
     }
+    const longPressJustFired = { current: false }
     const onClick = (e: L.LeafletMouseEvent) => {
       if (popupJustClosed.current) return
+      if (longPressJustFired.current) return
       if (addingSpot) { setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng }); return }
       const s = useMapStore.getState()
       if (s.spotMenu) return
@@ -823,12 +827,26 @@ export default function MapView() {
       s.setSearchPin({ lat, lng, name })
       s.setSpotMenu({ lat, lng, name })
     }
+    // Trykk-og-hold (Leaflet contextmenu på touch / høyreklikk på desktop) →
+    // slipp et hurtigmerke der du trykket. Undertrykk påfølgende klikk så
+    // "Valgt punkt"-menyen ikke åpnes samtidig.
+    const onLongPress = (e: L.LeafletMouseEvent) => {
+      if (e.originalEvent) L.DomEvent.preventDefault(e.originalEvent)
+      const s = useMapStore.getState()
+      if (s.mobPoint || addingSpot) return
+      s.addQuickPin({ lat: e.latlng.lat, lng: e.latlng.lng })
+      useMapStore.getState().dismissQuickPinHint()
+      longPressJustFired.current = true
+      setTimeout(() => { longPressJustFired.current = false }, 400)
+    }
     map.on('popupclose', onPopupClose)
     map.on('click', onClick)
+    map.on('contextmenu', onLongPress)
     map.getContainer().style.cursor = addingSpot ? 'crosshair' : ''
     return () => {
       map.off('popupclose', onPopupClose)
       map.off('click', onClick)
+      map.off('contextmenu', onLongPress)
     }
   }, [addingSpot])
 
@@ -836,6 +854,12 @@ export default function MapView() {
     <>
       <div ref={containerRef} className="w-full h-full">
       </div>
+      {!quickPinHintDismissed && !mobPoint && (
+        <div className="map-hint">
+          <span>Trykk og hold for å slippe et merke</span>
+          <button onClick={dismissQuickPinHint}>Vis ikke igjen</button>
+        </div>
+      )}
       {pendingSpot && <SpotDialog lat={pendingSpot.lat} lng={pendingSpot.lng} onClose={() => setPendingSpot(null)} />}
     </>
   )
