@@ -263,6 +263,7 @@ export default function MapControls() {
           onClick={() => {
             const m = getMapInstance()
             if (!followBoat && m) m.setZoom(14)   // reset zoom when returning from nav
+            if (mapRotated) requestNorthUp()      // rett opp manuelt vridd kart
             setFollowBoat(true)
           }}
           title={followBoat ? 'Følger båten' : 'Tilbake til båten'}
