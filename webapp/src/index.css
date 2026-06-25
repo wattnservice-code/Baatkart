@@ -2051,9 +2051,11 @@ html, body, #root {
   overflow: hidden;
 }
 .leaflet-bottom.leaflet-left { bottom: 4px; }
-/* Leaflet legger bunn-kontroller (attribusjon/maalestokk) paa z-index 1000 –
-   over panelene vaare. Senk dem saa de aldri dekker noe klikkbart. */
-.leaflet-bottom { z-index: 360 !important; }
+/* Attribusjonen (Kartverket/OSM) skal vaere synlig, men aldri fange trykk –
+   da kan den aldri ligge i veien for noe klikkbart. */
+.leaflet-control-attribution { pointer-events: none !important; }
+/* Skjul den under MOB (samme hjorne som MOB-panelet) */
+.mob-active .leaflet-control-attribution { display: none !important; }
 
 .night-vision .leaflet-tile {
   filter: saturate(0) brightness(0.55) sepia(1) hue-rotate(320deg) saturate(2.5) brightness(0.85);
