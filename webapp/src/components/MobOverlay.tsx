@@ -74,7 +74,6 @@ export default function MobOverlay() {
       lines.push(`Vær: ${currentWeather.windSpeed.toFixed(1)} m/s ${dir}, ${Math.round(currentWeather.temp)}°C`)
     }
     if (boatInfo.phone) lines.push(`Kontakt: ${boatInfo.phone}`)
-    if (boatInfo.notes) lines.push(`Notat: ${boatInfo.notes}`)
     return lines.join('\n')
   }
 
