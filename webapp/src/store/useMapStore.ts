@@ -287,7 +287,7 @@ export const useMapStore = create<MapStore>((set) => ({
   boatInfo: loadBoatInfo(),
   lookAhead: loadBool('lookAhead', false),
   headingUp: loadBool('headingUp', false),
-  rotateEnabled: loadBool('rotateEnabled', true),
+  rotateEnabled: loadBool('rotateEnabled', false),
   mapRotated: false,
   northUpNonce: 0,
   savedTracks: loadSavedTracks(),
