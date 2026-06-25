@@ -6,6 +6,7 @@ import { getMapInstance } from '../mapInstance'
 import { collisionAlarm } from '../audio'
 import { formatDist } from '../components/NavOverlay'
 import { destPoint, cardinal } from '../geo'
+import { computeCPA, isDanger, KN_TO_MS, type OwnState } from '../collision'
 
 // ── Data model ────────────────────────────────────────────────────────────────
 
@@ -272,37 +273,7 @@ function vesselIcon(vessel: AISVessel, danger: boolean, zoom: number): L.DivIcon
 }
 
 // ── Collision (CPA/TCPA) ──────────────────────────────────────────────────────
-
-const DANGER_CPA_M    = 926   // 0.5 nm
-const DANGER_TCPA_MIN = 15
-const KN_TO_MS        = 0.514444
-
-interface OwnState { lat: number; lng: number; speedMs: number; courseDeg: number }
-interface CpaInfo  { cpaM: number; tcpaMin: number; rangeM: number; bearingDeg: number }
-
-function computeCPA(own: OwnState, t: AISVessel): CpaInfo | null {
-  const R = 6371000, latRad = (own.lat * Math.PI) / 180
-  const px = ((t.lng - own.lng) * Math.PI / 180) * R * Math.cos(latRad)
-  const py = ((t.lat - own.lat) * Math.PI / 180) * R
-  const rangeM     = Math.hypot(px, py)
-  const bearingDeg = ((Math.atan2(px, py) * 180 / Math.PI) + 360) % 360
-  const ovx = own.speedMs * Math.sin((own.courseDeg * Math.PI) / 180)
-  const ovy = own.speedMs * Math.cos((own.courseDeg * Math.PI) / 180)
-  const tSpeed = t.sog * KN_TO_MS
-  const tCourse = t.heading > 0 && t.heading < 360 ? t.heading : t.cog
-  const tvx = tSpeed * Math.sin((tCourse * Math.PI) / 180)
-  const tvy = tSpeed * Math.cos((tCourse * Math.PI) / 180)
-  const rvx = tvx - ovx, rvy = tvy - ovy
-  const rv2 = rvx * rvx + rvy * rvy
-  if (rv2 < 1e-4) return { cpaM: rangeM, tcpaMin: 0, rangeM, bearingDeg }
-  const tcpaSec = -(px * rvx + py * rvy) / rv2
-  const cx = px + rvx * tcpaSec, cy = py + rvy * tcpaSec
-  return { cpaM: Math.hypot(cx, cy), tcpaMin: tcpaSec / 60, rangeM, bearingDeg }
-}
-
-function isDanger(cpa: CpaInfo | null): boolean {
-  return !!cpa && cpa.tcpaMin > 0 && cpa.tcpaMin < DANGER_TCPA_MIN && cpa.cpaM < DANGER_CPA_M
-}
+// Selve matten ligger i ../collision (ren + testbar). KN_TO_MS gjenbrukes under.
 
 // ── Popup ─────────────────────────────────────────────────────────────────────
 
