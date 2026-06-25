@@ -85,11 +85,12 @@ export default function SpotListPanel({ onClose, onAddGps, onAddMap }: Props) {
         <div className="settings-head" {...swipe}>
           <span className="settings-title">Steder</span>
           <button
-            className={`settings-head-icon-btn ${spotsVisible ? 'settings-head-icon-btn-active' : ''}`}
+            className={`spots-visibility-toggle ${spotsVisible ? 'spots-visibility-toggle-active' : ''}`}
             onClick={toggleSpotsVisible}
-            title={spotsVisible ? 'Skjul på kart' : 'Vis på kart'}
+            title={spotsVisible ? 'Trykk for å skjule lagrede steder på kartet' : 'Trykk for å vise lagrede steder på kartet'}
           >
-            {spotsVisible ? <Eye size={18} /> : <EyeOff size={18} />}
+            {spotsVisible ? <Eye size={16} /> : <EyeOff size={16} />}
+            <span>{spotsVisible ? 'Vises på kart' : 'Skjult på kart'}</span>
           </button>
           <button className="settings-close" onClick={onClose}><X size={20} /></button>
         </div>

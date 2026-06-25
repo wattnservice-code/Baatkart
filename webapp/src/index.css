@@ -1995,6 +1995,19 @@ html, body, #root {
 }
 .settings-head-icon-btn:active { background: rgba(255,255,255,0.16); }
 .settings-head-icon-btn-active { color: #38bdf8; background: rgba(56,189,248,0.15); }
+/* Merket av/på-bryter for å vise lagrede steder på kartet */
+.spots-visibility-toggle {
+  display: flex; align-items: center; gap: 6px;
+  margin-left: auto; margin-right: 8px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  color: #94a3b8; cursor: pointer;
+  padding: 7px 12px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.spots-visibility-toggle:active { background: rgba(255,255,255,0.16); }
+.spots-visibility-toggle-active { color: #38bdf8; background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.4); }
+.day .spots-visibility-toggle { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.12); color: #475569; }
+.day .spots-visibility-toggle-active { color: #0284c7; background: rgba(2,132,199,0.12); border-color: rgba(2,132,199,0.4); }
 .settings-body { flex: 1; overflow-y: auto; padding-bottom: max(32px, calc(env(safe-area-inset-bottom) + 20px)); }
 
 .day .settings-sheet { background: rgba(248,250,252,0.99); color: #0f172a; }
