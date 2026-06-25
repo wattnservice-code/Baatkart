@@ -19,111 +19,142 @@ export default function InfoPanel({ onClose }: Props) {
             <b>Viktig forbehold</b>
             <p>
               Båtkart er et hjelpemiddel og <b>erstatter ikke</b> offisielle sjøkart,
-              kartplotter eller godkjent navigasjonsutstyr. Posisjon, dybder, sjømerker
-              og AIS kan være unøyaktige eller forsinket. Bruk alltid offisielle kilder
-              og godt sjømannskap. Du er selv ansvarlig for sikker navigering.
+              kartplotter eller godkjent navigasjonsutstyr. Kartdata er basert på
+              OpenSeaMap som er community-vedlikeholdt og <b>ikke offisielt godkjent</b> for
+              navigasjon. Posisjon, dybder, sjømerker og AIS kan være unøyaktige eller
+              forsinket. Bruk alltid offisielle kilder og godt sjømannskap.
+              Du er selv ansvarlig for sikker navigering.
             </p>
           </div>
         </div>
 
         <h3 className="info-h">Kom i gang</h3>
         <ul className="info-list">
-          <li><b>Posisjon:</b> blå pil viser båten. Trykk «sentrer»-knappen for å følge.</li>
-          <li><b>Dag / natt / nattsyn:</b> sol-/øye-knappen på kartet sykler mellom modusene.</li>
-          <li><b>Kartretning:</b> kompassknappen sykler – trykk én gang for GPS kjøreretning, én til for kompassretning, én til for nord-opp.</li>
+          <li><b>Posisjon:</b> blå pil viser båten. Trykk «sentrer»-knappen (pil-ikon) for å følge posisjonen.</li>
+          <li><b>Dag / natt / nattsyn:</b> sol-knappen på høyre side sykler mellom modusene.</li>
+          <li><b>Kartretning:</b> kompassknappen øverst til høyre – trykk for GPS-kjøreretning (heading-up), trykk igjen for kompassretning, en gang til for nord-opp.</li>
+          <li><b>Vri kart med to fingre:</b> slå på under Meg → «Vri kart med to fingre». Trykk «Tilbake til båten» for å nullstille retningen.</li>
+          <li><b>Skjermen forblir på</b> så lenge appen er åpen (Wake Lock).</li>
+        </ul>
+
+        <h3 className="info-h">Valgt punkt</h3>
+        <ul className="info-list">
+          <li>Hold lenge på kartet for å åpne <b>Valgt punkt</b>-menyen.</li>
+          <li>Herfra kan du navigere til punktet, åpne i Google Maps, eller lagre som sted.</li>
         </ul>
 
         <h3 className="info-h">Steder</h3>
         <ul className="info-list">
-          <li>Trykk på kartet for å slippe en pin og lagre stedet.</li>
-          <li>Åpne <b>Steder</b>: søk på nett og se dine lagrede steder samlet.</li>
-          <li>Velg et symbol (fiske, bading, ankring, vrak, fare, iland) ved lagring.</li>
+          <li>Åpne <b>Steder</b>-panelet og trykk «Min posisjon» for å lagre der du er, eller «Velg på kartet» for å plassere en pin manuelt.</li>
+          <li>Søk på stedsnavn eller adresse – lagre søkeresultater direkte.</li>
+          <li>Velg symbol (fiske, bading, ankring, vrak, fare, iland) ved lagring.</li>
+          <li>Trykk «Vises på kart»/«Skjult på kart» øverst i panelet for å vise eller skjule alle lagrede steder på kartet.</li>
+          <li>Steder er sortert alfabetisk.</li>
+        </ul>
+
+        <h3 className="info-h">Navigasjon</h3>
+        <ul className="info-list">
+          <li>Søk etter et sted og trykk <b>Start</b> for å begynne navigasjon.</li>
+          <li>Du kan også navigere fra et lagret sted ved å trykke navigasjonsikonet i Steder-panelet.</li>
+          <li>Kurslinje og avstand vises på kartet under navigasjon.</li>
+          <li>Trykk <b>Avbryt</b> for å stoppe navigasjonen.</li>
         </ul>
 
         <h3 className="info-h">Turer</h3>
         <ul className="info-list">
-          <li>Trykk <b>Tur</b>-knappen i statuslinja for å starte opptak direkte.</li>
+          <li>Trykk <b>Tur</b>-knappen i statuslinja for å starte sporing.</li>
           <li>Trykk <b>REC</b> igjen for å stoppe – du kan lagre eller forkaste turen.</li>
-          <li>Vil du at opptak starter automatisk, slå på <b>Start tur-opptak automatisk</b> under Meg → Sporing.</li>
-          <li>Lagrede turer kan følges på nytt.</li>
+          <li>Slå på <b>Start tur-opptak automatisk</b> under Meg → Sporing for automatisk start ved åpning.</li>
+          <li>Lagrede turer kan vises og følges på nytt.</li>
         </ul>
 
         <h3 className="info-h">Mann over bord (MOB)</h3>
         <ul className="info-list">
           <li>Røde <b>MOB</b>-knappen merker posisjonen umiddelbart.</li>
-          <li>Vis avstand/peiling, kopier koordinater og naviger tilbake.</li>
+          <li>Viser avstand og peiling til MOB-punktet kontinuerlig.</li>
+          <li>Trykk <b>Del posisjon</b> for å dele koordinater og Google Maps-lenke via meldingsapp, e-post eller annet.</li>
+          <li>Kopier koordinater direkte til utklippstavlen.</li>
           <li>Ved nød: ring <b>120</b> (sjøredning) eller <b>112</b>.</li>
         </ul>
 
         <h3 className="info-h">AIS – fartøy på kartet</h3>
         <ul className="info-list">
-          <li>Trykk <b>Ship-knappen</b> på kartet for å slå AIS av/på – ingen API-nøkkel nødvendig.</li>
+          <li>Trykk <b>Ship-knappen</b> på kartet for å slå AIS av/på.</li>
           <li>Data hentes fra Barentswatch / Kystverket og oppdateres hvert 15. sekund.</li>
-          <li>Trykk på et fartøy for å se navn, type, fart, kurs, destinasjon, dimensjoner og mer.</li>
-          <li><b>Kollisjonsvarsel</b> (pulserende rød 🚨): CPA &lt; 0,3 nm og TCPA &lt; 10 min.</li>
-          <li>📡 <i>Ingen AIS-kontakt</i>: midlertidig nettverksfeil – varselet forsvinner når kontakten er tilbake.</li>
+          <li>Trykk på et fartøy for å se navn, type, fart, kurs, destinasjon og dimensjoner.</li>
+          <li><b>Kollisjonsvarsel</b> (pulserende rød 🚨): CPA &lt; 0,5 nm og TCPA &lt; 15 min. Trykk på varselet for å fly til det farligste fartøyet.</li>
+          <li>Fortøyde og ankrede fartøy kan skjules under Meg → «Vis fortøyde/ankrede».</li>
+          <li>📡 <i>Ingen AIS-kontakt</i>: midlertidig nettverksfeil – forsvinner automatisk når kontakten er tilbake.</li>
           <li>Ikke alle fartøy sender alle opplysninger – manglende felter er normalt.</li>
+          <li>AIS krever nettilgang og er ikke tilgjengelig offline.</li>
+        </ul>
+
+        <h3 className="info-h">Vær og tidevann</h3>
+        <ul className="info-list">
+          <li>Trykk <b>sol/bølge-knappen</b> øverst til høyre for å vise vær eller tidevann.</li>
+          <li>Værdata fra Meteorologisk institutt (Yr) – vind, temperatur, bølger og strøm.</li>
+          <li>Tidevann fra Kartverket – neste flo og fjøre ved nærmeste stasjon.</li>
+          <li>Krever nettilgang.</li>
         </ul>
 
         <h3 className="info-h">Offline</h3>
         <ul className="info-list">
-          <li>Kart caches automatisk når du er online.</li>
+          <li>Kart caches automatisk når du er online – besøkte områder er tilgjengelige uten nett.</li>
           <li>Last ned et område på forhånd via Meg → Offline kart.</li>
+          <li>AIS, vær og tidevann krever nettilgang og er ikke tilgjengelig offline.</li>
         </ul>
 
         <h3 className="info-h">Datakilder og lisenser</h3>
         <ul className="info-list">
           <li>
-            <b>Grunnkart:</b> © <a href="https://stadiamaps.com/" target="_blank" rel="noopener">Stadia Maps</a> /
-            <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> /
+            <b>Grunnkart:</b> ©{' '}
+            <a href="https://stadiamaps.com/" target="_blank" rel="noopener">Stadia Maps</a> /{' '}
+            <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> /{' '}
             <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-bidragsytere –
             lisens <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">ODbL</a>.
-            Kommersiell bruk tillatt.
           </li>
           <li>
-            <b>Nattmodus:</b> Stadia Maps «Alidade Smooth Dark» –
-            basert på OpenStreetMap, kommersiell bruk tillatt.
+            <b>Sjøkart-overlay:</b> ©{' '}
+            <a href="https://openseamap.org" target="_blank" rel="noopener">OpenSeaMap</a> –
+            community-vedlikeholdte navigasjonsmerker, lisens ODbL.{' '}
+            <b>Ikke offisielt godkjent for navigasjon.</b>
           </li>
           <li>
-            <b>Sjøkart:</b> © <a href="https://kartverket.no" target="_blank" rel="noopener">Kartverket</a> –
-            norske sjøkart (WMTS). Lisens NLOD 2.0.
+            <b>AIS-fartøy:</b> ©{' '}
+            <a href="https://barentswatch.no" target="_blank" rel="noopener">Barentswatch</a> / Kystverket –
+            offisiell norsk AIS, lisens NLOD 2.0.
           </li>
           <li>
-            <b>Sjømerker:</b> © <a href="https://openseamap.org" target="_blank" rel="noopener">OpenSeaMap</a> –
-            navigasjonsmerker, lisens ODbL.
+            <b>Vær:</b> ©{' '}
+            <a href="https://yr.no" target="_blank" rel="noopener">Yr</a> /{' '}
+            <a href="https://met.no" target="_blank" rel="noopener">Meteorologisk institutt</a> –
+            api.met.no, lisens NLOD 2.0.
           </li>
           <li>
-            <b>AIS-fartøy:</b> © <a href="https://barentswatch.no" target="_blank" rel="noopener">Barentswatch</a> /
-            Kystverket – offisiell norsk AIS, lisens NLOD 2.0.
-          </li>
-          <li>
-            <b>Vær:</b> © <a href="https://yr.no" target="_blank" rel="noopener">Yr</a> /
-            <a href="https://met.no" target="_blank" rel="noopener"> Meteorologisk institutt</a> –
-            data fra api.met.no, lisens NLOD 2.0.
-          </li>
-          <li>
-            <b>Tidevann:</b> © <a href="https://kartverket.no" target="_blank" rel="noopener">Kartverket</a> –
+            <b>Tidevann:</b> ©{' '}
+            <a href="https://kartverket.no" target="_blank" rel="noopener">Kartverket</a> –
             vannstand.kartverket.no, lisens NLOD 2.0.
           </li>
           <li>
-            <b>Stedsnavn:</b> © <a href="https://kartverket.no" target="_blank" rel="noopener">Kartverket</a> (stedsnavn API)
-            og <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener">Nominatim</a> / OpenStreetMap.
+            <b>Stedssøk:</b> ©{' '}
+            <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener">Nominatim</a> / OpenStreetMap.
           </li>
           <li>
-            <b>Mer om fartøy:</b> <a href="https://www.vesselfinder.com" target="_blank" rel="noopener">VesselFinder</a> –
+            <b>Mer om fartøy:</b>{' '}
+            <a href="https://www.vesselfinder.com" target="_blank" rel="noopener">VesselFinder</a> –
             ekstern lenke, åpnes i nettleser.
           </li>
           <li>
-            <b>Google Maps / Google Earth:</b> Eksterne lenker fra stedskort –
-            åpner Googles egne tjenester i nettleser.
+            <b>Google Maps / Google Earth:</b> Eksterne lenker fra stedskort og MOB – åpner Googles egne tjenester.
           </li>
           <li>
-            <b>GPS:</b> Enhetens innebygde GPS via Web Geolocation API (nettleser-native).
+            <b>GPS:</b> Enhetens innebygde GPS via Web Geolocation API.
           </li>
         </ul>
         <p style={{ fontSize: 11, color: '#64748b', marginTop: 8, lineHeight: 1.5 }}>
           Kartattribusjon vises nederst til venstre på kartet. Alle offentlige norske datakilder
-          er distribuert under <a href="https://data.norge.no/nlod" target="_blank" rel="noopener">Norsk lisens for offentlige data (NLOD) 2.0</a>.
+          er distribuert under{' '}
+          <a href="https://data.norge.no/nlod" target="_blank" rel="noopener">Norsk lisens for offentlige data (NLOD) 2.0</a>.
         </p>
       </div>
     </div>
