@@ -63,7 +63,7 @@ export default function InfoPanel({ onClose }: Props) {
         <h3 className="info-h">Turer</h3>
         <ul className="info-list">
           <li>Trykk <b>Tur</b>-knappen i statuslinja for å starte sporing.</li>
-          <li>Trykk <b>REC</b> igjen for å stoppe – du kan lagre eller forkaste turen.</li>
+          <li>Under opptak vises <b>REC</b> med distanse. Trykk på den for å åpne Turer-panelet der du kan stoppe og lagre eller forkaste turen.</li>
           <li>Slå på <b>Start tur-opptak automatisk</b> under Meg → Sporing for automatisk start ved åpning.</li>
           <li>Lagrede turer kan vises og følges på nytt.</li>
         </ul>
