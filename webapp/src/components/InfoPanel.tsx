@@ -107,9 +107,8 @@ export default function InfoPanel({ onClose }: Props) {
         <h3 className="info-h">Datakilder og lisenser</h3>
         <ul className="info-list">
           <li>
-            <b>Grunnkart:</b> ©{' '}
-            <a href="https://stadiamaps.com/" target="_blank" rel="noopener">Stadia Maps</a> /{' '}
-            <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> /{' '}
+            <b>Grunnkart (dag og natt):</b> ©{' '}
+            <a href="https://carto.com/" target="_blank" rel="noopener">CARTO</a> /{' '}
             <a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-bidragsytere –
             lisens <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">ODbL</a>.
           </li>
