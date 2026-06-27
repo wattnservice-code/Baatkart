@@ -254,8 +254,10 @@ export default function MapView() {
   // Init map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
+    const _saved = (() => { try { return JSON.parse(localStorage.getItem('lastPos') ?? 'null') } catch { return null } })()
+    const _zoom  = (() => { const z = localStorage.getItem('lastZoom'); return z ? +z : 13 })()
     const map = L.map(containerRef.current, {
-      center: [59.9, 10.7], zoom: 13, zoomControl: false,
+      center: _saved ? [_saved.lat, _saved.lng] : [59.9, 10.7], zoom: _zoom, zoomControl: false,
       rotate: true, rotateControl: false, touchRotate: useMapStore.getState().rotateEnabled, shiftKeyRotate: false, bearing: 0,
     })
     // Move the OSM attribution to the bottom-left so it doesn't sit under the
@@ -310,7 +312,7 @@ export default function MapView() {
       })
     }
     map.on('moveend', updateBounds)
-    map.on('zoomend', updateBounds)
+    map.on('zoomend', () => { updateBounds(); localStorage.setItem('lastZoom', String(map.getZoom())) })
     updateBounds()
 
     map.on('zoom', () => {

@@ -70,6 +70,7 @@ export function useGPS() {
           accuracy,
           timestamp,
         })
+        localStorage.setItem('lastPos', JSON.stringify({ lat: smoothed.current.lat, lng: smoothed.current.lng }))
       },
       (err) => console.warn('GPS-feil:', err.message),
       { enableHighAccuracy: true, maximumAge: 3000, timeout: 30000 }
