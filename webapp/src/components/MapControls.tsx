@@ -49,8 +49,8 @@ function CompassBtn({ mode, rotated }: { mode: NordMode; rotated: boolean }) {
       <svg ref={svgRef} className="cmps-svg" width="34" height="34" viewBox="-17 -17 34 34">
         {/* North needle — red */}
         <polygon points="0,-14 4.5,0 0,2 -4.5,0" fill="#ef4444" />
-        {/* South needle — white/muted */}
-        <polygon points="0,14 4.5,0 0,-2 -4.5,0" fill="currentColor" opacity="0.2" />
+        {/* South needle — dark gray for contrast */}
+        <polygon points="0,14 4.5,0 0,-2 -4.5,0" fill="#475569" />
         {/* Center circle */}
         <circle r="3" fill="white" stroke="rgba(0,0,0,0.18)" strokeWidth="0.8" />
       </svg>
