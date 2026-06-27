@@ -29,12 +29,12 @@ function formatEta(distM: number, speedMs: number): string | null {
 type NordMode = 'off' | 'gps' | 'krs'
 
 function CompassBtn({ mode, rotated }: { mode: NordMode; rotated: boolean }) {
-  const elRef  = useRef<HTMLDivElement>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
   const rafRef = useRef<number | null>(null)
   const active = mode !== 'off' || rotated
 
   useEffect(() => {
-    const el = elRef.current
+    const el = svgRef.current
     if (!el) return
     const loop = () => {
       el.style.transform = active ? `rotate(${-getCurrentBearing()}deg)` : ''
@@ -45,11 +45,31 @@ function CompassBtn({ mode, rotated }: { mode: NordMode; rotated: boolean }) {
   }, [active])
 
   return (
-    <div ref={elRef} className={`cmps-rose ${!active ? 'cmps-off' : ''}`}>
-      <span className="cmps-n">N</span>
-      <div className="cmps-needle" />
-      {mode === 'gps' && <span className="cmps-label">GPS</span>}
-      {mode === 'krs' && <span className="cmps-label">KRS</span>}
+    <div className={`cmps-rose ${!active ? 'cmps-off' : ''}`}>
+      <svg ref={svgRef} className="cmps-svg" width="36" height="36" viewBox="-18 -18 36 36">
+        {/* Cardinal ticks */}
+        <line x1="0" y1="-16" x2="0" y2="-12" stroke="currentColor" strokeWidth="2"   strokeLinecap="round" />
+        <line x1="0"  y1="16" x2="0"  y2="12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        <line x1="-16" y1="0" x2="-12" y2="0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        <line x1="16"  y1="0" x2="12"  y2="0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        {/* Intercardinal ticks */}
+        <line x1="-11" y1="-11" x2="-9" y2="-9" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" opacity="0.5" />
+        <line x1="11"  y1="-11" x2="9"  y2="-9" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" opacity="0.5" />
+        <line x1="-11" y1="11"  x2="-9" y2="9"  stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" opacity="0.5" />
+        <line x1="11"  y1="11"  x2="9"  y2="9"  stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" opacity="0.5" />
+        {/* North needle (red) */}
+        <polygon points="0,-11 3.5,0 0,1.5 -3.5,0" fill="#ef4444" />
+        {/* South needle (muted) */}
+        <polygon points="0,11 3.5,0 0,-1.5 -3.5,0" fill="currentColor" opacity="0.25" />
+        {/* Center dot */}
+        <circle r="2" fill="white" stroke="rgba(0,0,0,0.15)" strokeWidth="0.5" />
+        {/* N label at north tip */}
+        <text x="0" y="-13" textAnchor="middle" dominantBaseline="auto"
+              fontSize="6.5" fontWeight="900" fill="#ef4444" fontFamily="system-ui,sans-serif">N</text>
+      </svg>
+      {mode !== 'off' && (
+        <span className="cmps-label">{mode === 'gps' ? 'GPS' : 'KRS'}</span>
+      )}
     </div>
   )
 }
