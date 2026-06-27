@@ -111,11 +111,11 @@ html, body, #root {
 .cmps-svg  { display: block; }
 .cmps-label { font-size: 8px; font-weight: 800; color: rgba(255,255,255,0.9); letter-spacing: 0.1em; line-height: 1; }
 
-/* Kurs opp: amber glow */
+/* Kurs opp: blå glow (samme som andre aktive FAB-er) */
 .cmps-btn-krs {
-  background: #92400e !important;
-  border-color: #f59e0b !important;
-  box-shadow: 0 0 18px rgba(245,158,11,0.55), 0 2px 6px rgba(0,0,0,0.4) !important;
+  background: #1e3a5f !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 14px rgba(59,130,246,0.45), 0 2px 6px rgba(0,0,0,0.4) !important;
   color: white !important;
 }
 
@@ -1930,7 +1930,6 @@ html, body, #root {
 @media (min-width: 760px) and (min-height: 600px) {
   .fab { width: 60px; height: 60px; }
   .map-controls { gap: 11px; }
-  .compass-fab .cmps-n { font-size: 18px; }
   .wx-tide-toggle { width: 64px; height: 64px; }
   .mob-btn { width: 66px; height: 66px; font-size: 15px; }
   .speed-badge-slow { min-width: 68px; padding: 8px 14px; }
