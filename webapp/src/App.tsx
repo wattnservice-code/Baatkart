@@ -27,7 +27,7 @@ export default function App() {
   const mobPoint         = useMapStore((s) => s.mobPoint)
   const navPreview       = useMapStore((s) => s.navPreview)
   const darkMode         = useMapStore((s) => s.darkMode)
-  const nightVision      = useMapStore((s) => s.nightVision)
+  const setDarkMode      = useMapStore((s) => s.setDarkMode)
   const weatherVisible   = useMapStore((s) => s.weatherVisible)
   const tideVisible      = useMapStore((s) => s.tideVisible)
   const toggleWeather    = useMapStore((s) => s.toggleWeather)
@@ -63,8 +63,19 @@ export default function App() {
     }
   }, [])
 
+  // Follow system dark mode only when user hasn't set a manual preference
+  useEffect(() => {
+    if (localStorage.getItem('darkMode') !== null) return
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const handler = (e: MediaQueryListEvent) => {
+      if (localStorage.getItem('darkMode') === null) setDarkMode(e.matches)
+    }
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [setDarkMode])
+
   return (
-    <div className={`app-root ${darkMode ? '' : 'day'}${nightVision ? ' night-vision' : ''}${mobPoint ? ' mob-active' : ''}${navPreview ? ' nav-preview-active' : ''}`}>
+    <div className={`app-root ${darkMode ? '' : 'day'}${mobPoint ? ' mob-active' : ''}${navPreview ? ' nav-preview-active' : ''}`}>
       <DisclaimerModal />
       <div className="map-wrapper">
         <MapView />

@@ -76,7 +76,6 @@ interface MapStore {
   activePanel: 'spots' | 'turer' | 'meg' | null
   compassEnabled: boolean
   darkMode: boolean
-  nightVision: boolean
   seamarkVisible: boolean
   weatherVisible: boolean
   tideVisible: boolean
@@ -130,8 +129,7 @@ interface MapStore {
   setActivePanel: (p: 'spots' | 'turer' | 'meg' | null) => void
   toggleCompass: () => void
   toggleDarkMode: () => void
-  toggleNightVision: () => void
-  cycleDisplayMode: () => void   // day → night → night-vision → day
+  setDarkMode: (v: boolean) => void
   toggleSeamark: () => void
   toggleWeather: () => void
   toggleTide: () => void
@@ -234,7 +232,11 @@ function loadBool(key: string, def: boolean): boolean {
   return v === null ? def : v === 'true'
 }
 
-function loadDarkMode(): boolean { return loadBool('darkMode', true) }
+function loadDarkMode(): boolean {
+  const saved = localStorage.getItem('darkMode')
+  if (saved !== null) return saved === 'true'
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? true
+}
 function loadSpeedUnit(): SpeedUnit { return (localStorage.getItem('speedUnit') as SpeedUnit) || 'kmh' }
 function loadDistUnit(): DistUnit { return (localStorage.getItem('distUnit') as DistUnit) || 'm' }
 function loadSeamark(): boolean { return loadBool('seamarkVisible', false) }
@@ -260,7 +262,6 @@ export const useMapStore = create<MapStore>((set) => ({
   activePanel: null,
   compassEnabled: loadCompass(),
   darkMode: loadDarkMode(),
-  nightVision: loadBool('nightVision', false),
   seamarkVisible: loadSeamark(),
   weatherVisible: loadWeather(),
   tideVisible: loadTide(),
@@ -362,27 +363,7 @@ export const useMapStore = create<MapStore>((set) => ({
     localStorage.setItem('darkMode', String(next))
     return { darkMode: next }
   }),
-  toggleNightVision: () => set((s) => {
-    const next = !s.nightVision
-    localStorage.setItem('nightVision', String(next))
-    // Night vision only makes sense on a dark base — force dark mode on when enabling.
-    if (next && s.darkMode === false) {
-      localStorage.setItem('darkMode', 'true')
-      return { nightVision: next, darkMode: true }
-    }
-    return { nightVision: next }
-  }),
-  // Single button cycles the three display modes:
-  // 1 day (light) → 2 night (dark) → 3 night-vision (dark + red) → back to day
-  cycleDisplayMode: () => set((s) => {
-    let darkMode: boolean, nightVision: boolean
-    if (!s.darkMode && !s.nightVision)      { darkMode = true;  nightVision = false } // day → night
-    else if (s.darkMode && !s.nightVision)  { darkMode = true;  nightVision = true  } // night → night-vision
-    else                                    { darkMode = false; nightVision = false } // → day
-    localStorage.setItem('darkMode', String(darkMode))
-    localStorage.setItem('nightVision', String(nightVision))
-    return { darkMode, nightVision }
-  }),
+  setDarkMode: (v: boolean) => set({ darkMode: v }),
   toggleSpeedUnit: () => set((s) => {
     const next: SpeedUnit = s.speedUnit === 'kn' ? 'kmh' : 'kn'
     localStorage.setItem('speedUnit', next)

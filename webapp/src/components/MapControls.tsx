@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, X, Plus, Minus, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Eye, Crosshair } from 'lucide-react'
+import { Navigation, X, Plus, Minus, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Crosshair } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -76,8 +76,7 @@ export default function MapControls() {
   const setFollowBoat    = useMapStore((s) => s.setFollowBoat)
   const setAddingSpot    = useMapStore((s) => s.setAddingSpot)
   const darkMode         = useMapStore((s) => s.darkMode)
-  const nightVision      = useMapStore((s) => s.nightVision)
-  const cycleDisplayMode = useMapStore((s) => s.cycleDisplayMode)
+  const toggleDarkMode   = useMapStore((s) => s.toggleDarkMode)
   const aisVisible       = useMapStore((s) => s.aisVisible)
   const toggleAis        = useMapStore((s) => s.toggleAis)
   const aisStatus        = useMapStore((s) => s.aisStatus)
@@ -241,15 +240,11 @@ export default function MapControls() {
           <Ship size={20} />
         </button>
         <button
-          className={`fab ${nightVision ? 'fab-nightvision' : !darkMode ? 'fab-active' : ''}`}
-          onClick={() => { track('display_mode', { from: nightVision ? 'night' : darkMode ? 'dark' : 'day' }); cycleDisplayMode() }}
-          title={
-            nightVision ? 'Nattsyn (rødt) – trykk for dag'
-            : darkMode  ? 'Natt – trykk for nattsyn'
-            :             'Dag – trykk for natt'
-          }
+          className={`fab ${!darkMode ? 'fab-active' : ''}`}
+          onClick={() => { track('display_mode', { from: darkMode ? 'dark' : 'day' }); toggleDarkMode() }}
+          title={darkMode ? 'Natt – trykk for dag' : 'Dag – trykk for natt'}
         >
-          {nightVision ? <Eye size={22} /> : darkMode ? <Moon size={22} /> : <Sun size={22} />}
+          {darkMode ? <Moon size={22} /> : <Sun size={22} />}
         </button>
         <div className="fab-divider" />
         <button className="fab" onClick={() => getMapInstance()?.zoomIn()} title="Zoom inn">

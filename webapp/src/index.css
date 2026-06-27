@@ -14,6 +14,7 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   width: 100%; height: 100%;
+  transition: background-color 0.4s, color 0.4s;
 }
 
 .map-wrapper {
@@ -643,6 +644,7 @@ html, body, #root {
 }
 .nav-preview-name { font-size: 14px; font-weight: 700; color: #60a5fa; }
 .nav-preview-dist { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.nav-preview-eta  { font-size: 12px; color: #94a3b8; font-variant-numeric: tabular-nums; }
 .nav-preview-waypoints {
   width: 100%; display: flex; flex-direction: column; gap: 4px;
   border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px;
@@ -2032,18 +2034,6 @@ html, body, #root {
 .day .menu-item { color: #0f172a; border-bottom-color: rgba(0,0,0,0.06); }
 .day .menu-item:hover { background: rgba(0,0,0,0.04); }
 
-/* ── Night vision mode ───────────────────────────────────────────────────── */
-/* Red/amber tint over map — preserves dark-adapted night vision.            */
-/* Only active when .night-vision is set on .app-root.                       */
-.night-vision .map-wrapper::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(180, 20, 0, 0.18);
-  mix-blend-mode: multiply;
-  pointer-events: none;
-  z-index: 800;
-}
 /* ── AIS vessel popup — dark theme matching app ── */
 .dark-popup .leaflet-popup-content-wrapper {
   background: rgba(15,23,42,0.96);
@@ -2087,20 +2077,6 @@ html, body, #root {
 .mob-active .leaflet-control-attribution { display: none !important; }
 .nav-preview-active .leaflet-control-attribution { display: none !important; }
 
-.night-vision .leaflet-tile {
-  filter: saturate(0) brightness(0.55) sepia(1) hue-rotate(320deg) saturate(2.5) brightness(0.85);
-}
-/* Dim all UI chrome so it doesn't blind in the dark */
-.night-vision .fab,
-.night-vision .speed-badge,
-.night-vision .ais-status,
-.night-vision .map-banner {
-  opacity: 0.65;
-  filter: sepia(0.6) hue-rotate(320deg);
-}
-.night-vision .wx-tide-toggle { opacity: 0.55; filter: sepia(0.6) hue-rotate(320deg); }
-/* Active night vision button — show it's on */
-.fab-nightvision { background: #7f1d1d !important; color: #fca5a5 !important; }
 
 /* Pulsing locate button when follow is lost and boat is moving */
 @keyframes locatePulse {

@@ -18,6 +18,7 @@ export default function SpotDialog({ lat, lng, onClose }: Props) {
   const save = () => {
     if (!name.trim()) return
     addSpot({ id: `${Date.now()}`, lat, lng, name: name.trim(), icon })
+    navigator.vibrate?.(50)
     onClose()
   }
 
