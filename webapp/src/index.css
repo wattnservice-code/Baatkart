@@ -1814,7 +1814,7 @@ html, body, #root {
   .mob-btn {
     top: auto;
     bottom: max(12px, env(safe-area-inset-bottom));
-    left: max(12px, calc(env(safe-area-inset-left) + 10px));
+    left: max(6px, env(safe-area-inset-left));
     transform: none;
     width: 50px; height: 50px;
     font-size: 12px;
