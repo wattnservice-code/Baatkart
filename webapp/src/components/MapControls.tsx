@@ -47,12 +47,12 @@ function CompassBtn({ mode, rotated }: { mode: NordMode; rotated: boolean }) {
   return (
     <div className={`cmps-rose ${!active ? 'cmps-off' : ''}`}>
       <svg ref={svgRef} className="cmps-svg" width="34" height="34" viewBox="-17 -17 34 34">
-        {/* North needle — red */}
-        <polygon points="0,-14 4.5,0 0,2 -4.5,0" fill="#ef4444" />
-        {/* South needle — dark gray for contrast */}
-        <polygon points="0,14 4.5,0 0,-2 -4.5,0" fill="#475569" />
+        {/* North needle — bright red */}
+        <polygon points="0,-14 4.5,0 0,2 -4.5,0" fill="#dc0000" />
+        {/* South needle — black */}
+        <polygon points="0,14 4.5,0 0,-2 -4.5,0" fill="#111111" />
         {/* Center circle */}
-        <circle r="3" fill="white" stroke="rgba(0,0,0,0.18)" strokeWidth="0.8" />
+        <circle r="3" fill="white" stroke="#333" strokeWidth="0.8" />
       </svg>
       {mode !== 'off' && (
         <span className="cmps-label">{mode === 'gps' ? 'GPS' : 'KRS'}</span>
