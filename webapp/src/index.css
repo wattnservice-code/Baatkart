@@ -115,6 +115,21 @@ html, body, #root {
 .cmps-off  { opacity: 0.45; }
 .cmps-svg  { display: block; }
 .cmps-label { font-size: 8px; font-weight: 800; color: rgba(255,255,255,0.9); letter-spacing: 0.1em; line-height: 1; }
+/* Compass SVG element styles — dark mode defaults */
+.cmps-ring     { stroke: rgba(255,255,255,0.3); }
+.cmps-tick     { stroke: rgba(255,255,255,0.28); stroke-width: 0.9; }
+.cmps-needle-n { fill: #dc2626; }
+.cmps-needle-s { fill: rgba(210,210,210,0.88); }
+.cmps-n-lbl    { fill: white; }
+.cmps-cardinal { fill: rgba(255,255,255,0.6); }
+.cmps-center   { fill: #1e293b; stroke: rgba(255,255,255,0.45); stroke-width: 0.8; }
+/* Day mode overrides */
+.day .cmps-ring     { stroke: rgba(0,0,0,0.2); }
+.day .cmps-tick     { stroke: rgba(0,0,0,0.18); }
+.day .cmps-needle-s { fill: rgba(80,80,80,0.85); }
+.day .cmps-n-lbl    { fill: #111; }
+.day .cmps-cardinal  { fill: rgba(0,0,0,0.5); }
+.day .cmps-center    { fill: white; stroke: rgba(0,0,0,0.25); }
 
 /* Kurs opp: blå glow (samme som andre aktive FAB-er) */
 .cmps-btn-krs {
