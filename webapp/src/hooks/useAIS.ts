@@ -6,7 +6,7 @@ import { getMapInstance } from '../mapInstance'
 import { collisionAlarm } from '../audio'
 import { formatDist } from '../components/NavOverlay'
 import { destPoint, cardinal } from '../geo'
-import { computeCPA, isDanger, KN_TO_MS, type OwnState } from '../collision'
+import { computeCPA, isDanger, KN_TO_MS, type OwnState, type CpaInfo } from '../collision'
 
 // ── Data model ────────────────────────────────────────────────────────────────
 

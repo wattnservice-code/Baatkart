@@ -1,6 +1,6 @@
 // Order matters: leafletGlobal sets globalThis.L, THEN the plugin patches it.
 import './leafletGlobal'
-// @ts-expect-error — untyped side-effect import; the plugin patches L.Map in place
+// @ts-ignore — untyped side-effect import; the plugin patches L.Map in place
 import 'leaflet-rotate/dist/leaflet-rotate-src.js'
 
 declare module 'leaflet' {
