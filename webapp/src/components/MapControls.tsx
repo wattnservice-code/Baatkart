@@ -46,24 +46,24 @@ function CompassBtn({ mode, rotated }: { mode: NordMode; rotated: boolean }) {
 
   return (
     <div className={`cmps-rose ${!active ? 'cmps-off' : ''}`}>
-      <svg ref={svgRef} className="cmps-svg" width="34" height="34" viewBox="-17 -17 34 34">
+      <svg ref={svgRef} className="cmps-svg" width="38" height="38" viewBox="-17 -17 34 34">
         {/* Outer bezel ring */}
-        <circle r="15.5" className="cmps-ring" fill="none" strokeWidth="1.3"/>
+        <circle r="15.5" className="cmps-ring" fill="none" strokeWidth="1.1"/>
         {/* Intercardinal tick marks */}
-        <line x1="8.5" y1="-8.5" x2="11" y2="-11" className="cmps-tick"/>
-        <line x1="8.5" y1="8.5" x2="11" y2="11" className="cmps-tick"/>
-        <line x1="-8.5" y1="8.5" x2="-11" y2="11" className="cmps-tick"/>
-        <line x1="-8.5" y1="-8.5" x2="-11" y2="-11" className="cmps-tick"/>
-        {/* Needles — drawn before text so labels render on top */}
-        <polygon className="cmps-needle-n" points="0,-14 3.5,0 0,1.5 -3.5,0"/>
-        <polygon className="cmps-needle-s" points="0,14 3.5,0 0,-1.5 -3.5,0"/>
-        {/* Cardinal labels */}
-        <text className="cmps-n-lbl" x="0" y="-9" textAnchor="middle" dominantBaseline="middle" fontSize="5.5" fontWeight="bold" fontFamily="system-ui,sans-serif">N</text>
-        <text className="cmps-cardinal" x="0" y="10" textAnchor="middle" dominantBaseline="middle" fontSize="4.5" fontFamily="system-ui,sans-serif">S</text>
-        <text className="cmps-cardinal" x="11" y="0.5" textAnchor="middle" dominantBaseline="middle" fontSize="4.5" fontFamily="system-ui,sans-serif">E</text>
-        <text className="cmps-cardinal" x="-11" y="0.5" textAnchor="middle" dominantBaseline="middle" fontSize="4.5" fontFamily="system-ui,sans-serif">W</text>
+        <line x1="9" y1="-9" x2="11.5" y2="-11.5" className="cmps-tick"/>
+        <line x1="9" y1="9" x2="11.5" y2="11.5" className="cmps-tick"/>
+        <line x1="-9" y1="9" x2="-11.5" y2="11.5" className="cmps-tick"/>
+        <line x1="-9" y1="-9" x2="-11.5" y2="-11.5" className="cmps-tick"/>
+        {/* Needles — thin so they don't bury the labels */}
+        <polygon className="cmps-needle-n" points="0,-13.5 3,0 0,1 -3,0"/>
+        <polygon className="cmps-needle-s" points="0,13.5 3,0 0,-1 -3,0"/>
+        {/* Cardinal labels — halo via paint-order stroke for legibility */}
+        <text className="cmps-n-lbl"   x="0"   y="-9.5" textAnchor="middle" dominantBaseline="central" fontSize="6.5" fontWeight="900" fontFamily="system-ui,sans-serif">N</text>
+        <text className="cmps-cardinal" x="0"   y="9.5"  textAnchor="middle" dominantBaseline="central" fontSize="5.5" fontWeight="800" fontFamily="system-ui,sans-serif">S</text>
+        <text className="cmps-cardinal" x="9.5" y="0"    textAnchor="middle" dominantBaseline="central" fontSize="5.5" fontWeight="800" fontFamily="system-ui,sans-serif">E</text>
+        <text className="cmps-cardinal" x="-9.5" y="0"   textAnchor="middle" dominantBaseline="central" fontSize="5.5" fontWeight="800" fontFamily="system-ui,sans-serif">W</text>
         {/* Center pivot */}
-        <circle r="2.5" className="cmps-center"/>
+        <circle r="2.3" className="cmps-center"/>
       </svg>
       {mode !== 'off' && (
         <span className="cmps-label">{mode === 'gps' ? 'GPS' : 'KRS'}</span>
