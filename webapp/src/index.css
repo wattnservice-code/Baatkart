@@ -115,6 +115,7 @@ html, body, #root {
 .cmps-off  { opacity: 0.45; }
 .cmps-svg  { display: block; }
 .cmps-label { font-size: 8px; font-weight: 800; color: rgba(255,255,255,0.9); letter-spacing: 0.1em; line-height: 1; }
+.day .cmps-label { color: rgba(15,23,42,0.85); }
 /* Compass SVG element styles — dark mode defaults */
 .cmps-ring     { stroke: rgba(255,255,255,0.32); }
 .cmps-tick     { stroke: rgba(255,255,255,0.3); stroke-width: 0.9; }
