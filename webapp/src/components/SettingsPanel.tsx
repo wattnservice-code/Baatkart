@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { APP_VERSION } from '../version'
-import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, User, Info, RotateCw } from 'lucide-react'
+import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, User, Info, RotateCw, Crosshair } from 'lucide-react'
 import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
 import OfflinePanel from './OfflinePanel'
@@ -41,6 +41,8 @@ export default function SettingsPanel({ onClose }: Props) {
   const toggleAis               = useMapStore((s) => s.toggleAis)
   const aisShowStationary       = useMapStore((s) => s.aisShowStationary)
   const toggleAisShowStationary = useMapStore((s) => s.toggleAisShowStationary)
+  const quickPinEnabled         = useMapStore((s) => s.quickPinEnabled)
+  const toggleQuickPinEnabled   = useMapStore((s) => s.toggleQuickPinEnabled)
 
   const handleCompassToggle = async () => {
     if (!compassEnabled) {
@@ -97,6 +99,9 @@ export default function SettingsPanel({ onClose }: Props) {
           </button>
           <button className="menu-item" style={{ color: rotateEnabled ? '#60a5fa' : undefined }} onClick={toggleRotateEnabled}>
             <RotateCw size={20} /><span>Vri kart med to fingre {rotateEnabled ? '(på)' : '(av)'}</span>
+          </button>
+          <button className="menu-item" style={{ color: quickPinEnabled ? '#60a5fa' : undefined }} onClick={toggleQuickPinEnabled}>
+            <Crosshair size={20} /><span>Hurtig-merke-knapp {quickPinEnabled ? '(på)' : '(av)'}</span>
           </button>
 
           <div className="menu-divider" />

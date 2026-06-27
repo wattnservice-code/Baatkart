@@ -88,6 +88,7 @@ export default function MapControls() {
   const toggleAis        = useMapStore((s) => s.toggleAis)
   const aisStatus        = useMapStore((s) => s.aisStatus)
   const setFlyTo         = useMapStore((s) => s.setFlyTo)
+  const quickPinEnabled  = useMapStore((s) => s.quickPinEnabled)
   const quickPins        = useMapStore((s) => s.quickPins)
   const addQuickPin      = useMapStore((s) => s.addQuickPin)
   const speedUnit        = useMapStore((s) => s.speedUnit)
@@ -272,8 +273,8 @@ export default function MapControls() {
         >
           <Navigation size={22} />
         </button>
-        <div className="fab-divider" />
-        <button
+        {quickPinEnabled && <div className="fab-divider" />}
+        {quickPinEnabled && <button
           className={`fab ${quickPins.length > 0 ? 'fab-quickpin' : ''}`}
           onClick={() => {
             if (quickPins.length > 0) {
@@ -288,7 +289,7 @@ export default function MapControls() {
         >
           <Crosshair size={20} />
           {quickPins.length > 0 && <span className="fab-badge">{quickPins.length}</span>}
-        </button>
+        </button>}
       </div>
 
       {activePanel === 'spots' && (

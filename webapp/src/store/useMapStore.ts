@@ -110,6 +110,7 @@ interface MapStore {
   trackDistanceM: number
   trackMaxSpeed: number
   spotsVisible: boolean
+  quickPinEnabled: boolean
   quickPins: QuickPin[]
   highlightedQuickPinId: string | null
   mapHintDismissed: boolean
@@ -165,6 +166,7 @@ interface MapStore {
   setMapRotated: (v: boolean) => void
   requestNorthUp: () => void
   toggleSpotsVisible: () => void
+  toggleQuickPinEnabled: () => void
   addQuickPin: (p: { lat: number; lng: number }) => void
   dismissMapHint: () => void
   removeQuickPin: (id: string) => void
@@ -296,6 +298,7 @@ export const useMapStore = create<MapStore>((set) => ({
   trackDistanceM: 0,
   trackMaxSpeed: 0,
   spotsVisible: loadBool('spotsVisible', true),
+  quickPinEnabled: loadBool('quickPinEnabled', true),
   quickPins: loadQuickPins(),
   mapHintDismissed: localStorage.getItem('mapHintDismissed') === '1',
   highlightedQuickPinId: null,
@@ -414,6 +417,7 @@ export const useMapStore = create<MapStore>((set) => ({
   setMapRotated: (v) => set({ mapRotated: v }),
   requestNorthUp: () => set((s) => ({ northUpNonce: s.northUpNonce + 1 })),
   toggleSpotsVisible: () => set((s) => { const v = !s.spotsVisible; localStorage.setItem('spotsVisible', String(v)); return { spotsVisible: v } }),
+  toggleQuickPinEnabled: () => set((s) => { const v = !s.quickPinEnabled; localStorage.setItem('quickPinEnabled', String(v)); return { quickPinEnabled: v } }),
   addQuickPin: (p) => set((s) => {
     // Skip if there's already a pin within 20 m (double-tap guard)
     const tooClose = s.quickPins.some((q) => haversineM(q.lat, q.lng, p.lat, p.lng) < 20)
