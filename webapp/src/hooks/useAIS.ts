@@ -314,34 +314,32 @@ function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean, distUn
              Kollisjon om: <b>${min} min</b>
            </span>
          </div>`
-      : `<div style="margin-top:4px;color:#94a3b8;font-size:11px">Nærmeste: ${cpaStr} om ${min} min</div>`
+      : `<div style="margin-top:4px;color:#cbd5e1;font-size:13px">Nærmeste: <b style="color:#f1f5f9">${cpaStr}</b> om <b style="color:#f1f5f9">${min} min</b></div>`
   }
 
   const dimParts: string[] = []
   if (v.length) dimParts.push(`${Math.round(v.length)}${v.beam ? `×${Math.round(v.beam)}` : ''} m`)
   if (v.draught) dimParts.push(`dypgang ${v.draught.toFixed(1)} m`)
-  const dimLine  = dimParts.length ? `<div style="color:#64748b;font-size:11px;margin-top:2px">${dimParts.join(' · ')}</div>` : ''
+  const dimLine  = dimParts.length ? `<div style="color:#cbd5e1;font-size:13px;margin-top:3px">${dimParts.join(' · ')}</div>` : ''
   const destLine = dest
-    ? `<div style="color:#94a3b8;font-size:12px;margin-top:3px">📍 Til: <b style="color:#e2e8f0">${dest}</b>${eta ? `<br><span style="font-size:11px;color:#64748b">Ankomst: ${eta}</span>` : ''}</div>`
+    ? `<div style="color:#cbd5e1;font-size:13px;margin-top:4px">📍 Til: <b style="color:#ffffff">${dest}</b>${eta ? `<br><span style="font-size:12px;color:#cbd5e1">Ankomst: ${eta}</span>` : ''}</div>`
     : ''
-  const imoLine  = v.imo ? `<div style="color:#64748b;font-size:10px">IMO ${v.imo}</div>` : ''
-  const ageLine  = age ? `<span style="color:#64748b"> · ${age} siden</span>` : ''
+  const ageLine  = age ? `<span style="color:#94a3b8"> · ${age} siden</span>` : ''
   const moreLink = `<a href="https://www.vesselfinder.com/vessels/details/${v.mmsi}" target="_blank" rel="noopener"
-    style="display:inline-block;margin-top:6px;font-size:11px;color:#38bdf8;text-decoration:none">
+    style="display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:#38bdf8;text-decoration:none">
     🔍 Mer info og bilde →</a>`
 
-  return `<div style="min-width:190px;font-family:system-ui,sans-serif;line-height:1.5">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-      ${flag ? `<span style="font-size:18px">${flag}</span>` : ''}
-      <span style="font-weight:700;font-size:14px;flex:1">${v.name || `MMSI ${v.mmsi}`}</span>
+  return `<div style="min-width:200px;font-family:system-ui,sans-serif;line-height:1.55">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+      ${flag ? `<span style="font-size:20px">${flag}</span>` : ''}
+      <span style="font-weight:800;font-size:17px;color:#ffffff;flex:1">${v.name || `MMSI ${v.mmsi}`}</span>
     </div>
-    ${typeLabel ? `<div style="display:inline-block;padding:2px 8px;border-radius:10px;background:${typeClr}25;color:${typeClr};font-size:11px;font-weight:600;margin-bottom:4px">${typeLabel}</div>` : ''}
-    <div style="font-size:13px;color:#cbd5e1">${speedLine}</div>
-    ${navStat ? `<div style="color:#fbbf24;font-size:11px">${navStat}</div>` : ''}
-    ${turning  ? `<div style="color:#94a3b8;font-size:11px">${turning}</div>` : ''}
+    ${typeLabel ? `<div style="display:inline-block;padding:3px 10px;border-radius:10px;background:${typeClr};color:#0f172a;font-size:12px;font-weight:800;margin-bottom:6px">${typeLabel}</div>` : ''}
+    <div style="font-size:16px;color:#ffffff;font-weight:700">${speedLine}</div>
+    ${navStat ? `<div style="color:#fbbf24;font-size:13px;font-weight:600">${navStat}</div>` : ''}
+    ${turning  ? `<div style="color:#e2e8f0;font-size:13px">${turning}</div>` : ''}
     ${destLine}${dimLine}
-    <div style="color:#64748b;font-size:10px;margin-top:3px">MMSI ${v.mmsi}${v.callSign ? ` · ${v.callSign}` : ''}${ageLine}</div>
-    ${imoLine}
+    <div style="color:#cbd5e1;font-size:13px;margin-top:5px">MMSI <b style="color:#f1f5f9">${v.mmsi}</b>${v.callSign ? ` · <b style="color:#f1f5f9">${v.callSign}</b>` : ''}${ageLine}</div>
     ${moreLink}
     ${cpaLine}
   </div>`

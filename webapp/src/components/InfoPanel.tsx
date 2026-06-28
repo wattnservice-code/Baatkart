@@ -157,7 +157,7 @@ export default function InfoPanel({ onClose }: Props) {
             <b>GPS:</b> Enhetens innebygde GPS via Web Geolocation API.
           </li>
         </ul>
-        <p style={{ fontSize: 11, color: '#64748b', marginTop: 8, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 8, lineHeight: 1.5 }}>
           Kartattribusjon vises nederst til venstre på kartet. Alle offentlige norske datakilder
           er distribuert under{' '}
           <a href="https://data.norge.no/nlod" target="_blank" rel="noopener">Norsk lisens for offentlige data (NLOD) 2.0</a>.

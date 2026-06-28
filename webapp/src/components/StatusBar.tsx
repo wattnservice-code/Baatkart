@@ -69,7 +69,7 @@ export default function StatusBar() {
         </span>
         {position && !gpsStale && (copied
           ? <Check size={12} style={{ color: '#4ade80', marginLeft: 3 }} />
-          : <Copy size={11} style={{ color: '#64748b', marginLeft: 3 }} />
+          : <Copy size={13} style={{ color: '#94a3b8', marginLeft: 3 }} />
         )}
       </button>
 

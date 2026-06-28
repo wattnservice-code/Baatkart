@@ -80,7 +80,7 @@ export default function TrackFollowOverlay() {
 
   const xteAbs = result ? Math.abs(result.xte) : null
   const side   = result ? (result.xte < -1 ? '←' : result.xte > 1 ? '→' : null) : null
-  const xteColor = xteAbs === null ? '#64748b'
+  const xteColor = xteAbs === null ? '#94a3b8'
     : xteAbs < 25  ? '#22c55e'
     : xteAbs < 100 ? '#f59e0b'
     : '#ef4444'

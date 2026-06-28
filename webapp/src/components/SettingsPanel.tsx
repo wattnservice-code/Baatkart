@@ -13,8 +13,8 @@ function formatRingLabel(r: null | number): string {
 }
 
 const subhead: React.CSSProperties = {
-  padding: '14px 16px 4px', fontSize: 11, fontWeight: 700,
-  color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px',
+  padding: '14px 16px 4px', fontSize: 12, fontWeight: 700,
+  color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px',
 }
 
 interface Props { onClose: () => void }
