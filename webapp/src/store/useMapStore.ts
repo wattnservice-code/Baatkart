@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { haversineM } from '../geo'
+import { pushTrip, deleteTripRemote } from '../sync/tripSync'
 
 interface Position {
   lat: number
@@ -179,6 +180,7 @@ interface MapStore {
   setFocusQuickPin: (id: string | null) => void
   saveCurrentTrack: (name: string, icon?: string) => void
   deleteSavedTrack: (id: string) => void
+  mergeRemoteTrips: (remote: SavedTrack[]) => void
   startFollowingTrack: (track: SavedTrack) => void
   stopFollowingTrack: () => void
 }
@@ -457,7 +459,7 @@ export const useMapStore = create<MapStore>((set) => ({
     const pts = s.track.map((p) => ({ lat: p.lat, lng: p.lng }))
     const durationS = (s.track[s.track.length - 1].timestamp - s.track[0].timestamp) / 1000
     const saved: SavedTrack = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       name,
       date: new Date().toISOString(),
       points: pts,
@@ -469,12 +471,22 @@ export const useMapStore = create<MapStore>((set) => ({
     }
     const tracks = [...s.savedTracks, saved]
     persistSavedTracks(tracks)
+    pushTrip(saved)   // offline-first: lokalt lagret, push til sky om innlogget
     return { savedTracks: tracks }
   }),
   deleteSavedTrack: (id) => set((s) => {
     const tracks = s.savedTracks.filter((t) => t.id !== id)
     persistSavedTracks(tracks)
+    deleteTripRemote(id)
     return { savedTracks: tracks, followingTrack: s.followingTrack?.id === id ? null : s.followingTrack }
+  }),
+  mergeRemoteTrips: (remote) => set((s) => {
+    // Flett skyturer inn i lokale (skyen vinner ved samme id), sorter nyeste først
+    const byId = new Map(s.savedTracks.map((t) => [t.id, t]))
+    for (const t of remote) byId.set(t.id, t)
+    const tracks = [...byId.values()].sort((a, b) => b.date.localeCompare(a.date))
+    persistSavedTracks(tracks)
+    return { savedTracks: tracks }
   }),
   startFollowingTrack: (track) => set({ followingTrack: track }),
   stopFollowingTrack: () => set({ followingTrack: null }),

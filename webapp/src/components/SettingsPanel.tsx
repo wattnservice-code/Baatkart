@@ -3,6 +3,7 @@ import { APP_VERSION } from '../version'
 import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, User, Info, RotateCw, Crosshair } from 'lucide-react'
 import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
+import AccountSection from './AccountSection'
 import OfflinePanel from './OfflinePanel'
 import BoatInfoPanel from './BoatInfoPanel'
 import InfoPanel from './InfoPanel'
@@ -69,6 +70,10 @@ export default function SettingsPanel({ onClose }: Props) {
         </div>
 
         <div className="settings-body">
+          <div style={subhead}>Konto</div>
+          <AccountSection />
+
+          <div className="menu-divider" />
           <div style={subhead}>Hjelp</div>
           <button className="menu-item" onClick={() => setInfoOpen(true)}>
             <Info size={20} /><span>Bruksanvisning og forbehold</span>

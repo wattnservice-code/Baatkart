@@ -3,7 +3,7 @@
 
 -- ── Tabell ────────────────────────────────────────────────────────────────────
 create table if not exists public.trips (
-  id            uuid primary key default gen_random_uuid(),
+  id            text primary key default gen_random_uuid()::text,  -- delt id lokalt/sky
   user_id       uuid not null references auth.users (id) on delete cascade,
   boat_id       uuid,                       -- null nå; brukes når båt-velger kommer
   name          text not null,

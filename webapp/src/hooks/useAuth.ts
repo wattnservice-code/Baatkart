@@ -17,13 +17,17 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signInWithGoogle = () =>
-    supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
+  // E-post med engangskode (OTP): send kode → verifiser kode.
+  const sendCode = (email: string) =>
+    supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { shouldCreateUser: true },
     })
+
+  const verifyCode = (email: string, token: string) =>
+    supabase.auth.verifyOtp({ email: email.trim(), token: token.trim(), type: 'email' })
 
   const signOut = () => supabase.auth.signOut()
 
-  return { user, loading, signInWithGoogle, signOut }
+  return { user, loading, sendCode, verifyCode, signOut }
 }

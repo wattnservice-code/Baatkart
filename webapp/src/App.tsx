@@ -13,6 +13,8 @@ import SaveTrackDialog from './components/SaveTrackDialog'
 import DisclaimerModal from './components/DisclaimerModal'
 import WeatherOverlay from './components/WeatherOverlay'
 import TideOverlay from './components/TideOverlay'
+import { useAuth } from './hooks/useAuth'
+import { useTripSync } from './hooks/useTripSync'
 import { useGPS } from './hooks/useGPS'
 import { useCompass } from './hooks/useCompass'
 import { useWakeLock } from './hooks/useWakeLock'
@@ -24,6 +26,8 @@ export default function App() {
   useGPS()
   useWakeLock()
   useAIS()
+  const { user } = useAuth()
+  useTripSync(user)
   const compassEnabled   = useMapStore((s) => s.compassEnabled)
   const mobPoint         = useMapStore((s) => s.mobPoint)
   const navPreview       = useMapStore((s) => s.navPreview)
