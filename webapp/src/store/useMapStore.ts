@@ -59,6 +59,8 @@ export interface SavedTrack {
   durationS?: number     // total recording time in seconds
   maxSpeedMs?: number    // peak speed in m/s
   avgSpeedMs?: number    // average moving speed in m/s
+  startedAt?: string     // ISO – nøyaktig start (første GPS-punkt)
+  endedAt?: string       // ISO – nøyaktig stopp (siste GPS-punkt)
   icon?: string          // category key from spotIcons
 }
 
@@ -463,7 +465,9 @@ export const useMapStore = create<MapStore>((set) => ({
   saveCurrentTrack: (name, icon) => set((s) => {
     if (s.track.length < 2) return {}
     const pts = s.track.map((p) => ({ lat: p.lat, lng: p.lng }))
-    const durationS = (s.track[s.track.length - 1].timestamp - s.track[0].timestamp) / 1000
+    const startTs = s.track[0].timestamp
+    const endTs   = s.track[s.track.length - 1].timestamp
+    const durationS = (endTs - startTs) / 1000
     const saved: SavedTrack = {
       id: crypto.randomUUID(),
       name,
@@ -473,6 +477,8 @@ export const useMapStore = create<MapStore>((set) => ({
       durationS: Math.round(durationS),
       maxSpeedMs: s.trackMaxSpeed,
       avgSpeedMs: durationS > 0 ? s.trackDistanceM / durationS : 0,
+      startedAt: new Date(startTs).toISOString(),
+      endedAt: new Date(endTs).toISOString(),
       icon,
     }
     const tracks = [...s.savedTracks, saved]

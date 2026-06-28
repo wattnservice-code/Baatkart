@@ -12,6 +12,8 @@ create table if not exists public.trips (
   duration_s    integer not null default 0,
   avg_speed_ms  double precision not null default 0,
   max_speed_ms  double precision not null default 0,
+  started_at    timestamptz,                -- nøyaktig start (første GPS-punkt)
+  ended_at      timestamptz,                -- nøyaktig stopp (siste GPS-punkt)
   icon          text,
   points        jsonb not null default '[]'::jsonb,   -- [{lat,lng}, ...]
   created_at    timestamptz not null default now()

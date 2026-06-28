@@ -13,6 +13,8 @@ function toRow(t: SavedTrack, userId: string) {
     duration_s: t.durationS ?? 0,
     avg_speed_ms: t.avgSpeedMs ?? 0,
     max_speed_ms: t.maxSpeedMs ?? 0,
+    started_at: t.startedAt ?? null,
+    ended_at: t.endedAt ?? null,
     icon: t.icon ?? null,
     points: t.points,
   }
@@ -21,6 +23,7 @@ function toRow(t: SavedTrack, userId: string) {
 type Row = {
   id: string; name: string; trip_date: string; distance_m: number
   duration_s: number; avg_speed_ms: number; max_speed_ms: number
+  started_at: string | null; ended_at: string | null
   icon: string | null; points: { lat: number; lng: number }[]
 }
 
@@ -34,6 +37,8 @@ function fromRow(r: Row): SavedTrack {
     durationS: r.duration_s,
     avgSpeedMs: r.avg_speed_ms,
     maxSpeedMs: r.max_speed_ms,
+    startedAt: r.started_at ?? undefined,
+    endedAt: r.ended_at ?? undefined,
     icon: r.icon ?? undefined,
   }
 }

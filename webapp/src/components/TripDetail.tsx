@@ -56,9 +56,14 @@ export default function TripDetail({ track, following, onClose, onFollow, onStop
 
   const W = 300, H = 190
   const route = routePoints(track.points, W, H, 16)
-  const date = new Date(track.date).toLocaleString('no-NO', {
+  const fmtDT = (iso: string) => new Date(iso).toLocaleString('no-NO', {
     weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
+  const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
+  const date = fmtDT(track.startedAt ?? track.date)
+  const startEnd = track.startedAt && track.endedAt
+    ? `${fmtTime(track.startedAt)} – ${fmtTime(track.endedAt)}`
+    : null
 
   return (
     <div className="dialog-overlay" onClick={onClose}>
@@ -67,7 +72,7 @@ export default function TripDetail({ track, following, onClose, onFollow, onStop
           <span className="trip-detail-name">{iconEmoji(track.icon)} {track.name}</span>
           <button className="trip-detail-close" onClick={onClose}><X size={20} /></button>
         </div>
-        <div className="trip-detail-date">{date}</div>
+        <div className="trip-detail-date">{date}{startEnd && ` · ${startEnd}`}</div>
 
         <div className="trip-detail-map">
           {route ? (
