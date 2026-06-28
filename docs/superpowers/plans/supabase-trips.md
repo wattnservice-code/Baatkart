@@ -38,6 +38,27 @@ Matcher `SavedTrack` i `useMapStore.ts` 1:1 (metrikkene finnes allerede).
 - [ ] **Passord-reset**-flyt (glemt passord).
 - [ ] Vurder å beholde e-post+passord som fallback ved siden av Google.
 
+## Analyse & rapport (kommende)
+### For meg (eier)
+- `events`-tabellen fanger allerede anonyme hendelser. Utvid `track()`-kallene til
+  å dekke nøkkelhandlinger (app-åpning, tur lagret, feature-bruk, feil).
+- Eier-dashboard: spør `events`/`trips` (aggregert) i en intern visning eller
+  Supabase-dashboard/Metabase. Ingen persondata utover det som trengs.
+
+### For bruker (dashboard)
+- [x] Totaler i Turer (antall, distanse, tid).
+- [ ] Utvidet statistikk: per måned/år, lengste tur, snittfart over tid.
+- [ ] **Se turen på ekte kart** når online (vi har allerede `points[]` + følg-spor;
+      legg "Vis på kart" i tur-detalj som tegner ruten på hovedkartet). Offline:
+      SVG-ruten i detaljvisning dekker behovet (ingen base64 nødvendig).
+- [ ] **Rapport/eksport**: tabell over alle turer med metadata →
+      CSV (enkelt, klientside) nå, PDF senere (Supabase Edge Function).
+
+### Hva vi bør fange NÅ (for fremtiden)
+- `trips` har allerede: distanse, varighet, snitt, maks, dato, punkter.
+- Vurder å legge til ved opptak: `started_at`/`ended_at` (eksakt), evt.
+  værforhold-snapshot. Lett å utvide tabellen senere (nullable kolonner).
+
 ## Senere (båt)
 - Tabell `boats (id, user_id, name, mmsi, …)`.
 - Båt-velger i UI; sett `boat_id` på nye turer. Eksisterende turer beholder `null`.
