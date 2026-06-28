@@ -2,6 +2,7 @@ import { X, Play, Square, Trash2 } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
 import { iconEmoji } from '../spotIcons'
+import { tripDate, tripTimeRange } from '../tripFormat'
 import type { SavedTrack } from '../store/useMapStore'
 
 interface Props {
@@ -56,16 +57,8 @@ export default function TripDetail({ track, following, onClose, onFollow, onStop
 
   const W = 300, H = 190
   const route = routePoints(track.points, W, H, 16)
-  const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('no-NO', {
-    weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric',
-  })
-  const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
-  const baseIso = track.startedAt ?? track.date
-  const date = fmtDate(baseIso)
-  // Nye turer: start–slutt. Gamle turer (uten tidsstempler): bare lagringstidspunkt.
-  const startEnd = track.startedAt && track.endedAt
-    ? `${fmtTime(track.startedAt)} – ${fmtTime(track.endedAt)}`
-    : fmtTime(track.date)
+  const date = tripDate(track)
+  const startEnd = tripTimeRange(track)
 
   return (
     <div className="dialog-overlay" onClick={onClose}>

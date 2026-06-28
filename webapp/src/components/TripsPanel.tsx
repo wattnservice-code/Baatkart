@@ -4,6 +4,7 @@ import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
 import { iconEmoji } from '../spotIcons'
+import { tripDate, tripTimeRange } from '../tripFormat'
 import TripDetail from './TripDetail'
 import type { SpeedUnit, SavedTrack } from '../store/useMapStore'
 
@@ -129,16 +130,14 @@ export default function TripsPanel({ onClose }: Props) {
               <div className="saved-track-info" onClick={() => setDetailTrip(t)} style={{ cursor: 'pointer' }}>
                 <span className="saved-track-name">{iconEmoji(t.icon)} {t.name}</span>
                 <span className="saved-track-meta">
-                  {formatDist(t.distanceM, distUnit)} · {new Date(t.date).toLocaleDateString('no-NO')}
-                  {t.durationS != null && ` · ${formatDuration(t.durationS)}`}
+                  {tripDate(t)} · {tripTimeRange(t)}
                 </span>
-                {(t.maxSpeedMs != null || t.avgSpeedMs != null) && (
-                  <span className="saved-track-speeds">
-                    {t.maxSpeedMs != null && `Max ${formatSpd(t.maxSpeedMs, speedUnit)}`}
-                    {t.maxSpeedMs != null && t.avgSpeedMs != null && '  ·  '}
-                    {t.avgSpeedMs != null && `Snitt ${formatSpd(t.avgSpeedMs, speedUnit)}`}
-                  </span>
-                )}
+                <span className="saved-track-speeds">
+                  {formatDist(t.distanceM, distUnit)}
+                  {t.durationS != null && ` · ${formatDuration(t.durationS)}`}
+                  {t.avgSpeedMs != null && ` · Snitt ${formatSpd(t.avgSpeedMs, speedUnit)}`}
+                  {t.maxSpeedMs != null && ` · Max ${formatSpd(t.maxSpeedMs, speedUnit)}`}
+                </span>
               </div>
               <div className="saved-track-btns">
                 {followingTrack?.id === t.id ? (
