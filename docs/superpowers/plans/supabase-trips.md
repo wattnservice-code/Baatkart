@@ -53,6 +53,10 @@ Matcher `SavedTrack` i `useMapStore.ts` 1:1 (metrikkene finnes allerede).
       SVG-ruten i detaljvisning dekker behovet (ingen base64 nødvendig).
 - [ ] **Rapport/eksport**: tabell over alle turer med metadata →
       CSV (enkelt, klientside) nå, PDF senere (Supabase Edge Function).
+  - Format: dato som ISO / `YYYY-MM-DD HH:MM` (sorterbart), ALDRI lokalisert
+    "man."-streng. Tall som rådata (m, s, m/s) + evt. formaterte kolonner ved siden.
+  - Lagring er allerede rapport-klar: `timestamptz` (UTC) + SI-enheter. Locale-format
+    er kun UI-visning.
 
 ### Hva vi bør fange NÅ (for fremtiden)
 - `trips` har allerede: distanse, varighet, snitt, maks, dato, punkter.
