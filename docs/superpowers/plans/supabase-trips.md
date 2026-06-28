@@ -24,6 +24,20 @@
 
 Matcher `SavedTrack` i `useMapStore.ts` 1:1 (metrikkene finnes allerede).
 
+## Status
+- [x] E-post + passord-innlogging (Confirm email AV under testing).
+- [x] Offline-first sync (push/slett/hent/flett).
+
+## Før lansering (TODO)
+- [ ] **Sosial innlogging**: Google (1-tapp). Krever Google Cloud OAuth-klient +
+      Supabase Provider-oppsett + redirect-URL. Evt. Apple (kreves om iOS-app i App Store).
+- [ ] **Account-UI plassering/design**: egen "Konto/Profil"-skjerm i stedet for
+      øverst i Meg. Tydeligere innlogget-status, evt. avatar.
+- [ ] **Confirm email PÅ igjen** før lansering + egen SMTP (Resend) for
+      passord-reset og e-postbekreftelse uten rate limits.
+- [ ] **Passord-reset**-flyt (glemt passord).
+- [ ] Vurder å beholde e-post+passord som fallback ved siden av Google.
+
 ## Senere (båt)
 - Tabell `boats (id, user_id, name, mmsi, …)`.
 - Båt-velger i UI; sett `boat_id` på nye turer. Eksisterende turer beholder `null`.
