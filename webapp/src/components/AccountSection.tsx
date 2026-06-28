@@ -1,9 +1,13 @@
 import { useState } from 'react'
-import { LogIn, LogOut, Mail, Lock, Cloud, UserPlus } from 'lucide-react'
+import { LogIn, LogOut, Mail, Lock, Cloud, UserPlus, RefreshCw } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { useMapStore } from '../store/useMapStore'
+import { syncNow } from '../sync/tripSync'
 
 export default function AccountSection() {
   const { user, loading, signIn, signUp, signOut } = useAuth()
+  const syncStatus  = useMapStore((s) => s.syncStatus)
+  const syncMessage = useMapStore((s) => s.syncMessage)
   const [email, setEmail]     = useState('')
   const [password, setPass]   = useState('')
   const [mode, setMode]       = useState<'login' | 'signup'>('login')
@@ -23,6 +27,12 @@ export default function AccountSection() {
             <span className="account-sub">Turer synkes automatisk</span>
           </div>
         </div>
+        {syncMessage && (
+          <div className={`account-sync account-sync-${syncStatus}`}>{syncMessage}</div>
+        )}
+        <button className="account-btn account-btn-sync" onClick={() => syncNow()} disabled={syncStatus === 'syncing'}>
+          <RefreshCw size={16} /> {syncStatus === 'syncing' ? 'Synker…' : 'Synk nå'}
+        </button>
         <button className="account-btn account-btn-out" onClick={() => signOut()}>
           <LogOut size={16} /> Logg ut
         </button>

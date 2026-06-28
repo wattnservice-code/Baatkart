@@ -126,6 +126,9 @@ interface MapStore {
   clearTrack: () => void
   pendingTrackSave: boolean
   setPendingTrackSave: (v: boolean) => void
+  syncStatus: 'idle' | 'syncing' | 'ok' | 'error'
+  syncMessage: string
+  setSyncState: (status: 'idle' | 'syncing' | 'ok' | 'error', message?: string) => void
   addSpot: (spot: SavedSpot) => void
   removeSpot: (id: string) => void
   setMob: (pos: { lat: number; lng: number }) => void
@@ -305,6 +308,8 @@ export const useMapStore = create<MapStore>((set) => ({
   trackDistanceM: 0,
   trackMaxSpeed: 0,
   pendingTrackSave: false,
+  syncStatus: 'idle',
+  syncMessage: '',
   spotsVisible: loadBool('spotsVisible', true),
   quickPinEnabled: loadBool('quickPinEnabled', true),
   quickPins: loadQuickPins(),
@@ -341,6 +346,7 @@ export const useMapStore = create<MapStore>((set) => ({
   resumeTracking: () => set({ isTracking: true }),
   stopTracking: () => set((s) => { flushTrackSave(s.track); return { isTracking: false } }),
   setPendingTrackSave: (v) => set({ pendingTrackSave: v }),
+  setSyncState: (status, message) => set({ syncStatus: status, syncMessage: message ?? '' }),
   toggleAutoTrack: () => set((s) => { const v = !s.autoTrack; localStorage.setItem('autoTrack', String(v)); return { autoTrack: v } }),
   clearTrack: () => { flushTrackSave([]); return set({ track: [] }) },
 

@@ -1,4 +1,5 @@
 import { supabase } from '../supabase'
+import { useMapStore } from '../store/useMapStore'
 import type { SavedTrack } from '../store/useMapStore'
 
 // Map mellom lokal SavedTrack og rad i public.trips
@@ -37,6 +38,10 @@ function fromRow(r: Row): SavedTrack {
   }
 }
 
+function report(status: 'idle' | 'syncing' | 'ok' | 'error', message?: string) {
+  useMapStore.getState().setSyncState(status, message)
+}
+
 async function currentUserId(): Promise<string | null> {
   const { data } = await supabase.auth.getSession()
   return data.session?.user.id ?? null
@@ -46,8 +51,10 @@ async function currentUserId(): Promise<string | null> {
 export async function pushTrip(t: SavedTrack): Promise<void> {
   const uid = await currentUserId()
   if (!uid) return
+  report('syncing', 'Lagrer tur i skyen…')
   const { error } = await supabase.from('trips').upsert(toRow(t, uid))
-  if (error) console.warn('Tur-sync (push) feilet:', error.message)
+  if (error) { report('error', `Sky-lagring feilet: ${error.message}`); console.warn(error) }
+  else report('ok', 'Tur lagret i skyen ✓')
 }
 
 export async function deleteTripRemote(id: string): Promise<void> {
@@ -63,7 +70,7 @@ export async function fetchTrips(): Promise<SavedTrack[]> {
   if (!uid) return []
   const { data, error } = await supabase
     .from('trips').select('*').order('trip_date', { ascending: false })
-  if (error) { console.warn('Tur-sync (hent) feilet:', error.message); return [] }
+  if (error) { report('error', `Henting feilet: ${error.message}`); return [] }
   return (data as Row[]).map(fromRow)
 }
 
@@ -74,5 +81,19 @@ export async function pushMissing(local: SavedTrack[], remoteIds: Set<string>): 
   const missing = local.filter((t) => !remoteIds.has(t.id))
   if (missing.length === 0) return
   const { error } = await supabase.from('trips').upsert(missing.map((t) => toRow(t, uid)))
-  if (error) console.warn('Tur-sync (opplasting) feilet:', error.message)
+  if (error) report('error', `Opplasting feilet: ${error.message}`)
+  else report('ok', `Lastet opp ${missing.length} tur${missing.length > 1 ? 'er' : ''} ✓`)
+}
+
+// Full synk: hent sky → flett → last opp lokale som mangler. Brukes av "Synk nå".
+export async function syncNow(): Promise<void> {
+  const uid = await currentUserId()
+  if (!uid) { report('error', 'Ikke innlogget'); return }
+  report('syncing', 'Synker…')
+  const remote = await fetchTrips()
+  if (useMapStore.getState().syncStatus === 'error') return
+  useMapStore.getState().mergeRemoteTrips(remote)
+  const remoteIds = new Set(remote.map((t) => t.id))
+  await pushMissing(useMapStore.getState().savedTracks, remoteIds)
+  if (useMapStore.getState().syncStatus !== 'error') report('ok', 'Alt synkronisert ✓')
 }
