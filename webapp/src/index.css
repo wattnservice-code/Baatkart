@@ -1100,12 +1100,12 @@ html, body, #root {
   display: flex; align-items: center; justify-content: center;
 }
 .spot-wx-block {
-  display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center;
-  padding: 6px 16px 8px;
-  font-size: 13px; color: #94a3b8;
+  display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center;
+  padding: 10px 2px 12px;
+  font-size: 16px; font-weight: 600; color: #e2e8f0;
   border-top: 1px solid rgba(255,255,255,0.07);
 }
-.day .spot-wx-block { color: #475569; border-top-color: rgba(0,0,0,0.07); }
+.day .spot-wx-block { color: #1e293b; border-top-color: rgba(0,0,0,0.08); }
 .spot-action-dist-block {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   margin: 4px 0 12px;
@@ -1124,8 +1124,16 @@ html, body, #root {
 .spot-action-row .spot-action-btn { flex: 1; }
 .spot-action-btn:active { transform: scale(0.97); }
 .spot-action-nav    { background: #2563eb; }
-.spot-action-maps    { background: #0891b2; }
-.spot-action-earth   { background: #047857; }
+/* Google-snarveier: sekundære, dempet ghost-stil (mindre dominerende) */
+.spot-action-maps, .spot-action-earth {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.16);
+  color: #cbd5e1; font-size: 13px; font-weight: 600; padding: 10px;
+}
+.spot-action-maps:active, .spot-action-earth:active { background: rgba(255,255,255,0.12); }
+.day .spot-action-maps, .day .spot-action-earth {
+  background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.14); color: #334155;
+}
 .spot-action-save    { background: #ca8a04; }
 .spot-action-remove  { background: #334155; color: #f87171; }
 
@@ -1598,20 +1606,22 @@ html, body, #root {
 .wx-temp { font-size: 12px; color: #94a3b8; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
 .wx-symbol { font-size: 14px; line-height: 1; }
 .wx-expand-toggle {
-  display: block; width: 100%; margin-top: 6px; padding: 3px 0 0;
-  background: none; border: none; border-top: 1px solid rgba(255,255,255,0.08);
-  color: #94a3b8; font-size: 11px; text-align: center; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; margin-top: 10px; padding: 11px;
+  background: rgba(56,189,248,0.14); border: 1px solid rgba(56,189,248,0.35);
+  border-radius: 10px;
+  color: #7dd3fc; font-size: 15px; font-weight: 700; text-align: center; cursor: pointer;
 }
-.wx-expand-toggle:active { color: #94a3b8; }
-.wx-forecast { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
-.wx-forecast-row { display: flex; align-items: flex-start; gap: 6px; }
-.wx-forecast-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.wx-sparkline { width: 100%; height: 28px; display: block; }
-.wx-forecast-label { font-size: 11px; font-weight: 600; color: #94a3b8; flex-shrink: 0; min-width: 56px; padding-top: 6px; }
-.wx-forecast-hours { display: flex; justify-content: space-between; font-size: 10px; color: #475569; }
-.day .wx-expand-toggle { color: #94a3b8; border-top-color: rgba(0,0,0,0.08); }
-.day .wx-forecast-hours { color: #94a3b8; }
-.day .wx-forecast-label { color: #475569; }
+.wx-expand-toggle:active { background: rgba(56,189,248,0.26); }
+.wx-forecast { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.wx-forecast-row { display: flex; align-items: flex-start; gap: 8px; }
+.wx-forecast-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.wx-sparkline { width: 100%; height: 32px; display: block; }
+.wx-forecast-label { font-size: 14px; font-weight: 700; color: #e2e8f0; flex-shrink: 0; min-width: 64px; padding-top: 8px; }
+.wx-forecast-hours { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #94a3b8; }
+.day .wx-expand-toggle { color: #0369a1; background: rgba(56,189,248,0.12); border-color: rgba(56,189,248,0.4); }
+.day .wx-forecast-hours { color: #64748b; }
+.day .wx-forecast-label { color: #1e293b; }
 
 /* ── Wave severity colours — vivid on dark, darker for daylight contrast ── */
 .wave-ok  { color: #4ade80; }
