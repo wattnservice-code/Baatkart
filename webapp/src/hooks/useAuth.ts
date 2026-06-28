@@ -17,17 +17,13 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // E-post med engangskode (OTP): send kode → verifiser kode.
-  const sendCode = (email: string) =>
-    supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { shouldCreateUser: true },
-    })
+  const signIn = (email: string, password: string) =>
+    supabase.auth.signInWithPassword({ email: email.trim(), password })
 
-  const verifyCode = (email: string, token: string) =>
-    supabase.auth.verifyOtp({ email: email.trim(), token: token.trim(), type: 'email' })
+  const signUp = (email: string, password: string) =>
+    supabase.auth.signUp({ email: email.trim(), password })
 
   const signOut = () => supabase.auth.signOut()
 
-  return { user, loading, sendCode, verifyCode, signOut }
+  return { user, loading, signIn, signUp, signOut }
 }

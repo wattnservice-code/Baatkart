@@ -1,14 +1,15 @@
 import { useState } from 'react'
-import { LogIn, LogOut, Mail, Check, Cloud } from 'lucide-react'
+import { LogIn, LogOut, Mail, Lock, Cloud, UserPlus } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
 export default function AccountSection() {
-  const { user, loading, sendCode, verifyCode, signOut } = useAuth()
-  const [email, setEmail] = useState('')
-  const [code, setCode]   = useState('')
-  const [step, setStep]   = useState<'email' | 'code'>('email')
-  const [busy, setBusy]   = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { user, loading, signIn, signUp, signOut } = useAuth()
+  const [email, setEmail]     = useState('')
+  const [password, setPass]   = useState('')
+  const [mode, setMode]       = useState<'login' | 'signup'>('login')
+  const [busy, setBusy]       = useState(false)
+  const [error, setError]     = useState<string | null>(null)
+  const [info, setInfo]       = useState<string | null>(null)
 
   if (loading) return null
 
@@ -29,72 +30,75 @@ export default function AccountSection() {
     )
   }
 
-  const handleSend = async () => {
-    if (!email.trim()) return
-    setBusy(true); setError(null)
-    const { error } = await sendCode(email)
+  const submit = async () => {
+    if (!email.trim() || password.length < 6) {
+      setError('Skriv e-post og passord (minst 6 tegn).')
+      return
+    }
+    setBusy(true); setError(null); setInfo(null)
+    const fn = mode === 'login' ? signIn : signUp
+    const { data, error } = await fn(email, password)
     setBusy(false)
-    if (error) { setError(error.message); return }
-    setStep('code')
-  }
-
-  const handleVerify = async () => {
-    if (!code.trim()) return
-    setBusy(true); setError(null)
-    const { error } = await verifyCode(email, code)
-    setBusy(false)
-    if (error) { setError('Feil eller utløpt kode. Prøv igjen.'); return }
-    // onAuthStateChange oppdaterer user → komponenten viser innlogget-visning
+    if (error) {
+      setError(mode === 'login'
+        ? 'Feil e-post eller passord.'
+        : error.message)
+      return
+    }
+    // Hvis e-postbekreftelse er på, finnes ingen sesjon ennå
+    if (mode === 'signup' && !data.session) {
+      setInfo('Konto opprettet. Bekreft e-posten din, så kan du logge inn.')
+      setMode('login')
+    }
+    // ellers oppdaterer onAuthStateChange user → innlogget-visning
   }
 
   return (
     <div className="account-box">
       <div className="account-intro">
         <Cloud size={18} className="account-cloud" />
-        <span>Logg inn for å lagre turene dine i skyen og få dem på alle enheter.</span>
+        <span>{mode === 'login'
+          ? 'Logg inn for å lagre turene dine i skyen og få dem på alle enheter.'
+          : 'Opprett konto for å synke turene dine på tvers av enheter.'}</span>
       </div>
 
-      {step === 'email' ? (
-        <>
-          <div className="account-field">
-            <Mail size={16} />
-            <input
-              className="account-input"
-              type="email" inputMode="email" autoComplete="email"
-              placeholder="din@epost.no"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            />
-          </div>
-          <button className="account-btn account-btn-in" onClick={handleSend} disabled={busy || !email.trim()}>
-            <LogIn size={16} /> {busy ? 'Sender…' : 'Send kode på e-post'}
-          </button>
-        </>
-      ) : (
-        <>
-          <div className="account-field">
-            <Check size={16} />
-            <input
-              className="account-input"
-              type="text" inputMode="numeric" autoComplete="one-time-code"
-              placeholder="6-sifret kode"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
-              autoFocus
-            />
-          </div>
-          <button className="account-btn account-btn-in" onClick={handleVerify} disabled={busy || !code.trim()}>
-            <Check size={16} /> {busy ? 'Sjekker…' : 'Logg inn'}
-          </button>
-          <button className="account-btn account-btn-ghost" onClick={() => { setStep('email'); setCode(''); setError(null) }}>
-            Bruk annen e-post
-          </button>
-        </>
-      )}
+      <div className="account-field">
+        <Mail size={16} />
+        <input
+          className="account-input"
+          type="email" inputMode="email" autoComplete="email"
+          placeholder="din@epost.no"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+      <div className="account-field">
+        <Lock size={16} />
+        <input
+          className="account-input"
+          type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+          placeholder="Passord (minst 6 tegn)"
+          value={password}
+          onChange={(e) => setPass(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && submit()}
+        />
+      </div>
+
+      <button className="account-btn account-btn-in" onClick={submit} disabled={busy}>
+        {mode === 'login'
+          ? <><LogIn size={16} /> {busy ? 'Logger inn…' : 'Logg inn'}</>
+          : <><UserPlus size={16} /> {busy ? 'Oppretter…' : 'Opprett konto'}</>}
+      </button>
+
+      <button
+        className="account-btn account-btn-ghost"
+        onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); setInfo(null) }}
+      >
+        {mode === 'login' ? 'Ny? Opprett konto' : 'Har konto? Logg inn'}
+      </button>
 
       {error && <div className="account-error">{error}</div>}
+      {info  && <div className="account-info">{info}</div>}
     </div>
   )
 }

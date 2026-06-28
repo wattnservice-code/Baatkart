@@ -218,6 +218,7 @@ html, body, #root {
 .account-btn-out { background: rgba(255,255,255,0.08); color: #f1f5f9; }
 .account-btn-ghost { background: none; color: #94a3b8; font-weight: 600; padding: 6px; }
 .account-error { font-size: 13px; color: #f87171; }
+.account-info  { font-size: 13px; color: #4ade80; }
 .day .account-intro { color: #334155; }
 .day .account-email { color: #0f172a; }
 .day .account-field { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.14); }
