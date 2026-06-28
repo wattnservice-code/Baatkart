@@ -9,6 +9,7 @@ import NavOverlay from './components/NavOverlay'
 import TrackFollowOverlay from './components/TrackFollowOverlay'
 import MobButton from './components/MobButton'
 import NavPreviewBar from './components/NavPreviewBar'
+import SaveTrackDialog from './components/SaveTrackDialog'
 import DisclaimerModal from './components/DisclaimerModal'
 import WeatherOverlay from './components/WeatherOverlay'
 import TideOverlay from './components/TideOverlay'
@@ -34,6 +35,8 @@ export default function App() {
   const toggleTide       = useMapStore((s) => s.toggleTide)
   const startTracking    = useMapStore((s) => s.startTracking)
   const clearTrack       = useMapStore((s) => s.clearTrack)
+  const pendingTrackSave = useMapStore((s) => s.pendingTrackSave)
+  const setPendingTrackSave = useMapStore((s) => s.setPendingTrackSave)
   useCompass(compassEnabled)
 
   // Auto-start recording on launch — only if the user opted in (Meg → Sporing).
@@ -100,6 +103,7 @@ export default function App() {
       <MobButton />
       <StatusBar />
       <BottomNav />
+      {pendingTrackSave && <SaveTrackDialog onClose={() => setPendingTrackSave(false)} />}
     </div>
   )
 }

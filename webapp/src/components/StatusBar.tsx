@@ -10,7 +10,10 @@ export default function StatusBar() {
   const compassHeading    = useMapStore((s) => s.compassHeading)
   const isTracking        = useMapStore((s) => s.isTracking)
   const startTracking     = useMapStore((s) => s.startTracking)
-  const setActivePanel    = useMapStore((s) => s.setActivePanel)
+  const stopTracking      = useMapStore((s) => s.stopTracking)
+  const setPendingTrackSave = useMapStore((s) => s.setPendingTrackSave)
+  const clearTrack        = useMapStore((s) => s.clearTrack)
+  const trackPoints       = useMapStore((s) => s.track.length)
   const trackDistanceM    = useMapStore((s) => s.trackDistanceM)
   const distUnit          = useMapStore((s) => s.distUnit)
   const offlineOnly       = useMapStore((s) => s.offlineOnly)
@@ -101,11 +104,16 @@ export default function StatusBar() {
       </button>
 
       <div className="status-divider" />
-      {/* Tur-knapp: direkte start om ikke recording, åpner panel for å stoppe/lagre */}
+      {/* Tur-knapp: start om ikke recording; stopp + "Lagre tur"-popup om recording */}
       <button
         className={`status-tracking-btn ${isTracking ? 'status-tracking-on' : ''}`}
-        onClick={() => isTracking ? setActivePanel('turer') : startTracking()}
-        title={isTracking ? 'Stopp/lagre tur' : 'Start tur-opptak'}
+        onClick={() => {
+          if (!isTracking) { startTracking(); return }
+          stopTracking()
+          if (trackPoints > 1) setPendingTrackSave(true)   // åpne Lagre tur-popup
+          else clearTrack()
+        }}
+        title={isTracking ? 'Stopp og lagre tur' : 'Start tur-opptak'}
       >
         {isTracking
           ? <><Circle size={13} style={{ fill: '#f87171', marginRight: 4 }} />REC {formatDist(trackDistanceM, distUnit)}</>

@@ -4,7 +4,6 @@ import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
 import { iconEmoji } from '../spotIcons'
-import SaveTrackDialog from './SaveTrackDialog'
 import type { SpeedUnit } from '../store/useMapStore'
 
 interface Props { onClose: () => void }
@@ -29,6 +28,7 @@ export default function TripsPanel({ onClose }: Props) {
   const track               = useMapStore((s) => s.track)
   const startTracking       = useMapStore((s) => s.startTracking)
   const stopTracking        = useMapStore((s) => s.stopTracking)
+  const setPendingTrackSave = useMapStore((s) => s.setPendingTrackSave)
   const clearTrack          = useMapStore((s) => s.clearTrack)
   const distUnit            = useMapStore((s) => s.distUnit)
   const speedUnit           = useMapStore((s) => s.speedUnit)
@@ -40,7 +40,6 @@ export default function TripsPanel({ onClose }: Props) {
   const trackDistanceM      = useMapStore((s) => s.trackDistanceM)
   const trackMaxSpeed       = useMapStore((s) => s.trackMaxSpeed)
 
-  const [showSave, setShowSave]       = useState(false)
   const [confirmId, setConfirmId]     = useState<string | null>(null)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [now, setNow] = useState(Date.now())
@@ -56,7 +55,7 @@ export default function TripsPanel({ onClose }: Props) {
 
   const stopAndSave = () => {
     stopTracking()
-    if (track.length > 1) setShowSave(true)
+    if (track.length > 1) { setPendingTrackSave(true); onClose() }
     else clearTrack()
   }
 
@@ -146,8 +145,6 @@ export default function TripsPanel({ onClose }: Props) {
           ))}
         </div>
       </div>
-
-      {showSave && <SaveTrackDialog onClose={() => { setShowSave(false); onClose() }} />}
 
       {confirmDiscard && (
         <div className="dialog-overlay" onClick={() => setConfirmDiscard(false)}>

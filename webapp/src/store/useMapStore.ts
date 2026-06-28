@@ -119,9 +119,12 @@ interface MapStore {
   setPosition: (pos: Position) => void
   setHeading: (heading: number) => void
   startTracking: () => void
+  resumeTracking: () => void
   toggleAutoTrack: () => void
   stopTracking: () => void
   clearTrack: () => void
+  pendingTrackSave: boolean
+  setPendingTrackSave: (v: boolean) => void
   addSpot: (spot: SavedSpot) => void
   removeSpot: (id: string) => void
   setMob: (pos: { lat: number; lng: number }) => void
@@ -299,6 +302,7 @@ export const useMapStore = create<MapStore>((set) => ({
   followingTrack: null,
   trackDistanceM: 0,
   trackMaxSpeed: 0,
+  pendingTrackSave: false,
   spotsVisible: loadBool('spotsVisible', true),
   quickPinEnabled: loadBool('quickPinEnabled', true),
   quickPins: loadQuickPins(),
@@ -331,7 +335,10 @@ export const useMapStore = create<MapStore>((set) => ({
       d += haversineM(s.track[i-1].lat, s.track[i-1].lng, s.track[i].lat, s.track[i].lng)
     return { isTracking: true, trackDistanceM: d, trackMaxSpeed: 0 }
   }),
+  // Gjenoppta uten å nullstille distanse/maks (brukes av "Fortsett opptak")
+  resumeTracking: () => set({ isTracking: true }),
   stopTracking: () => set((s) => { flushTrackSave(s.track); return { isTracking: false } }),
+  setPendingTrackSave: (v) => set({ pendingTrackSave: v }),
   toggleAutoTrack: () => set((s) => { const v = !s.autoTrack; localStorage.setItem('autoTrack', String(v)); return { autoTrack: v } }),
   clearTrack: () => { flushTrackSave([]); return set({ track: [] }) },
 
