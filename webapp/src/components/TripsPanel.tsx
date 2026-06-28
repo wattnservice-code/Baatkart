@@ -4,7 +4,8 @@ import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
 import { formatDist } from './NavOverlay'
 import { iconEmoji } from '../spotIcons'
-import type { SpeedUnit } from '../store/useMapStore'
+import TripDetail from './TripDetail'
+import type { SpeedUnit, SavedTrack } from '../store/useMapStore'
 
 interface Props { onClose: () => void }
 
@@ -42,6 +43,7 @@ export default function TripsPanel({ onClose }: Props) {
 
   const [confirmId, setConfirmId]     = useState<string | null>(null)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
+  const [detailTrip, setDetailTrip]   = useState<SavedTrack | null>(null)
   const [now, setNow] = useState(Date.now())
 
   useEffect(() => {
@@ -111,9 +113,20 @@ export default function TripsPanel({ onClose }: Props) {
           {savedTracks.length === 0 && (
             <div className="spot-panel-empty">Ingen lagrede turer ennå</div>
           )}
+          {savedTracks.length > 0 && (() => {
+            const totDist = savedTracks.reduce((a, t) => a + t.distanceM, 0)
+            const totTime = savedTracks.reduce((a, t) => a + (t.durationS ?? 0), 0)
+            return (
+              <div className="trip-totals">
+                <div className="trip-total"><span>{savedTracks.length}</span><small>turer</small></div>
+                <div className="trip-total"><span>{formatDist(totDist, distUnit)}</span><small>totalt</small></div>
+                <div className="trip-total"><span>{formatDuration(totTime)}</span><small>tid</small></div>
+              </div>
+            )
+          })()}
           {savedTracks.map((t) => (
             <div key={t.id} className="saved-track-row">
-              <div className="saved-track-info">
+              <div className="saved-track-info" onClick={() => setDetailTrip(t)} style={{ cursor: 'pointer' }}>
                 <span className="saved-track-name">{iconEmoji(t.icon)} {t.name}</span>
                 <span className="saved-track-meta">
                   {formatDist(t.distanceM, distUnit)} · {new Date(t.date).toLocaleDateString('no-NO')}
@@ -145,6 +158,17 @@ export default function TripsPanel({ onClose }: Props) {
           ))}
         </div>
       </div>
+
+      {detailTrip && (
+        <TripDetail
+          track={detailTrip}
+          following={followingTrack?.id === detailTrip.id}
+          onClose={() => setDetailTrip(null)}
+          onFollow={() => { startFollowingTrack(detailTrip); setDetailTrip(null); onClose() }}
+          onStop={() => { stopFollowingTrack(); setDetailTrip(null) }}
+          onDelete={() => { setConfirmId(detailTrip.id); setDetailTrip(null) }}
+        />
+      )}
 
       {confirmDiscard && (
         <div className="dialog-overlay" onClick={() => setConfirmDiscard(false)}>
