@@ -1096,6 +1096,13 @@ html, body, #root {
   bottom: max(20px, calc(env(safe-area-inset-bottom) + 16px));
   z-index: 600;
   width: min(420px, calc(100% - 24px));
+  /* Begrens til synlig skjerm og la innholdet scrolle internt — ellers vokser
+     kortet forbi toppen på liggende telefon og blir kappet/uleselig. */
+  max-height: calc(100vh - 36px);
+  max-height: calc(100dvh - max(24px, env(safe-area-inset-top)) - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background: rgba(15,23,42,0.96);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.12);
@@ -1159,6 +1166,18 @@ html, body, #root {
 }
 .spot-action-save    { background: #ca8a04; }
 .spot-action-remove  { background: #334155; color: #f87171; }
+/* Liggende telefon (lav skjerm): kompakter kortet så det får plass uten kapping */
+@media (orientation: landscape) and (max-height: 520px) {
+  .spot-action-card { padding: 10px 12px; }
+  .spot-action-head { margin-bottom: 6px; }
+  .spot-action-dist-block { margin: 2px 0 8px; }
+  .spot-action-dist-val { font-size: 26px; }
+  .spot-action-eta-val  { font-size: 15px; }
+  .spot-wx-block { padding: 6px 2px 8px; font-size: 14px; gap: 6px 14px; }
+  .wx-expand-toggle { padding: 9px; margin-top: 6px; }
+  .spot-action-btns { gap: 8px; }
+  .spot-action-btn { padding: 10px; font-size: 14px; }
+}
 
 /* ── MOB map marker ── */
 .mob-map-marker { position: relative; width: 40px; height: 40px; }
