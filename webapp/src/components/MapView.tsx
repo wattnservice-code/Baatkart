@@ -870,6 +870,11 @@ export default function MapView() {
         quickPinMarkersRef.current.get(pin.id)!.setLatLng([pin.lat, pin.lng]).setIcon(icon)
       } else {
         const m = L.marker([pin.lat, pin.lng], { icon, zIndexOffset: 900 }).addTo(map)
+        // Trykk på et merke → fokuser det (åpne lista + marker raden)
+        m.on('click', (e) => {
+          L.DomEvent.stopPropagation(e)
+          useMapStore.getState().setFocusQuickPin(pin.id)
+        })
         quickPinMarkersRef.current.set(pin.id, m)
       }
     })

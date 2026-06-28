@@ -113,6 +113,7 @@ interface MapStore {
   quickPinEnabled: boolean
   quickPins: QuickPin[]
   highlightedQuickPinId: string | null
+  focusQuickPinId: string | null   // trigger: åpne lista + marker dette merket
   mapHintDismissed: boolean
 
   setPosition: (pos: Position) => void
@@ -172,6 +173,7 @@ interface MapStore {
   removeQuickPin: (id: string) => void
   clearQuickPins: () => void
   setHighlightedQuickPin: (id: string | null) => void
+  setFocusQuickPin: (id: string | null) => void
   saveCurrentTrack: (name: string, icon?: string) => void
   deleteSavedTrack: (id: string) => void
   startFollowingTrack: (track: SavedTrack) => void
@@ -302,6 +304,7 @@ export const useMapStore = create<MapStore>((set) => ({
   quickPins: loadQuickPins(),
   mapHintDismissed: localStorage.getItem('mapHintDismissed') === '1',
   highlightedQuickPinId: null,
+  focusQuickPinId: null,
 
   setPosition: (pos) =>
     set((state) => {
@@ -440,6 +443,7 @@ export const useMapStore = create<MapStore>((set) => ({
     return { mapHintDismissed: true }
   }),
   setHighlightedQuickPin: (id) => set({ highlightedQuickPinId: id }),
+  setFocusQuickPin: (id) => set({ focusQuickPinId: id }),
 
   saveCurrentTrack: (name, icon) => set((s) => {
     if (s.track.length < 2) return {}

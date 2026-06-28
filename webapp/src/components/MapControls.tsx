@@ -75,6 +75,8 @@ function CompassBtn({ mode, rotated }: { mode: NordMode; rotated: boolean }) {
 export default function MapControls() {
   const [gpsSpot, setGpsSpot]           = useState<{ lat: number; lng: number } | null>(null)
   const [quickPinListOpen, setQuickPinListOpen] = useState(false)
+  const [confirmDelId, setConfirmDelId] = useState<string | null>(null)
+  const [confirmClearAll, setConfirmClearAll] = useState(false)
   const [spotWx, setSpotWx]   = useState<{ windSpeed: number; windDir: number; temp: number; symbol: string } | null>(null)
   const [spotWave, setSpotWave] = useState<{ height: number; dir: number; seaTemp?: number } | null>(null)
   const [spotWindSeries, setSpotWindSeries] = useState<SeriesPoint[]>([])
@@ -117,6 +119,8 @@ export default function MapControls() {
   const clearQuickPins          = useMapStore((s) => s.clearQuickPins)
   const setHighlightedQuickPin  = useMapStore((s) => s.setHighlightedQuickPin)
   const highlightedQuickPinId   = useMapStore((s) => s.highlightedQuickPinId)
+  const focusQuickPinId         = useMapStore((s) => s.focusQuickPinId)
+  const setFocusQuickPin        = useMapStore((s) => s.setFocusQuickPin)
 
   // Close the card. For a dropped/search pin (no saved id) also remove the
   // blue pin from the map; for a saved spot just close (keep its yellow pin).
@@ -165,10 +169,18 @@ export default function MapControls() {
     if (quickPins.length === 0) setQuickPinListOpen(false)
   }, [quickPins.length])
 
-  // Clear the selected-pin highlight whenever the list closes
+  // Clear the selected-pin highlight + any pending confirms whenever the list closes
   useEffect(() => {
-    if (!quickPinListOpen) setHighlightedQuickPin(null)
+    if (!quickPinListOpen) { setHighlightedQuickPin(null); setConfirmDelId(null); setConfirmClearAll(false) }
   }, [quickPinListOpen, setHighlightedQuickPin])
+
+  // Trykk på et merke på kartet → åpne lista og marker det merket
+  useEffect(() => {
+    if (!focusQuickPinId) return
+    setQuickPinListOpen(true)
+    setHighlightedQuickPin(focusQuickPinId)
+    setFocusQuickPin(null)
+  }, [focusQuickPinId, setHighlightedQuickPin, setFocusQuickPin])
 
   // 3-state cycle: nord-opp → GPS kjøreretning → kompassretning → nord-opp
   const nordMode: NordMode = compassEnabled ? 'krs' : headingUp ? 'gps' : 'off'
@@ -288,15 +300,15 @@ export default function MapControls() {
         {quickPinEnabled && <button
           className={`fab ${quickPins.length > 0 ? 'fab-quickpin' : ''}`}
           onClick={() => {
-            if (quickPins.length > 0) {
-              setQuickPinListOpen((v) => !v)
-            } else if (position) {
-              track('quickpin_added')
-              addQuickPin({ lat: position.lat, lng: position.lng })
-              setQuickPinListOpen(true)
-            }
+            // Hvert trykk dropper et nytt merke der du er (rask merking under fart)
+            // og viser lista. 20 m-guarden i store hindrer dubletter på samme sted.
+            if (!position) return
+            track('quickpin_added')
+            addQuickPin({ lat: position.lat, lng: position.lng })
+            navigator.vibrate?.(40)
+            setQuickPinListOpen(true)
           }}
-          title={quickPins.length > 0 ? 'Vis merker' : 'Merk posisjon'}
+          title="Merk posisjon"
         >
           <Crosshair size={20} />
           {quickPins.length > 0 && <span className="fab-badge">{quickPins.length}</span>}
@@ -339,49 +351,75 @@ export default function MapControls() {
             </div>
             <div className="quickpin-popup-list">
               {withDist.map(({ pin, dist, brg }, idx) => (
-                <div
-                  key={pin.id}
-                  className={`quickpin-popup-row ${pin.id === highlightedQuickPinId ? 'quickpin-popup-row--selected' : ''}`}
-                  onClick={() => {
-                    setFlyTo({ lat: pin.lat, lng: pin.lng })
-                    setHighlightedQuickPin(pin.id)
-                  }}
-                >
-                  <span className="quickpin-popup-num">{idx + 1}</span>
-                  <div className="quickpin-popup-info">
-                    <span className="quickpin-popup-label">{pin.label}</span>
-                    {dist !== null && (
-                      <span className="quickpin-popup-dist">
-                        {formatDist(dist, distUnit as 'nm' | 'm' | 'km')} · {Math.round(brg!)}°
-                      </span>
-                    )}
+                confirmDelId === pin.id ? (
+                  <div key={pin.id} className="quickpin-popup-row quickpin-row-confirm">
+                    <span className="quickpin-confirm-text">Slette merke {pin.label}?</span>
+                    <button className="quickpin-confirm-cancel"
+                      onClick={(e) => { e.stopPropagation(); setConfirmDelId(null) }}>
+                      Avbryt
+                    </button>
+                    <button className="quickpin-confirm-del"
+                      onClick={(e) => { e.stopPropagation(); removeQuickPin(pin.id); setConfirmDelId(null) }}>
+                      <Trash2 size={18} /> Slett
+                    </button>
                   </div>
-                  <button
-                    className="quickpin-popup-nav"
-                    title="Navigér hit"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setNavTarget({ lat: pin.lat, lng: pin.lng, name: `Merke ${pin.label}` })
-                      removeQuickPin(pin.id)
-                      setQuickPinListOpen(false)
+                ) : (
+                  <div
+                    key={pin.id}
+                    className={`quickpin-popup-row ${pin.id === highlightedQuickPinId ? 'quickpin-popup-row--selected' : ''}`}
+                    onClick={() => {
+                      setFlyTo({ lat: pin.lat, lng: pin.lng })
+                      setHighlightedQuickPin(pin.id)
                     }}
                   >
-                    <Navigation size={16} />
-                  </button>
-                  <button
-                    className="quickpin-popup-del"
-                    title="Fjern merke"
-                    onClick={(e) => { e.stopPropagation(); removeQuickPin(pin.id) }}
-                  >
-                    <X size={13} />
-                  </button>
-                </div>
+                    <span className="quickpin-popup-num">{idx + 1}</span>
+                    <div className="quickpin-popup-info">
+                      <span className="quickpin-popup-label">{pin.label}</span>
+                      {dist !== null && (
+                        <span className="quickpin-popup-dist">
+                          {formatDist(dist, distUnit as 'nm' | 'm' | 'km')} · {Math.round(brg!)}°
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      className="quickpin-popup-nav"
+                      title="Navigér hit"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setNavTarget({ lat: pin.lat, lng: pin.lng, name: `Merke ${pin.label}` })
+                        removeQuickPin(pin.id)
+                        setQuickPinListOpen(false)
+                      }}
+                    >
+                      <Navigation size={20} />
+                    </button>
+                    <button
+                      className="quickpin-popup-del"
+                      title="Fjern merke"
+                      onClick={(e) => { e.stopPropagation(); setConfirmDelId(pin.id) }}
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                )
               ))}
             </div>
             {quickPins.length > 1 && (
-              <button className="quickpin-popup-clear" onClick={clearQuickPins}>
-                <Trash2 size={13} /> Fjern alle
-              </button>
+              confirmClearAll ? (
+                <div className="quickpin-clearall-confirm">
+                  <span>Fjerne alle {quickPins.length}?</span>
+                  <button className="quickpin-confirm-cancel"
+                    onClick={() => setConfirmClearAll(false)}>Avbryt</button>
+                  <button className="quickpin-confirm-del"
+                    onClick={() => { clearQuickPins(); setConfirmClearAll(false); setQuickPinListOpen(false) }}>
+                    <Trash2 size={18} /> Fjern alle
+                  </button>
+                </div>
+              ) : (
+                <button className="quickpin-popup-clear" onClick={() => setConfirmClearAll(true)}>
+                  <Trash2 size={16} /> Fjern alle
+                </button>
+              )
             )}
           </div>
         )

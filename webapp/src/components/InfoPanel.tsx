@@ -43,6 +43,13 @@ export default function InfoPanel({ onClose }: Props) {
           <li>Herfra kan du navigere til punktet, åpne i Google Maps, eller lagre som sted.</li>
         </ul>
 
+        <h3 className="info-h">Hurtig-merker</h3>
+        <ul className="info-list">
+          <li>Trykk <b>sikte-knappen</b> (⊕) for å droppe et merke der båten er – hvert trykk gir et nytt merke. Praktisk for fiskeplasser, teiner og lignende under fart.</li>
+          <li>Trykk et merke på kartet eller i lista for å markere det; trykk <b>navigér</b> for å sette kurs dit.</li>
+          <li>Sletting krever bekreftelse. Knappen kan skrus av under <b>Meg</b>.</li>
+        </ul>
+
         <h3 className="info-h">Steder</h3>
         <ul className="info-list">
           <li>Åpne <b>Steder</b>-panelet og trykk «Min posisjon» for å lagre der du er, eller «Velg på kartet» for å plassere en pin manuelt.</li>
