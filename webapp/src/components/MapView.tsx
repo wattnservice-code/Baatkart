@@ -885,24 +885,32 @@ export default function MapView() {
       popupJustClosed.current = true
       setTimeout(() => { popupJustClosed.current = false }, 100)
     }
-    // Enkelt-trykk gjør ingenting på kartet (unngår utilsiktet "Valgt punkt"
-    // mens du panorerer). Unntak: i "legg til sted"-modus plasserer det stedet.
-    const onClick = (e: L.LeafletMouseEvent) => {
-      if (popupJustClosed.current) return
-      if (addingSpot) { setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng }); return }
-    }
-    // Trykk-og-hold (Leaflet contextmenu på touch / høyreklikk på desktop) →
-    // åpne "Valgt punkt"-menyen (naviger / Google Maps / lagre) der du trykket.
-    const onLongPress = (e: L.LeafletMouseEvent) => {
-      if (e.originalEvent) L.DomEvent.preventDefault(e.originalEvent)
+    // Åpne "Valgt punkt"-menyen (naviger / Google Maps / lagre) der du trykker.
+    // Leaflet fyrer ikke 'click' etter en dra-bevegelse, så panorering trigger
+    // ikke menyen ved et uhell — trygt å bruke enkelt-trykk.
+    const openPointMenu = (lat: number, lng: number) => {
       const s = useMapStore.getState()
-      if (s.mobPoint || addingSpot) return
-      if (s.spotMenu) return
-      const lat = e.latlng.lat, lng = e.latlng.lng
       const name = 'Valgt punkt'
       s.setSearchPin({ lat, lng, name })
       s.setSpotMenu({ lat, lng, name })
       s.dismissMapHint()
+    }
+    // Enkelt-trykk: rask tilgang (viktig i sjøgang der trykk-og-hold feiler).
+    // Plasserer sted i "legg til"-modus; ellers åpner/lukker punktmenyen.
+    const onClick = (e: L.LeafletMouseEvent) => {
+      if (popupJustClosed.current) return
+      if (addingSpot) { setPendingSpot({ lat: e.latlng.lat, lng: e.latlng.lng }); return }
+      const s = useMapStore.getState()
+      if (s.mobPoint) return
+      if (s.spotMenu) { s.setSpotMenu(null); s.setSearchPin(null); return }  // trykk igjen lukker
+      openPointMenu(e.latlng.lat, e.latlng.lng)
+    }
+    // Trykk-og-hold (touch) / høyreklikk (desktop) → samme meny, beholdt som fallback.
+    const onLongPress = (e: L.LeafletMouseEvent) => {
+      if (e.originalEvent) L.DomEvent.preventDefault(e.originalEvent)
+      const s = useMapStore.getState()
+      if (s.mobPoint || addingSpot || s.spotMenu) return
+      openPointMenu(e.latlng.lat, e.latlng.lng)
     }
     map.on('popupclose', onPopupClose)
     map.on('click', onClick)
@@ -921,7 +929,7 @@ export default function MapView() {
       </div>
       {!mapHintDismissed && !mobPoint && (
         <div className="map-hint">
-          <span>Trykk og hold på kartet for valg</span>
+          <span>Trykk på kartet for valg</span>
           <button onClick={dismissMapHint}>Vis ikke igjen</button>
         </div>
       )}

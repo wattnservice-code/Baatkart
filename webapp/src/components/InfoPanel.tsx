@@ -39,7 +39,7 @@ export default function InfoPanel({ onClose }: Props) {
 
         <h3 className="info-h">Valgt punkt</h3>
         <ul className="info-list">
-          <li>Hold lenge på kartet for å åpne <b>Valgt punkt</b>-menyen.</li>
+          <li>Trykk på kartet for å åpne <b>Valgt punkt</b>-menyen (trykk igjen for å lukke).</li>
           <li>Herfra kan du navigere til punktet, åpne i Google Maps, eller lagre som sted.</li>
         </ul>
 
