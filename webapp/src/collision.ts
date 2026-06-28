@@ -2,7 +2,7 @@
 // og et AIS-fartøy. Ren matte, ekstrahert fra useAIS for å kunne testes.
 
 export const DANGER_CPA_M    = 926   // 0.5 nm
-export const DANGER_TCPA_MIN = 15
+export const DANGER_TCPA_MIN = 6     // varsle kun når kollisjon er nært forestående
 export const KN_TO_MS        = 0.514444
 
 export interface OwnState { lat: number; lng: number; speedMs: number; courseDeg: number }
@@ -34,7 +34,7 @@ export function computeCPA(own: OwnState, t: CpaTarget): CpaInfo | null {
   return { cpaM: Math.hypot(cx, cy), tcpaMin: tcpaSec / 60, rangeM, bearingDeg }
 }
 
-// Farlig hvis fartøyet nærmer seg (positiv TCPA) innen 15 min OG nærmeste
+// Farlig hvis fartøyet nærmer seg (positiv TCPA) innen 6 min OG nærmeste
 // passering er nærmere enn 0,5 nm.
 export function isDanger(cpa: CpaInfo | null): boolean {
   return !!cpa && cpa.tcpaMin > 0 && cpa.tcpaMin < DANGER_TCPA_MIN && cpa.cpaM < DANGER_CPA_M

@@ -52,7 +52,7 @@ describe('computeCPA', () => {
 describe('isDanger', () => {
   it('null → ikke farlig', () => { expect(isDanger(null)).toBe(false) })
 
-  it('nær passering innen 15 min → farlig', () => {
+  it('nær passering om kort tid → farlig', () => {
     const t = target({ lat: northOf(0, 1000), sog: 15, heading: 180 })
     expect(isDanger(computeCPA(stationaryOwn, t))).toBe(true)
   })
@@ -68,8 +68,8 @@ describe('isDanger', () => {
     expect(isDanger(computeCPA(stationaryOwn, t))).toBe(false)
   })
 
-  it('treff først om mer enn 15 min → ikke farlig', () => {
-    // langt unna og sakte → kollisjon, men TCPA > 15 min
+  it('treff først langt fram i tid → ikke farlig', () => {
+    // langt unna og sakte → kollisjon, men TCPA langt over terskelen
     const t = target({ lat: northOf(0, 10000), sog: 1, heading: 180 })
     const cpa = computeCPA(stationaryOwn, t)!
     expect(cpa.tcpaMin).toBeGreaterThan(15)

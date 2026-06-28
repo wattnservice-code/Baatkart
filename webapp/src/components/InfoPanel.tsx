@@ -82,7 +82,7 @@ export default function InfoPanel({ onClose }: Props) {
           <li>Trykk <b>Ship-knappen</b> på kartet for å slå AIS av/på.</li>
           <li>Data hentes fra Barentswatch / Kystverket og oppdateres hvert 15. sekund.</li>
           <li>Trykk på et fartøy for å se navn, type, fart, kurs, destinasjon og dimensjoner.</li>
-          <li><b>Kollisjonsvarsel</b> (pulserende rød 🚨): CPA &lt; 0,5 nm og TCPA &lt; 15 min. Trykk på varselet for å fly til det farligste fartøyet.</li>
+          <li><b>Kollisjonsvarsel</b> (pulserende rød 🚨): CPA &lt; 0,5 nm og TCPA &lt; 6 min. Trykk på varselet for å fly til det farligste fartøyet.</li>
           <li>Fortøyde og ankrede fartøy kan skjules under Meg → «Vis fortøyde/ankrede».</li>
           <li>📡 <i>Ingen AIS-kontakt</i>: midlertidig nettverksfeil – forsvinner automatisk når kontakten er tilbake.</li>
           <li>Ikke alle fartøy sender alle opplysninger – manglende felter er normalt.</li>

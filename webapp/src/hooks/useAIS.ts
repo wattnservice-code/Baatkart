@@ -304,17 +304,17 @@ function popupContent(v: AISVessel, cpa: CpaInfo | null, danger: boolean, distUn
     const cpaStr   = formatDist(cpa.cpaM, distUnit)
     const rangeStr = formatDist(cpa.rangeM, distUnit)
     const min      = Math.round(cpa.tcpaMin)
-    const brg      = Math.round(cpa.bearingDeg)
-    const brgLabel = cardinal(cpa.bearingDeg)
+    // Kun det som teller: avstand nå + tid til kollisjon. Gul/hvit på solid rød
+    // så det leses skikkelig (rød-på-rød ble for mørkt).
     cpaLine = danger
-      ? `<div style="margin-top:6px;padding:6px 8px;background:rgba(239,68,68,0.15);border-radius:6px;color:#ef4444;font-weight:700;font-size:12px;line-height:1.7">
-           ⚠ KOLLISJONSKURS<br/>
-           <span style="font-weight:400;font-size:11px">
-             Nå: <b>${rangeStr}</b> unna &nbsp;·&nbsp; Peil: <b>${brg}° ${brgLabel}</b><br/>
-             Nærmeste: <b>${cpaStr}</b> om <b>${min} min</b>
+      ? `<div style="margin-top:6px;padding:8px 10px;background:#dc2626;border-radius:6px;font-size:14px;line-height:1.6">
+           <span style="color:#fde047;font-weight:800;letter-spacing:0.02em">⚠ KOLLISJONSKURS</span><br/>
+           <span style="color:#ffffff;font-weight:600">
+             Avstand: <b>${rangeStr}</b><br/>
+             Kollisjon om: <b>${min} min</b>
            </span>
          </div>`
-      : `<div style="margin-top:4px;color:#64748b;font-size:11px">Nærmeste punkt: ${cpaStr} om ${min} min</div>`
+      : `<div style="margin-top:4px;color:#94a3b8;font-size:11px">Nærmeste: ${cpaStr} om ${min} min</div>`
   }
 
   const dimParts: string[] = []
