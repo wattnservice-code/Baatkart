@@ -320,7 +320,7 @@ html, body, #root {
   background: none; border: none; color: #cbd5e1; cursor: pointer; flex-shrink: 0;
   min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;
 }
-.trip-detail-date { font-size: 13px; color: #94a3b8; margin: 2px 0 10px; }
+.trip-detail-date { font-size: 14px; font-weight: 600; color: #cbd5e1; margin: 2px 0 10px; }
 .trip-detail-map {
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
   border-radius: 12px; overflow: hidden; margin-bottom: 12px;
@@ -1350,9 +1350,9 @@ html, body, #root {
   padding: 10px 16px; gap: 8px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.saved-track-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.saved-track-name { font-size: 14px; font-weight: 600; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.saved-track-meta { font-size: 11px; color: #94a3b8; }
+.saved-track-info { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.saved-track-name { font-size: 16px; font-weight: 700; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.saved-track-meta { font-size: 13px; color: #cbd5e1; }
 .saved-track-btns { display: flex; gap: 6px; flex-shrink: 0; }
 .saved-track-btn {
   display: flex; align-items: center; gap: 4px;
@@ -1375,7 +1375,7 @@ html, body, #root {
 .trip-stat-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
 .trip-stat-val { font-size: 15px; font-weight: 700; color: #e2e8f0; }
 .day .trip-stat-val { color: #0f172a; }
-.saved-track-speeds { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+.saved-track-speeds { font-size: 13px; font-weight: 600; color: #cbd5e1; margin-top: 1px; }
 .trip-current-btns { display: flex; gap: 8px; }
 .trip-btn {
   display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -1391,6 +1391,9 @@ html, body, #root {
 
 .day .saved-track-row { border-bottom-color: rgba(0,0,0,0.06); }
 .day .saved-track-name { color: #0f172a; }
+.day .saved-track-meta { color: #475569; }
+.day .saved-track-speeds { color: #475569; }
+.day .trip-detail-date { color: #475569; }
 .day .saved-track-btn { border-color: rgba(0,0,0,0.12); background: rgba(0,0,0,0.03); }
 .day .saved-track-follow { background: rgba(168,85,247,0.1); border-color: #a855f7; color: #7c3aed; }
 .day .saved-track-del { color: #94a3b8; }
