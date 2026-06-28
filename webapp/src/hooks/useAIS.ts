@@ -257,8 +257,10 @@ function navStatusLabel(code: number): string | undefined {
 
 function vesselIcon(vessel: AISVessel, danger: boolean, zoom: number): L.DivIcon {
   const sz = vesselSize(zoom)
-  const hdg = (vessel.heading >= 0 && vessel.heading < 360) ? vessel.heading
-            : (vessel.cog >= 0 && vessel.cog < 360) ? vessel.cog : 0
+  // COG (spor over grunn) først — samme prioritet som kurslinjen, så ikon og
+  // strek alltid peker samme vei. heading (baug) brukes kun som fallback.
+  const hdg = (vessel.cog >= 0 && vessel.cog < 360) ? vessel.cog
+            : (vessel.heading > 0 && vessel.heading < 360) ? vessel.heading : 0
   const color = danger ? '#ef4444' : vesselTypeColor(vessel.shipType)
   const wrapCls = danger ? 'ais-danger-wrap' : ''
   const html = `<div class="${wrapCls}" style="width:${sz}px;height:${sz}px;">
