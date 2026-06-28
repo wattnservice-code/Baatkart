@@ -20,6 +20,9 @@ create table if not exists public.trips (
 create index if not exists trips_user_id_idx on public.trips (user_id);
 create index if not exists trips_user_date_idx on public.trips (user_id, trip_date desc);
 
+-- ── Tilgang: gi innlogget rolle rett til tabellen (RLS styrer hvilke rader) ─────
+grant select, insert, update, delete on public.trips to authenticated;
+
 -- ── Row Level Security: hver bruker ser/endrer kun egne turer ──────────────────
 alter table public.trips enable row level security;
 
