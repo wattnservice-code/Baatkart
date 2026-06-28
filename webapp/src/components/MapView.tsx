@@ -97,6 +97,17 @@ function formatRingLabel(m: number): string {
 // in look-ahead mode. Smaller = boat higher on screen = more room for the ring.
 const LOOK_AHEAD_FRAC = 0.28
 
+// Auto look-ahead with hysteresis: engage above 4 kn, only disengage below 2 kn.
+// Without the gap, GPS speed noise around the threshold makes the boat flip between
+// "pushed back" and "centred" — looking like it drifts toward the middle.
+const LA_ENGAGE_MS = 2.06   // ~4 knots
+const LA_RELEASE_MS = 1.03  // ~2 knots
+function effectiveLookAhead(stateRef: { current: boolean }, speed: number, manual: boolean): boolean {
+  if (speed > LA_ENGAGE_MS) stateRef.current = true
+  else if (speed < LA_RELEASE_MS) stateRef.current = false
+  return manual || stateRef.current
+}
+
 // Round a distance DOWN to a clean 1/2/5 × 10ⁿ value (50, 100, 200, 500, …)
 function niceRound(m: number): number {
   if (m <= 0) return 50
@@ -118,9 +129,9 @@ function fitRingRadius(
 ): number {
   const size = map.getSize()
   const mpp = (156543 * Math.cos(pos.lat * Math.PI / 180)) / Math.pow(2, zoom)
-  const autoLookAhead = pos.speed > 2.06
-  // Boat's vertical screen position: centred when stationary, lower when leading
-  const boatY = followBoat && (lookAhead || autoLookAhead) ? 0.5 + LOOK_AHEAD_FRAC : 0.5
+  // Boat's vertical screen position: centred when stationary, lower when leading.
+  // `lookAhead` here is the already-resolved effective flag (manual OR auto).
+  const boatY = followBoat && lookAhead ? 0.5 + LOOK_AHEAD_FRAC : 0.5
   const minPx = Math.min(boatY * size.y, (1 - boatY) * size.y, 0.5 * size.x)
   return Math.max(50, niceRound(minPx * mpp * 0.85))   // 0.85 → small margin off the edge
 }
@@ -143,8 +154,8 @@ function recenterOnBoat(
   lookAhead: boolean,
   animate: boolean,
 ) {
-  const autoLookAhead = pos.speed > 2.06 && pos.heading !== undefined
-  if (lookAhead || autoLookAhead) {
+  // `lookAhead` is the already-resolved effective flag (manual OR auto w/ hysteresis).
+  if (lookAhead) {
     const size = map.getSize()
     const topLL = map.containerPointToLatLng([size.x / 2, 0])
     const botLL = map.containerPointToLatLng([size.x / 2, size.y])
@@ -205,6 +216,7 @@ export default function MapView() {
   const seamarkTileRef  = useRef<L.TileLayer | null>(null)
   const resumeFollowRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wasMovingRef    = useRef(false)
+  const autoLARef       = useRef(false)   // hysteresis state for auto look-ahead
   const spotMarkersRef      = useRef<Map<string, L.Marker>>(new Map())
   const quickPinMarkersRef  = useRef<Map<string, L.Marker>>(new Map())
   const followTrackLineRef  = useRef<L.Polyline | null>(null)
@@ -329,7 +341,8 @@ export default function MapView() {
       }
       if (rangeRingRef.current && pos) {
         const st = useMapStore.getState()
-        const r = customR ?? fitRingRadius(map, pos, st.followBoat, st.lookAhead, zoom)
+        const la = effectiveLookAhead(autoLARef, pos.speed, st.lookAhead)
+        const r = customR ?? fitRingRadius(map, pos, st.followBoat, la, zoom)
         rangeRingRef.current.setRadius(r)
         const labelPos = destPoint(pos.lat, pos.lng, (pos.heading + 270) % 360, r)
         ringLabelRef.current?.setLatLng(labelPos)
@@ -364,7 +377,8 @@ export default function MapView() {
         map.invalidateSize({ animate: false })
         const pos = positionRef.current
         if (pos && useMapStore.getState().followBoat) {
-          recenterOnBoat(map, pos, useMapStore.getState().lookAhead, false)
+          const la = effectiveLookAhead(autoLARef, pos.speed, useMapStore.getState().lookAhead)
+          recenterOnBoat(map, pos, la, false)
         }
       })
     }
@@ -433,9 +447,10 @@ export default function MapView() {
       map.setZoom(13, { animate: true })
     }
     wasMovingRef.current = isMoving
+    const la = effectiveLookAhead(autoLARef, position.speed, lookAhead)
     const mpp = (156543 * Math.cos(position.lat * Math.PI / 180)) / Math.pow(2, zoom)
     // Auto-fit so the whole ring + label stay on screen; honour a manual override.
-    const radius = customRingRadius ?? fitRingRadius(map, position, followBoat, lookAhead, zoom)
+    const radius = customRingRadius ?? fitRingRadius(map, position, followBoat, la, zoom)
 
     // Boat marker
     const size = boatSize(zoom)
@@ -445,7 +460,7 @@ export default function MapView() {
       map.setView(latlng, Math.max(zoom, 13), { animate: false })
     } else {
       boatMarkerRef.current.setLatLng(latlng)
-      if (followBoat) recenterOnBoat(map, position, lookAhead, true)
+      if (followBoat) recenterOnBoat(map, position, la, true)
     }
 
     // GPS course predictor — zoom-adaptive length (min 40% screen height, up to 5 min ahead or 100% screen height)
