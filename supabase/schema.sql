@@ -275,3 +275,6 @@ language sql stable security definer set search_path = public as $$
   order by e.updated_at desc;
 $$;
 grant execute on function public.admin_list_access() to authenticated;
+
+-- max_seters per prisplan (1 = personlig; >1 = familie/firma)
+alter table public.price_plan add column if not exists max_seats integer not null default 1;

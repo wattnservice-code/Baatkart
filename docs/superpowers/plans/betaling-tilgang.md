@@ -61,6 +61,19 @@ Ikke bygg `customer`/`customer_user`, kampanjer, `audit_log` nå. `profiles` (1:
 bruker) holder for MVP. Migrasjonssti er ren: legg til `customer` + koble når
 firma/familie faktisk trengs.
 
+## Anti-deling (ikke "spredd rundt")
+To ulike problemer:
+- **Passord-deling** (samme bruker logget inn mange steder) → **enhetsgrense** per
+  bruker. Spor enheter (stabil device_id i localStorage) i `user_device`-tabell;
+  soft cap (f.eks. 2–3 aktive). Over grensa: "logg ut andre enheter" eller blokker
+  ny. Håndheves server-side (RPC/trigger). Lett touch – ikke frustrer ny telefon/reinstall.
+- **Flere personer per abonnement** (familie/firma) → **seter**. `price_plan.max_seats`
+  (default 1). Subscription hører til en `customer`; `customer_user` = brukte seter.
+  Når seter fulle → ingen flere kan kobles på.
+
+MVP: per-bruker-plan (max_seats=1) + enkel enhetsgrense. Seter/familieplan når det
+faktisk tilbys. Enforcement bygges med Stripe-integrasjonen.
+
 ## Gratis / test-/comp-brukere
 Tilgang = entitlement, ikke betaling → gratis tilgang gis ved å sette et entitlement
 direkte, uten Stripe. `entitlement.source` skiller `'comp'`/`'beta'` fra `'stripe'`,
