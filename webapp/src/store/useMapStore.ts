@@ -1,6 +1,14 @@
 import { create } from 'zustand'
-import { haversineM } from '../geo'
+import { haversineM, simplifyTrack } from '../geo'
 import { pushTrip, deleteTripRemote } from '../sync/tripSync'
+
+// Minste bevegelse (m) før et nytt sporpunkt lagres — holder datamengden nede.
+const MIN_POINT_DIST = 10
+// Minste fart (m/s) for å regne det som bevegelse. ~1,4 knop → drift/stillstand
+// (under denne) logges ikke som tur-punkter.
+const MIN_TRACK_SPEED = 0.7
+// Toleranse (m) for forenkling av lagret rute (Douglas-Peucker).
+const SIMPLIFY_TOL_M = 12
 
 interface Position {
   lat: number
@@ -326,12 +334,17 @@ export const useMapStore = create<MapStore>((set) => ({
     set((state) => {
       const updates: Partial<MapStore> = { position: pos }
       if (state.isTracking) {
-        const track = [...state.track, { lat: pos.lat, lng: pos.lng, timestamp: pos.timestamp }]
-        saveTrackDebounced(track)
-        updates.track = track
-        if (state.track.length > 0) {
-          const prev = state.track[state.track.length - 1]
-          updates.trackDistanceM = state.trackDistanceM + haversineM(prev.lat, prev.lng, pos.lat, pos.lng)
+        // Lagre kun punkt når båten faktisk beveger seg (over driftfart) OG har
+        // flyttet seg ≥ MIN_POINT_DIST m. Holder datamengden nede og hindrer at
+        // stillstand/drift (fiske) spammer punkter.
+        const prev = state.track[state.track.length - 1]
+        const moved = prev ? haversineM(prev.lat, prev.lng, pos.lat, pos.lng) : Infinity
+        const moving = (pos.speed ?? 0) >= MIN_TRACK_SPEED
+        if (moving && (!prev || moved >= MIN_POINT_DIST)) {
+          const track = [...state.track, { lat: pos.lat, lng: pos.lng, timestamp: pos.timestamp }]
+          saveTrackDebounced(track)
+          updates.track = track
+          if (prev) updates.trackDistanceM = state.trackDistanceM + moved
         }
         if (pos.speed > state.trackMaxSpeed) updates.trackMaxSpeed = pos.speed
       }
@@ -468,15 +481,16 @@ export const useMapStore = create<MapStore>((set) => ({
 
   saveCurrentTrack: (name, icon) => set((s) => {
     if (s.track.length < 2) return {}
-    const pts = s.track.map((p) => ({ lat: p.lat, lng: p.lng }))
     const startTs = s.track[0].timestamp
     const endTs   = s.track[s.track.length - 1].timestamp
     const durationS = (endTs - startTs) / 1000
-    // Distanse regnes fra punktene (robust også ved auto-finalisering ved gjenåpning,
-    // der den løpende trackDistanceM kan være nullstilt).
+    // Distanse regnes fra fulle punkter (robust også ved auto-finalisering ved
+    // gjenåpning, der den løpende trackDistanceM kan være nullstilt).
     let dist = 0
     for (let i = 1; i < s.track.length; i++)
       dist += haversineM(s.track[i-1].lat, s.track[i-1].lng, s.track[i].lat, s.track[i].lng)
+    // Forenkle ruten som lagres (beholder formen, kutter datamengde kraftig).
+    const pts = simplifyTrack(s.track.map((p) => ({ lat: p.lat, lng: p.lng })), SIMPLIFY_TOL_M)
     const saved: SavedTrack = {
       id: crypto.randomUUID(),
       name,

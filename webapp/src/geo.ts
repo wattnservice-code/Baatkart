@@ -88,3 +88,38 @@ export function mobDrift(
   const radius = 30 + distance * 0.3
   return { lat: dLat, lng: dLng, bearing, distance, radius }
 }
+
+// ── Rute-forenkling (Douglas-Peucker) ─────────────────────────────────────────
+// Fjerner overflødige punkter på rette strekk men beholder formen. Toleranse i m.
+type LL = { lat: number; lng: number }
+
+function perpDistM(p: LL, a: LL, b: LL): number {
+  // Lokal meter-projeksjon relativt til a (gyldig over korte avstander).
+  const k = Math.cos((a.lat * Math.PI) / 180)
+  const ax = 0, ay = 0
+  const bx = (b.lng - a.lng) * k * 111320, by = (b.lat - a.lat) * 111320
+  const px = (p.lng - a.lng) * k * 111320, py = (p.lat - a.lat) * 111320
+  const dx = bx - ax, dy = by - ay
+  const len2 = dx * dx + dy * dy
+  if (len2 === 0) return Math.hypot(px - ax, py - ay)
+  let t = ((px - ax) * dx + (py - ay) * dy) / len2
+  t = Math.max(0, Math.min(1, t))
+  const cx = ax + t * dx, cy = ay + t * dy
+  return Math.hypot(px - cx, py - cy)
+}
+
+export function simplifyTrack<T extends LL>(points: T[], toleranceM: number): T[] {
+  if (points.length < 3) return points
+  let maxDist = 0, idx = 0
+  const end = points.length - 1
+  for (let i = 1; i < end; i++) {
+    const d = perpDistM(points[i], points[0], points[end])
+    if (d > maxDist) { maxDist = d; idx = i }
+  }
+  if (maxDist > toleranceM) {
+    const left = simplifyTrack(points.slice(0, idx + 1), toleranceM)
+    const right = simplifyTrack(points.slice(idx), toleranceM)
+    return left.slice(0, -1).concat(right)
+  }
+  return [points[0], points[end]]
+}

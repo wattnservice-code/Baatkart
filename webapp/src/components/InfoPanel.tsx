@@ -69,10 +69,12 @@ export default function InfoPanel({ onClose }: Props) {
 
         <h3 className="info-h">Turer</h3>
         <ul className="info-list">
-          <li>Trykk <b>Tur</b>-knappen i statuslinja for å starte sporing.</li>
-          <li>Under opptak vises <b>REC</b> med distanse. Trykk på den for å avslutte – da kommer <b>Lagre tur</b> opp med distanse, tid, snitt- og maksfart. Velg Lagre, Forkast eller Fortsett opptak.</li>
-          <li>Slå på <b>Start tur-opptak automatisk</b> under Meg → Sporing for automatisk start ved åpning.</li>
-          <li>Lagrede turer kan vises og følges på nytt.</li>
+          <li>Åpne <b>Turer</b>-fanen og trykk <b>Start ny tur</b>. En pulserende rød prikk på Turer-fanen viser at opptak pågår.</li>
+          <li>Trykk <b>Stopp og lagre</b> for å avslutte – da kommer <b>Lagre tur</b> opp med distanse, tid, snitt- og maksfart. Velg Lagre, Forkast eller Fortsett opptak.</li>
+          <li>Trykk en lagret tur for å se <b>detaljer</b>: rutebilde, dato, start–slutt og nøkkeltall. Du kan også <b>følge</b> ruten på nytt.</li>
+          <li>Under <b>Meg → Sporing</b>: slå på <b>Start tur-opptak automatisk</b> (start ved åpning) og <b>Lagre tur automatisk</b> (turen lagres av seg selv når økta er over).</li>
+          <li>Logg inn under <b>Meg → Konto</b> for å lagre turene i skyen og få dem på alle enheter.</li>
+          <li>For å spare plass lagres punkter kun ved bevegelse, og ruten forenkles automatisk uten synlig tap.</li>
         </ul>
 
         <h3 className="info-h">Mann over bord (MOB)</h3>
