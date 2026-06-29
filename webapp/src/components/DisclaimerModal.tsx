@@ -1,15 +1,17 @@
 import { useState } from 'react'
-import { AlertTriangle } from 'lucide-react'
-
-const KEY = 'disclaimerAccepted'
+import { AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import { isCurrentAccepted, recordAcceptance } from '../consent'
+import terms from '../content/bruksvilkar.md?raw'
 
 export default function DisclaimerModal() {
-  const [accepted, setAccepted] = useState(() => localStorage.getItem(KEY) === '1')
+  const [accepted, setAccepted] = useState(isCurrentAccepted)
+  const [showTerms, setShowTerms] = useState(false)
 
   if (accepted) return null
 
   const accept = () => {
-    localStorage.setItem(KEY, '1')
+    recordAcceptance()   // lagrer versjon + tidsstempel (lokalt + sky om innlogget)
     setAccepted(true)
   }
 
@@ -18,25 +20,35 @@ export default function DisclaimerModal() {
       <div className="dialog disclaimer-dialog">
         <div className="dialog-header">
           <AlertTriangle size={20} color="#f59e0b" />
-          Viktig informasjon
+          Bruksvilkår
         </div>
 
         <p className="disclaimer-text">
-          Batkart bruker <strong>OpenSeaMap</strong>-kart som er community-vedlikeholdt
-          og ikke offisielt godkjent for navigasjon.
+          Batkart er et <strong>hjelpemiddel</strong> og bruker OpenSeaMap-kart som
+          ikke er offisielt godkjent for navigasjon.
         </p>
         <p className="disclaimer-text">
           Appen skal <strong>ikke brukes som eneste navigasjonsmiddel.</strong>{' '}
-          Følg alltid offisielle sjøkart, sett deg inn i lokale farleder og
-          overhold gjeldende sjøveisregler.
+          Du er selv ansvarlig for fartøyet, sikkerheten og egne
+          navigasjonsbeslutninger. Følg alltid offisielle sjøkart og sjøveisreglene.
         </p>
         <p className="disclaimer-text disclaimer-small">
-          Utvikleren fraskriver seg ansvar for feil i kartdata eller konsekvenser
-          av navigasjonsbeslutninger tatt på grunnlag av denne appen.
+          Så langt loven tillater fraskriver utvikleren seg ansvar for tap eller skade
+          som følge av bruk av appen.
         </p>
 
+        <button className="disclaimer-terms-toggle" onClick={() => setShowTerms((v) => !v)}>
+          {showTerms ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {showTerms ? 'Skjul fullstendige bruksvilkår' : 'Les fullstendige bruksvilkår'}
+        </button>
+        {showTerms && (
+          <div className="disclaimer-terms info-md">
+            <ReactMarkdown>{terms}</ReactMarkdown>
+          </div>
+        )}
+
         <button className="disclaimer-accept" onClick={accept}>
-          Jeg forstår og godtar
+          Jeg har lest og godtar bruksvilkårene
         </button>
       </div>
     </div>

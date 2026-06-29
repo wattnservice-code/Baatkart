@@ -20,6 +20,7 @@ import { useCompass } from './hooks/useCompass'
 import { useWakeLock } from './hooks/useWakeLock'
 import { useAIS } from './hooks/useAIS'
 import { useMapStore } from './store/useMapStore'
+import { syncAcceptanceOnLogin } from './consent'
 import { unlockAudio } from './audio'
 
 export default function App() {
@@ -28,6 +29,8 @@ export default function App() {
   useAIS()
   const { user } = useAuth()
   useTripSync(user)
+  // Logg lokal vilkårs-aksept til server når brukeren logger inn (bevis på samtykke)
+  useEffect(() => { if (user) void syncAcceptanceOnLogin() }, [user])
   const compassEnabled   = useMapStore((s) => s.compassEnabled)
   const mobPoint         = useMapStore((s) => s.mobPoint)
   const navPreview       = useMapStore((s) => s.navPreview)
