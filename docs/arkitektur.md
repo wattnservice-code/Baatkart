@@ -3,12 +3,12 @@
 ## Hvor ting ligger
 - **Supabase** (Postgres): all varig data – `trips`, `tos_acceptances`, `events`,
   (senere `boats`), + **auth** (innlogging) + evt. storage. Dette er sannhetskilden.
-- **Frontend-app** (Vite/React PWA): hostes på **Vercel** *eller* **Netlify**.
-  - Begge config-filer finnes nå (`vercel.json`, `netlify.toml`).
-  - `netlify/functions/tide.js` er en **Netlify-funksjon** → tidevann virker kun om
-    appen kjøres på Netlify (eller funksjonen flyttes til Vercel).
-  - ⚠️ **Anbefaling:** velg **én** host for å unngå forvirring. Sett da env-variabler
-    (`VITE_SUPABASE_*`) i den hostens dashboard.
+- **Frontend-app** (Vite/React PWA): hostes på **Vercel**, rot-mappe = `webapp/`.
+  - Config: **`webapp/vercel.json`** (no-cache-headers for PWA: sw.js, index.html, m.m.).
+  - **AIS**: Vercel-funksjon `webapp/api/ais.ts` (kalt via `/api/ais`).
+  - **Tidevann**: kalles direkte mot `vannstand.kartverket.no` fra frontend.
+  - **Netlify er fjernet** (var ubrukt; tide-funksjonen var død kode).
+  - Env-variabler (`VITE_SUPABASE_*`) settes i Vercel-dashbordet.
 - **n8n** (senere): automatisering/rapporter – leser fra Supabase, sender ut.
 
 ## Nøkler / sikkerhet (viktig)
