@@ -223,3 +223,44 @@ returns boolean language sql stable security definer set search_path = public as
       and (e.valid_until is null or e.valid_until > now())
   );
 $$;
+
+-- ── Admin: flagg + trygge funksjoner (kalles fra Studio / admin-UI) ────────────
+alter table public.profiles add column if not exists is_admin boolean not null default false;
+
+-- Er innlogget bruker admin?
+create or replace function public.is_admin()
+returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((select is_admin from public.profiles where id = auth.uid()), false);
+$$;
+
+-- Gi gratis tilgang (kun admin). valid_until = null → evig; ellers tidsbegrenset.
+create or replace function public.admin_grant_access(
+  p_email text, p_feature text default 'premium', p_valid_until timestamptz default null
+) returns void language plpgsql security definer set search_path = public as $$
+declare uid uuid;
+begin
+  if not public.is_admin() then raise exception 'Ikke autorisert'; end if;
+  select id into uid from auth.users where lower(email) = lower(p_email);
+  if uid is null then raise exception 'Fant ingen bruker med e-post %', p_email; end if;
+  insert into public.entitlement (user_id, feature_key, active, source, valid_until)
+  values (uid, p_feature, true, 'comp', p_valid_until)
+  on conflict (user_id, feature_key)
+  do update set active = true, source = 'comp', valid_until = excluded.valid_until, updated_at = now();
+end; $$;
+
+-- Fjern tilgang (kun admin)
+create or replace function public.admin_revoke_access(
+  p_email text, p_feature text default 'premium'
+) returns void language plpgsql security definer set search_path = public as $$
+declare uid uuid;
+begin
+  if not public.is_admin() then raise exception 'Ikke autorisert'; end if;
+  select id into uid from auth.users where lower(email) = lower(p_email);
+  if uid is null then raise exception 'Fant ingen bruker'; end if;
+  update public.entitlement set active = false, updated_at = now()
+  where user_id = uid and feature_key = p_feature;
+end; $$;
+
+grant execute on function public.is_admin() to authenticated;
+grant execute on function public.admin_grant_access(text, text, timestamptz) to authenticated;
+grant execute on function public.admin_revoke_access(text, text) to authenticated;
