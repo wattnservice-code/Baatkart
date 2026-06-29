@@ -63,6 +63,15 @@ Matcher `SavedTrack` i `useMapStore.ts` 1:1 (metrikkene finnes allerede).
 - Vurder å legge til ved opptak: `started_at`/`ended_at` (eksakt), evt.
   værforhold-snapshot. Lett å utvide tabellen senere (nullable kolonner).
 
+## Datavolum
+- [x] **Punkt kun ved bevegelse**: fart ≥ ~1,4 knop og ≥10 m flyttet → drift/stillstand
+      (fiske) logges ikke. Største sparekilden.
+- [x] **Forenkle rute ved lagring** (Douglas-Peucker, ~12 m). Beholder form.
+- Effekt: 4t-tur fra ~14 000 → typisk noen hundre punkter.
+- [ ] **Retention** (senere, hvis nødvendig): cap localStorage til siste N turer
+      (eldre kun i sky), evt. slett sky-turer eldre enn X måneder. Ikke nødvendig nå
+      gitt kildereduksjonen over — vurderes når reelle tall foreligger.
+
 ## Senere (båt)
 - Tabell `boats (id, user_id, name, mmsi, …)`.
 - Båt-velger i UI; sett `boat_id` på nye turer. Eksisterende turer beholder `null`.
