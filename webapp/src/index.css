@@ -896,6 +896,28 @@ html, body, #root {
 .day .info-h { color: #0f172a; }
 .day .info-list li { color: #334155; }
 .day .info-list b { color: #0f172a; }
+/* Markdown-rendret bruksanvisning (én sann kilde: bruksanvisning.md) */
+.info-md h2 { font-size: 15px; font-weight: 800; margin: 18px 0 5px; color: #f1f5f9; }
+.info-md ul { margin: 0; padding-left: 18px; }
+.info-md li { font-size: 14px; line-height: 1.6; color: #cbd5e1; margin: 2px 0; }
+.info-md p { font-size: 14px; line-height: 1.6; color: #cbd5e1; margin: 8px 0; }
+.info-md strong { color: #f1f5f9; font-weight: 700; }
+.info-md em { color: #cbd5e1; }
+.info-md a { color: #38bdf8; text-decoration: none; }
+/* Forbehold = blockquote → tydelig rød advarselsboks */
+.info-md blockquote {
+  margin: 10px 0 6px; padding: 12px 14px;
+  background: rgba(220,38,38,0.12); border: 1px solid rgba(220,38,38,0.4);
+  border-radius: 10px; color: #fda4a4;
+}
+.info-md blockquote p { margin: 4px 0 0; color: #fda4a4; }
+.info-md blockquote p:first-child { margin-top: 0; }
+.info-md blockquote strong { color: #fecaca; }
+.day .info-md h2 { color: #0f172a; }
+.day .info-md li, .day .info-md p { color: #334155; }
+.day .info-md strong { color: #0f172a; }
+.day .info-md blockquote { background: rgba(220,38,38,0.08); color: #b91c1c; }
+.day .info-md blockquote p, .day .info-md blockquote strong { color: #991b1b; }
 
 /* Icon picker (save dialogs) */
 .icon-picker {
