@@ -10,6 +10,7 @@ Den felles dimensjonen er **brukeren** (`auth.users`).
 | `trips` | `id` **text** (klient-uuid) | `user_id` → auth.users | text-id fordi offline-first (klienten genererer id) |
 | `tos_acceptances` | `id` bigint identity | `user_id` → auth.users | samtykke-logg (+ `terms_hash`) |
 | `consent_log` | `id` bigint identity | `user_id` → auth.users | append-only historikk: ja/nei på samtykke/preferanser m/ tidsstempel |
+| `communications` | `id` bigint identity | `user_id` → auth.users | logg over sendt kommunikasjon (velkommen, rapport, varsler). Skrives av backend/n8n |
 | `events` | `id` bigint identity | – (anonym `session_id`) | analytics, bevisst uten bruker |
 | `boats` | `id` uuid | `user_id` → auth.users | rik båtinfo (type, mål, motor, drivstoff, forbruk). `trips.boat_id` → boats |
 
