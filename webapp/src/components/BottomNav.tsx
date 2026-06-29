@@ -1,35 +1,32 @@
-import { Map, Star, Route, User } from 'lucide-react'
+import { Star, Route, User } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
 import { track } from '../analytics'
 
-type Tab = 'kart' | 'steder' | 'turer' | 'meg'
+type Tab = 'steder' | 'turer' | 'meg'
 
-const ITEMS: { key: Tab; label: string; Icon: typeof Map }[] = [
-  { key: 'kart',   label: 'Kart',   Icon: Map },
+const ITEMS: { key: Tab; label: string; Icon: typeof Star }[] = [
   { key: 'steder', label: 'Steder', Icon: Star },
   { key: 'turer',  label: 'Turer',  Icon: Route },
   { key: 'meg',    label: 'Meg',    Icon: User },
 ]
 
+const PANEL = { steder: 'spots', turer: 'turer', meg: 'meg' } as const
+
 export default function BottomNav() {
   const activePanel    = useMapStore((s) => s.activePanel)
   const setActivePanel = useMapStore((s) => s.setActivePanel)
 
-  // 'kart' = no panel open; the others map 1:1 to a panel id
-  const active: Tab =
+  const active: Tab | null =
     activePanel === 'spots' ? 'steder'
     : activePanel === 'turer' ? 'turer'
     : activePanel === 'meg' ? 'meg'
-    : 'kart'
+    : null
 
+  // Trykk på fane åpner panelet; trykk på aktiv fane lukker (tilbake til kart).
   const select = (tab: Tab) => {
-    if (tab !== 'kart') track('panel_open', { panel: tab })
-    setActivePanel(
-      tab === 'steder' ? 'spots'
-      : tab === 'turer' ? 'turer'
-      : tab === 'meg'  ? 'meg'
-      : null
-    )
+    if (active === tab) { setActivePanel(null); return }
+    track('panel_open', { panel: tab })
+    setActivePanel(PANEL[tab])
   }
 
   return (
