@@ -2096,6 +2096,15 @@ html, body, #root {
 .day .bottom-nav { background: #f8fafc; border-top-color: rgba(0,0,0,0.12); }
 .day .bottom-nav-item { color: #475569; }
 .day .bottom-nav-item-active { color: #2563eb; }
+.bottom-nav-icon-wrap { position: relative; display: flex; }
+.bottom-nav-rec {
+  position: absolute; top: -3px; right: -6px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: #f87171; border: 1.5px solid #0b1220;
+  animation: rec-pulse 1.4s ease-in-out infinite;
+}
+.day .bottom-nav-rec { border-color: #fff; }
+@keyframes rec-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 
 /* Landscape: hide labels, keep icon-only compact nav at bottom */
 @media (orientation: landscape) {

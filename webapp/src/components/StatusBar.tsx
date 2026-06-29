@@ -1,21 +1,12 @@
 import { useEffect, useState } from 'react'
-import { MapPin, Compass, WifiOff, Wifi, Copy, Check, Circle } from 'lucide-react'
+import { MapPin, Compass, WifiOff, Wifi, Copy, Check } from 'lucide-react'
 import { useMapStore } from '../store/useMapStore'
-import { formatDist } from './NavOverlay'
 import { cardinal } from '../geo'
 
 export default function StatusBar() {
   const position          = useMapStore((s) => s.position)
   const compassEnabled    = useMapStore((s) => s.compassEnabled)
   const compassHeading    = useMapStore((s) => s.compassHeading)
-  const isTracking        = useMapStore((s) => s.isTracking)
-  const startTracking     = useMapStore((s) => s.startTracking)
-  const stopTracking      = useMapStore((s) => s.stopTracking)
-  const setPendingTrackSave = useMapStore((s) => s.setPendingTrackSave)
-  const clearTrack        = useMapStore((s) => s.clearTrack)
-  const trackPoints       = useMapStore((s) => s.track.length)
-  const trackDistanceM    = useMapStore((s) => s.trackDistanceM)
-  const distUnit          = useMapStore((s) => s.distUnit)
   const offlineOnly       = useMapStore((s) => s.offlineOnly)
   const toggleOfflineOnly = useMapStore((s) => s.toggleOfflineOnly)
   const setOfflineOnly    = useMapStore((s) => s.setOfflineOnly)
@@ -101,24 +92,6 @@ export default function StatusBar() {
       >
         {offlineOnly || !isOnline ? <WifiOff size={18} /> : <Wifi size={18} />}
         {offlineOnly && <span className="status-offline-label">Offline</span>}
-      </button>
-
-      <div className="status-divider" />
-      {/* Tur-knapp: start om ikke recording; stopp + "Lagre tur"-popup om recording */}
-      <button
-        className={`status-tracking-btn ${isTracking ? 'status-tracking-on' : ''}`}
-        onClick={() => {
-          if (!isTracking) { startTracking(); return }
-          stopTracking()
-          if (trackPoints > 1) setPendingTrackSave(true)   // åpne Lagre tur-popup
-          else clearTrack()
-        }}
-        title={isTracking ? 'Stopp og lagre tur' : 'Start tur-opptak'}
-      >
-        {isTracking
-          ? <><Circle size={13} style={{ fill: '#f87171', marginRight: 4 }} />REC {formatDist(trackDistanceM, distUnit)}</>
-          : <><Circle size={13} style={{ marginRight: 4 }} />Tur</>
-        }
       </button>
     </div>
   )
