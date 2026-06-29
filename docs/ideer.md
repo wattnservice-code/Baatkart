@@ -44,6 +44,18 @@ etterfylle. Hver datakilde åpner tjenester:
 **GDPR-vakt:** samle med tydelig formål (jf. `jus-ansvar.md`). Båt-spec er lav risiko
 og høy verdi; MMSI/telefon er mer personlig → opt-in, klart formål.
 
+## Utstyrs-tagging (NFC) – gear-inventar
+Idé: klistremerker på utstyr, finn/sjekk via telefon.
+- **Teknisk hake:** NFC er passiv (~cm, må tappes) → kan IKKE "finne på kart" live.
+  Gir kun ID + **sist-sett-posisjon** (GPS der du tappet). Live finn-på-kart krever
+  **BLE-tracker** (AirTag/Tile) – egen, større hardware-løp.
+- **Realistisk båt-versjon (NFC, billig):**
+  - **Før-tur-sjekkliste:** tapp gjennom tags → alt sikkerhets-/fiskeutstyr om bord?
+  - **Sist sett:** "Gaffen: sist tappet ved hytta 12. juni" (ikke live, men nok).
+  - Inventar knyttet til båt → passer metadata/tilleggstjeneste-temaet.
+- **Fit:** adjacent, ikke kjerne. Vurder som premium add-on senere. Ikke la "finn på
+  kart"-forventningen styre – NFC leverer ikke det.
+
 ## Touch-audit (fra UX-tilbakemelding)
 - Full gjennomgang av treffflater (≥44–48px) i HELE appen, ikke bare lukkeknapper.
 - Sjekk særlig: ikon-knapper på kartet, lister, og alt som trykkes i fart til sjøs.
