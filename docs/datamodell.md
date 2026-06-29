@@ -9,6 +9,7 @@ Den felles dimensjonen er **brukeren** (`auth.users`).
 | `profiles` | `id` uuid = auth.users.id | (1:1 bruker) | kundedata + preferanser (rapport-frekvens m.m.), auto-opprettet ved registrering |
 | `trips` | `id` **text** (klient-uuid) | `user_id` → auth.users | text-id fordi offline-first (klienten genererer id) |
 | `tos_acceptances` | `id` bigint identity | `user_id` → auth.users | samtykke-logg (+ `terms_hash`) |
+| `consent_log` | `id` bigint identity | `user_id` → auth.users | append-only historikk: ja/nei på samtykke/preferanser m/ tidsstempel |
 | `events` | `id` bigint identity | – (anonym `session_id`) | analytics, bevisst uten bruker |
 | `boats` (senere) | `id` uuid | `user_id` → auth.users | dimensjon `trips.boat_id` peker hit |
 
