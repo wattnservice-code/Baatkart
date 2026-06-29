@@ -11,7 +11,8 @@ export default function DisclaimerModal() {
   if (accepted) return null
 
   const accept = () => {
-    recordAcceptance()   // lagrer versjon + tidsstempel (lokalt + sky om innlogget)
+    // Lagrer versjon + tidsstempel + hash av teksten (lokalt + sky om innlogget)
+    void recordAcceptance(terms)
     setAccepted(true)
   }
 
