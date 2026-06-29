@@ -283,3 +283,41 @@ alter table public.price_plan add column if not exists max_seats integer not nul
 -- naermer seg. Default settes ved registrering; kan forlenges per bruker (kampanje).
 alter table public.profiles add column if not exists trial_ends_at timestamptz default (now() + interval '1 year');
 update public.profiles set trial_ends_at = created_at + interval '1 year' where trial_ends_at is null;
+
+-- ── Båt: rik båtinfo (1 bruker kan ha flere båter; trips.boat_id peker hit) ─────
+create table if not exists public.boats (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references auth.users (id) on delete cascade,
+  name            text,
+  boat_type       text,             -- f.eks. 'Aquador 28 HT'
+  length_m        numeric,
+  beam_m          numeric,
+  draught_m       numeric,
+  engine          text,             -- motorbeskrivelse (modell/hk)
+  fuel_type       text,             -- 'diesel' | 'bensin' | 'el' | 'hybrid'
+  fuel_cons_lph   numeric,          -- forbruk liter/time ved marsjfart
+  cruise_speed_kn numeric,          -- marsjfart (for forbruk-/rekkevidde-estimat)
+  mmsi            text,
+  call_sign       text,
+  phone           text,             -- kontakt (nød/MOB-deling)
+  notes           text,
+  is_default      boolean not null default true,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+create index if not exists boats_user_idx on public.boats (user_id);
+alter table public.boats enable row level security;
+grant select, insert, update, delete on public.boats to authenticated;
+drop policy if exists "boats_select_own" on public.boats;
+create policy "boats_select_own" on public.boats for select using (auth.uid() = user_id);
+drop policy if exists "boats_insert_own" on public.boats;
+create policy "boats_insert_own" on public.boats for insert with check (auth.uid() = user_id);
+drop policy if exists "boats_update_own" on public.boats;
+create policy "boats_update_own" on public.boats for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "boats_delete_own" on public.boats;
+create policy "boats_delete_own" on public.boats for delete using (auth.uid() = user_id);
+
+-- Knytt trips.boat_id til boats (settes når båt-velger tas i bruk)
+alter table public.trips
+  drop constraint if exists trips_boat_fk,
+  add constraint trips_boat_fk foreign key (boat_id) references public.boats (id) on delete set null;

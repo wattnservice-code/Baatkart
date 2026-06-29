@@ -11,7 +11,7 @@ Den felles dimensjonen er **brukeren** (`auth.users`).
 | `tos_acceptances` | `id` bigint identity | `user_id` → auth.users | samtykke-logg (+ `terms_hash`) |
 | `consent_log` | `id` bigint identity | `user_id` → auth.users | append-only historikk: ja/nei på samtykke/preferanser m/ tidsstempel |
 | `events` | `id` bigint identity | – (anonym `session_id`) | analytics, bevisst uten bruker |
-| `boats` (senere) | `id` uuid | `user_id` → auth.users | dimensjon `trips.boat_id` peker hit |
+| `boats` | `id` uuid | `user_id` → auth.users | rik båtinfo (type, mål, motor, drivstoff, forbruk). `trips.boat_id` → boats |
 
 **E-post** ligger i `auth.users` (Supabase Auth) – ikke duplisert. n8n/rapporter
 joiner `auth.users` (e-post) med `profiles` (preferanser) og `trips` (data).
