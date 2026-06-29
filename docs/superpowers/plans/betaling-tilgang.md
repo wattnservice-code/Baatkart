@@ -61,6 +61,14 @@ Ikke bygg `customer`/`customer_user`, kampanjer, `audit_log` nå. `profiles` (1:
 bruker) holder for MVP. Migrasjonssti er ren: legg til `customer` + koble når
 firma/familie faktisk trengs.
 
+## Gratis / test-/comp-brukere
+Tilgang = entitlement, ikke betaling → gratis tilgang gis ved å sette et entitlement
+direkte, uten Stripe. `entitlement.source` skiller `'comp'`/`'beta'` fra `'stripe'`,
+så webhooken kun rører sine egne og aldri overskriver en gratis-tildeling.
+- **Evig gratis:** `valid_until = null`.
+- **Tidsbegrenset test:** `valid_until = now() + interval '90 days'`.
+- Gis manuelt via SQL (etter e-post) nå; egen admin-knapp senere.
+
 ## Offline-tilgang (viktig for en app som virker uten nett)
 Problem: er kunden alltid offline, kan appen aldri spørre serveren → tilgang ville
 aldri utløpe. Løsning – **cachet entitlement med to datoer**:
