@@ -264,3 +264,14 @@ end; $$;
 grant execute on function public.is_admin() to authenticated;
 grant execute on function public.admin_grant_access(text, text, timestamptz) to authenticated;
 grant execute on function public.admin_revoke_access(text, text) to authenticated;
+
+-- Liste over alle entitlements (kun admin) — for admin-UI
+create or replace function public.admin_list_access()
+returns table(email text, feature_key text, active boolean, source text, valid_until timestamptz, updated_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select u.email, e.feature_key, e.active, e.source, e.valid_until, e.updated_at
+  from public.entitlement e join auth.users u on u.id = e.user_id
+  where public.is_admin()
+  order by e.updated_at desc;
+$$;
+grant execute on function public.admin_list_access() to authenticated;

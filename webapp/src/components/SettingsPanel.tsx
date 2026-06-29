@@ -1,12 +1,16 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { APP_VERSION } from '../version'
-import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, User, Info, RotateCw, Crosshair, Save } from 'lucide-react'
+import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, User, Info, RotateCw, Crosshair, Save, ShieldCheck } from 'lucide-react'
 import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
+import { useAuth } from '../hooks/useAuth'
+import { useAdmin } from '../hooks/useAdmin'
 import AccountSection from './AccountSection'
 import OfflinePanel from './OfflinePanel'
 import BoatInfoPanel from './BoatInfoPanel'
 import InfoPanel from './InfoPanel'
+
+const AdminPanel = lazy(() => import('./AdminPanel'))
 
 function formatRingLabel(r: null | number): string {
   if (r === null) return 'Auto'
@@ -24,6 +28,9 @@ export default function SettingsPanel({ onClose }: Props) {
   const [offlineOpen, setOfflineOpen]     = useState(false)
   const [boatInfoOpen, setBoatInfoOpen]   = useState(false)
   const [infoOpen, setInfoOpen]           = useState(false)
+  const [adminOpen, setAdminOpen]         = useState(false)
+  const { user } = useAuth()
+  const isAdmin = useAdmin(user)
   const seamarkVisible = useMapStore((s) => s.seamarkVisible)
   const compassEnabled = useMapStore((s) => s.compassEnabled)
   const speedUnit      = useMapStore((s) => s.speedUnit)
@@ -76,6 +83,12 @@ export default function SettingsPanel({ onClose }: Props) {
           <AccountSection />
 
           <div className="menu-divider" />
+          {isAdmin && (
+            <button className="menu-item" style={{ color: '#34d399' }} onClick={() => setAdminOpen(true)}>
+              <ShieldCheck size={20} /><span>Admin</span>
+            </button>
+          )}
+
           <div style={subhead}>Hjelp</div>
           <button className="menu-item" onClick={() => setInfoOpen(true)}>
             <Info size={20} /><span>Bruksanvisning og forbehold</span>
@@ -150,6 +163,11 @@ export default function SettingsPanel({ onClose }: Props) {
       {offlineOpen && <OfflinePanel onClose={() => setOfflineOpen(false)} />}
       {boatInfoOpen && <BoatInfoPanel onClose={() => setBoatInfoOpen(false)} />}
       {infoOpen && <InfoPanel onClose={() => setInfoOpen(false)} />}
+      {adminOpen && (
+        <Suspense fallback={null}>
+          <AdminPanel onClose={() => setAdminOpen(false)} />
+        </Suspense>
+      )}
 
     </>
   )

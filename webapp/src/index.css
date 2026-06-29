@@ -219,6 +219,45 @@ html, body, #root {
 .account-btn-ghost { background: none; color: #94a3b8; font-weight: 600; padding: 6px; }
 .account-error { font-size: 13px; color: #f87171; }
 .account-info  { font-size: 13px; color: #4ade80; }
+/* ── Admin ── */
+.admin-field { margin-bottom: 10px; }
+.admin-input {
+  width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 10px; color: #f1f5f9; font-size: 16px; padding: 12px; outline: none;
+}
+.admin-input::placeholder { color: #94a3b8; }
+.admin-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 13px; border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.admin-btn:disabled { opacity: 0.5; }
+.admin-btn-grant { background: #059669; color: white; }
+.admin-ok  { margin-top: 10px; font-size: 13px; color: #4ade80; }
+.admin-err { margin-top: 10px; font-size: 13px; color: #f87171; }
+.admin-list-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px 4px; font-size: 12px; font-weight: 700; color: #94a3b8;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.admin-refresh {
+  background: none; border: none; color: #94a3b8; cursor: pointer;
+  min-width: 44px; min-height: 40px; display: flex; align-items: center; justify-content: center;
+}
+.admin-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.admin-row-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.admin-row-email { font-size: 15px; font-weight: 600; color: #f1f5f9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-row-meta { font-size: 12px; color: #94a3b8; }
+.admin-row-revoke {
+  background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.4); color: #fca5a5;
+  border-radius: 10px; min-width: 48px; min-height: 48px; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.day .admin-input { color: #0f172a; background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.14); }
+.day .admin-row-email { color: #0f172a; }
 .account-btn-sync { background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.4); color: #7dd3fc; }
 .account-sync { font-size: 13px; font-weight: 600; }
 .account-sync-syncing { color: #7dd3fc; }
