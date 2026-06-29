@@ -61,6 +61,26 @@ Ikke bygg `customer`/`customer_user`, kampanjer, `audit_log` nå. `profiles` (1:
 bruker) holder for MVP. Migrasjonssti er ren: legg til `customer` + koble når
 firma/familie faktisk trengs.
 
+## Offline-tilgang (viktig for en app som virker uten nett)
+Problem: er kunden alltid offline, kan appen aldri spørre serveren → tilgang ville
+aldri utløpe. Løsning – **cachet entitlement med to datoer**:
+- Ved online-sjekk lagres lokalt: `{ features, valid_until, verifiedAt }`.
+- **`valid_until`** = abonnementsperiodens slutt (Stripe). Offline sjekkes
+  `valid_until > now()` på enhetsklokka → tilgang utløper av seg selv ved
+  periodeslutt, også offline. Ny `valid_until` får man kun ved å gå online (etter
+  fornying).
+- **`verifiedAt`** = sist verifisert online. Eldre enn maks ferskhetsvindu (f.eks.
+  **30 dager**) → må på nett for å revalidere.
+- **Grace-periode** (f.eks. 3–7 dager etter `valid_until`) så en betalende kunde på
+  sjøen ved fornying ikke mister premium midt i en tur.
+- **Klokke-tukling:** offline-utløp bygger på enhetsklokka (kan stilles tilbake).
+  Lav risiko her; evt. lagre høyeste sette servertid og oppdag tilbakehopp. Ikke
+  verdt streng DRM for en fritidsapp.
+
+### Kritisk regel: aldri lås sikkerhet bak betaling
+Kart, GPS, MOB = **alltid gratis** og virker offline uansett. Premium = kun ekstra
+(kartpakker, AIS, sky, rapporter). Da kan offline-utløp ALDRI sette noen i fare.
+
 ## Sikkerhet
 - Frontend: kun `anon`-nøkkel. Webhook/serverlogikk: `service_role` (kun server).
 - Stripe **secret key** kun server-side (webhook-funksjon), aldri i frontend/git.
