@@ -51,10 +51,19 @@ export type SpeedUnit = 'kn' | 'kmh'
 export type DistUnit = 'm' | 'km' | 'nm'
 
 export interface BoatInfo {
-  name: string
-  mmsi: string
-  phone: string
+  ownerName: string      // eier (→ profiles.display_name for personlig e-post)
+  name: string           // båtnavn
   boatType: string
+  lengthM: string
+  beamM: string
+  draughtM: string
+  engine: string
+  fuelType: string       // 'diesel' | 'bensin' | 'el' | 'hybrid'
+  fuelConsLph: string    // forbruk liter/time ved marsjfart
+  cruiseSpeedKn: string
+  mmsi: string
+  callSign: string
+  phone: string
   notes: string
 }
 
@@ -235,10 +244,14 @@ function saveMob(mob: MobPoint | null) {
 }
 
 const BOAT_INFO_KEY = 'baatkart-boatinfo'
+export const EMPTY_BOAT_INFO: BoatInfo = {
+  ownerName: '', name: '', boatType: '', lengthM: '', beamM: '', draughtM: '',
+  engine: '', fuelType: '', fuelConsLph: '', cruiseSpeedKn: '',
+  mmsi: '', callSign: '', phone: '', notes: '',
+}
 function loadBoatInfo(): BoatInfo {
-  const empty: BoatInfo = { name: '', mmsi: '', phone: '', boatType: '', notes: '' }
-  try { return { ...empty, ...JSON.parse(localStorage.getItem(BOAT_INFO_KEY) ?? '{}') } }
-  catch { return empty }
+  try { return { ...EMPTY_BOAT_INFO, ...JSON.parse(localStorage.getItem(BOAT_INFO_KEY) ?? '{}') } }
+  catch { return EMPTY_BOAT_INFO }
 }
 
 function loadSavedTracks(): SavedTrack[] {
