@@ -198,6 +198,7 @@ interface MapStore {
   mergeRemoteTrips: (remote: SavedTrack[]) => void
   startFollowingTrack: (track: SavedTrack) => void
   stopFollowingTrack: () => void
+  reverseFollow: () => void
 }
 
 function loadSpots(): SavedSpot[] {
@@ -525,6 +526,10 @@ export const useMapStore = create<MapStore>((set) => ({
   }),
   startFollowingTrack: (track) => set({ followingTrack: track }),
   stopFollowingTrack: () => set({ followingTrack: null }),
+  // Snu ruten (kjøre tilbake samme vei). Ny array + objekt — muterer ikke lagret tur.
+  reverseFollow: () => set((s) => s.followingTrack
+    ? { followingTrack: { ...s.followingTrack, points: [...s.followingTrack.points].reverse() } }
+    : {}),
 
   setBoatInfo: (info) => set((s) => {
     const updated = { ...s.boatInfo, ...info }

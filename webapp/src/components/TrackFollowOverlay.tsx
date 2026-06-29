@@ -70,6 +70,7 @@ export default function TrackFollowOverlay() {
   const position           = useMapStore((s) => s.position)
   const distUnit           = useMapStore((s) => s.distUnit)
   const stopFollowingTrack = useMapStore((s) => s.stopFollowingTrack)
+  const reverseFollow      = useMapStore((s) => s.reverseFollow)
 
   const result = useMemo(() => {
     if (!followingTrack || !position) return null
@@ -102,7 +103,10 @@ export default function TrackFollowOverlay() {
           </span>
         )}
       </div>
-      <button className="track-follow-stop" onClick={stopFollowingTrack}>Stopp ✕</button>
+      <div className="track-follow-btns">
+        <button className="track-follow-btn track-follow-reverse" onClick={reverseFollow}>⇄ Snu rute</button>
+        <button className="track-follow-btn track-follow-stop" onClick={stopFollowingTrack}>Stopp ✕</button>
+      </div>
     </div>
   )
 }

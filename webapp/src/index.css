@@ -383,6 +383,12 @@ html, body, #root {
   width: 100%; max-width: 340px;
   color: white; box-shadow: 0 16px 48px rgba(0,0,0,0.6);
 }
+.dialog-x {
+  margin-left: auto; background: rgba(255,255,255,0.06); border: none; color: #f1f5f9;
+  border-radius: 50%; min-width: 48px; min-height: 48px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.dialog-x:active { background: rgba(255,255,255,0.14); }
 .dialog-header {
   display: flex; align-items: center; gap: 8px;
   margin-bottom: 16px; font-size: 16px; font-weight: 600;
@@ -1243,11 +1249,12 @@ html, body, #root {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .spot-action-close {
-  background: none; border: none; color: #94a3b8;
-  cursor: pointer; flex-shrink: 0;
-  min-width: 44px; min-height: 44px;
+  background: rgba(255,255,255,0.06); border: none; color: #f1f5f9;
+  cursor: pointer; flex-shrink: 0; border-radius: 50%;
+  min-width: 48px; min-height: 48px;
   display: flex; align-items: center; justify-content: center;
 }
+.spot-action-close:active { background: rgba(255,255,255,0.14); }
 .spot-wx-block {
   display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center;
   padding: 10px 2px 12px;
@@ -1351,20 +1358,25 @@ html, body, #root {
   text-align: center;
   backdrop-filter: blur(6px);
 }
-.track-follow-name { font-size: 12px; font-weight: 700; color: #c084fc; margin-bottom: 4px; }
-.track-follow-stats { display: flex; gap: 12px; justify-content: center; align-items: baseline; margin-bottom: 8px; }
-.track-follow-xte { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.track-follow-dist { font-size: 13px; color: #94a3b8; }
-.track-follow-stop {
-  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-  color: #94a3b8; border-radius: 8px;
-  padding: 4px 12px; font-size: 12px; cursor: pointer;
+.track-follow-name { font-size: 13px; font-weight: 700; color: #c084fc; margin-bottom: 4px; }
+.track-follow-stats { display: flex; gap: 14px; justify-content: center; align-items: baseline; margin-bottom: 10px; }
+.track-follow-xte { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.track-follow-dist { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+.track-follow-btns { display: flex; gap: 8px; }
+.track-follow-btn {
+  flex: 1; border-radius: 10px; min-height: 46px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
 }
-.track-follow-stop:hover { color: #f87171; }
+.track-follow-reverse { background: rgba(168,85,247,0.18); border: 1px solid #a855f7; color: #d8b4fe; }
+.track-follow-reverse:active { background: rgba(168,85,247,0.32); }
+.track-follow-stop { background: rgba(248,113,113,0.14); border: 1px solid rgba(248,113,113,0.5); color: #fca5a5; }
+.track-follow-stop:active { background: rgba(248,113,113,0.28); }
 .day .track-follow-overlay { background: rgba(248,250,252,0.97); border-color: #a855f7; color: #0f172a; }
 .day .track-follow-name { color: #7c3aed; }
-.day .track-follow-dist { color: #94a3b8; }
-.day .track-follow-stop { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); color: #94a3b8; }
+.day .track-follow-dist { color: #0f172a; }
+.day .track-follow-reverse { color: #7c3aed; background: rgba(168,85,247,0.1); }
+.day .track-follow-stop { color: #b91c1c; background: rgba(248,113,113,0.1); }
 
 /* ── Saved track rows (in SettingsPanel) ── */
 .saved-track-row {
@@ -2234,12 +2246,12 @@ html, body, #root {
 }
 .settings-title { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; }
 .settings-close {
-  background: rgba(255,255,255,0.08); border: none; color: #cbd5e1; cursor: pointer;
-  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: none; color: #f1f5f9; cursor: pointer;
+  width: 50px; height: 50px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
 }
 .settings-close:active { background: rgba(255,255,255,0.16); }
-.settings-close svg { width: 24px; height: 24px; }
+.settings-close svg { width: 26px; height: 26px; }
 .settings-head-icon-btn {
   background: rgba(255,255,255,0.08); border: none; color: #94a3b8; cursor: pointer;
   width: 44px; height: 44px; border-radius: 50%; margin-left: auto; margin-right: 8px;

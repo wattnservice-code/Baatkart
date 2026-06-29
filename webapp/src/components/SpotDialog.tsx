@@ -28,7 +28,7 @@ export default function SpotDialog({ lat, lng, onClose }: Props) {
         <div className="dialog-header">
           <MapPin size={20} className="text-blue-400" />
           <span>Nytt lagret sted</span>
-          <button onClick={onClose} className="ml-auto"><X size={20} /></button>
+          <button onClick={onClose} className="dialog-x"><X size={22} /></button>
         </div>
         <input
           autoFocus
