@@ -1,5 +1,14 @@
 # Plan: betaling, abonnement og tilgang (Stripe)
 
+## Go-to-market: gratis introperiode først
+- **Gratis i intro (f.eks. 1 år), så betaling.** Bygg brukerbase uten betalings-friksjon.
+- **Onboarding = advarsler + vilkår + appen, IKKE betaling.** Bruker skal ikke forholde
+  seg til pris før introperioden nærmer seg slutt.
+- Per bruker: `profiles.trial_ends_at` (default registrering + 1 år; kan forlenges/kampanje).
+- Betaling **surfacer først** når `trial_ends_at` nærmer seg (f.eks. siste 14 dager):
+  myk melding, ikke vegg. Etter utløp: premium-ekstra låses, **kjernen forblir gratis**.
+- Ingenting av dette berører brukeren før den dagen vi faktisk skrur på premium-gating.
+
 ## Beslutninger
 - **Betaling: Stripe.** Modell **ikke bestemt** (kanskje intro/startup første år, ny
   prising senere). → design **modell-nøytralt**: produkt skilt fra pris, tilgang via

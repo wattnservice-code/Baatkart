@@ -278,3 +278,8 @@ grant execute on function public.admin_list_access() to authenticated;
 
 -- max_seters per prisplan (1 = personlig; >1 = familie/firma)
 alter table public.price_plan add column if not exists max_seats integer not null default 1;
+
+-- Introperiode per bruker (gratis i f.eks. 1 ar). Betaling surfacer forst nar dette
+-- naermer seg. Default settes ved registrering; kan forlenges per bruker (kampanje).
+alter table public.profiles add column if not exists trial_ends_at timestamptz default (now() + interval '1 year');
+update public.profiles set trial_ends_at = created_at + interval '1 year' where trial_ends_at is null;
