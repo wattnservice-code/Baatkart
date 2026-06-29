@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { APP_VERSION } from '../version'
-import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, User, Info, RotateCw, Crosshair } from 'lucide-react'
+import { X, Ship, Layers, Circle, Compass, Gauge, WifiOff, User, Info, RotateCw, Crosshair, Save } from 'lucide-react'
 import { useSwipeDismiss } from '../hooks/useSwipeDismiss'
 import { useMapStore } from '../store/useMapStore'
 import AccountSection from './AccountSection'
@@ -37,6 +37,8 @@ export default function SettingsPanel({ onClose }: Props) {
   const cycleDistUnit  = useMapStore((s) => s.cycleDistUnit)
   const autoTrack      = useMapStore((s) => s.autoTrack)
   const toggleAutoTrack = useMapStore((s) => s.toggleAutoTrack)
+  const autoSaveTrip    = useMapStore((s) => s.autoSaveTrip)
+  const toggleAutoSaveTrip = useMapStore((s) => s.toggleAutoSaveTrip)
   const cycleRingRadius      = useMapStore((s) => s.cycleRingRadius)
   const aisVisible              = useMapStore((s) => s.aisVisible)
   const toggleAis               = useMapStore((s) => s.toggleAis)
@@ -113,6 +115,9 @@ export default function SettingsPanel({ onClose }: Props) {
           <div style={subhead}>Sporing</div>
           <button className="menu-item" style={{ color: autoTrack ? '#60a5fa' : undefined }} onClick={toggleAutoTrack}>
             <Circle size={20} /><span>Start tur-opptak automatisk {autoTrack ? '(på)' : '(av)'}</span>
+          </button>
+          <button className="menu-item" style={{ color: autoSaveTrip ? '#60a5fa' : undefined }} onClick={toggleAutoSaveTrip}>
+            <Save size={20} /><span>Lagre tur automatisk {autoSaveTrip ? '(på)' : '(av)'}</span>
           </button>
 
           <div className="menu-divider" />

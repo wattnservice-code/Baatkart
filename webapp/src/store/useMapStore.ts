@@ -71,6 +71,7 @@ interface MapStore {
   position: Position | null
   isTracking: boolean
   autoTrack: boolean
+  autoSaveTrip: boolean
   track: TrackPoint[]
   savedSpots: SavedSpot[]
   mobPoint: MobPoint | null
@@ -124,6 +125,7 @@ interface MapStore {
   startTracking: () => void
   resumeTracking: () => void
   toggleAutoTrack: () => void
+  toggleAutoSaveTrip: () => void
   stopTracking: () => void
   clearTrack: () => void
   pendingTrackSave: boolean
@@ -268,6 +270,7 @@ export const useMapStore = create<MapStore>((set) => ({
   position: null,
   isTracking: false,
   autoTrack: loadBool('autoTrack', false),
+  autoSaveTrip: loadBool('autoSaveTrip', false),
   track: loadTrack(),
   savedSpots: loadSpots(),
   mobPoint: loadMob(),
@@ -350,6 +353,7 @@ export const useMapStore = create<MapStore>((set) => ({
   setPendingTrackSave: (v) => set({ pendingTrackSave: v }),
   setSyncState: (status, message) => set({ syncStatus: status, syncMessage: message ?? '' }),
   toggleAutoTrack: () => set((s) => { const v = !s.autoTrack; localStorage.setItem('autoTrack', String(v)); return { autoTrack: v } }),
+  toggleAutoSaveTrip: () => set((s) => { const v = !s.autoSaveTrip; localStorage.setItem('autoSaveTrip', String(v)); return { autoSaveTrip: v } }),
   clearTrack: () => { flushTrackSave([]); return set({ track: [] }) },
 
   addSpot: (spot) =>
@@ -468,15 +472,20 @@ export const useMapStore = create<MapStore>((set) => ({
     const startTs = s.track[0].timestamp
     const endTs   = s.track[s.track.length - 1].timestamp
     const durationS = (endTs - startTs) / 1000
+    // Distanse regnes fra punktene (robust også ved auto-finalisering ved gjenåpning,
+    // der den løpende trackDistanceM kan være nullstilt).
+    let dist = 0
+    for (let i = 1; i < s.track.length; i++)
+      dist += haversineM(s.track[i-1].lat, s.track[i-1].lng, s.track[i].lat, s.track[i].lng)
     const saved: SavedTrack = {
       id: crypto.randomUUID(),
       name,
       date: new Date().toISOString(),
       points: pts,
-      distanceM: s.trackDistanceM,
+      distanceM: dist,
       durationS: Math.round(durationS),
       maxSpeedMs: s.trackMaxSpeed,
-      avgSpeedMs: durationS > 0 ? s.trackDistanceM / durationS : 0,
+      avgSpeedMs: durationS > 0 ? dist / durationS : 0,
       startedAt: new Date(startTs).toISOString(),
       endedAt: new Date(endTs).toISOString(),
       icon,

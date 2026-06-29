@@ -43,15 +43,26 @@ export default function App() {
   const setPendingTrackSave = useMapStore((s) => s.setPendingTrackSave)
   useCompass(compassEnabled)
 
-  // Auto-start recording on launch — only if the user opted in (Meg → Sporing).
-  // Drops a stale track first so the line shows just this trip; a recent track
-  // is kept so a service-worker reload mid-trip doesn't wipe the route.
+  // På oppstart: finaliser forrige økt hvis det er et opphold (>45 min siden
+  // siste punkt = turen er over). Auto-lagring (Meg → Sporing) lagrer den da
+  // automatisk; ellers droppes svært gamle spor som før. Korte opphold beholdes
+  // så en bakgrunn/reload midt i turen ikke deler opp turen.
   useEffect(() => {
-    if (!useMapStore.getState().autoTrack) return
-    const t = useMapStore.getState().track
+    const s = useMapStore.getState()
+    const t = s.track
     const last = t[t.length - 1]
-    if (last && Date.now() - last.timestamp > 6 * 3600 * 1000) clearTrack()
-    startTracking()
+    const gapMs = last ? Date.now() - last.timestamp : 0
+    const FINALIZE_GAP = 45 * 60 * 1000
+    if (last && gapMs > FINALIZE_GAP) {
+      if (s.autoSaveTrip && t.length >= 2) {
+        const d = new Date(t[0].timestamp).toLocaleDateString('no-NO', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        s.saveCurrentTrack(`Tur ${d}`)
+      }
+      s.clearTrack()
+    } else if (last && gapMs > 6 * 3600 * 1000) {
+      s.clearTrack()
+    }
+    if (s.autoTrack) s.startTracking()
   }, [startTracking, clearTrack])
 
   const wxTideActive = weatherVisible || tideVisible
