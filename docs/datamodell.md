@@ -6,10 +6,14 @@ Den felles dimensjonen er **brukeren** (`auth.users`).
 
 | Tabell | PK | Eier-nøkkel | Merknad |
 |---|---|---|---|
+| `profiles` | `id` uuid = auth.users.id | (1:1 bruker) | kundedata + preferanser (rapport-frekvens m.m.), auto-opprettet ved registrering |
 | `trips` | `id` **text** (klient-uuid) | `user_id` → auth.users | text-id fordi offline-first (klienten genererer id) |
-| `tos_acceptances` | `id` bigint identity | `user_id` → auth.users | samtykke-logg |
+| `tos_acceptances` | `id` bigint identity | `user_id` → auth.users | samtykke-logg (+ `terms_hash`) |
 | `events` | `id` bigint identity | – (anonym `session_id`) | analytics, bevisst uten bruker |
 | `boats` (senere) | `id` uuid | `user_id` → auth.users | dimensjon `trips.boat_id` peker hit |
+
+**E-post** ligger i `auth.users` (Supabase Auth) – ikke duplisert. n8n/rapporter
+joiner `auth.users` (e-post) med `profiles` (preferanser) og `trips` (data).
 
 ### Hvorfor PK-stilen varierer
 - **Offline-syncbare** tabeller (trips) bruker **klientgenerert id** (text/uuid) så
