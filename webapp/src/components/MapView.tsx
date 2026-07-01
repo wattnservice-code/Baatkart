@@ -397,8 +397,10 @@ export default function MapView() {
   useEffect(() => {
     if (!baseTileRef.current || !kartvTileRef.current) return
     baseTileRef.current.setUrl(darkMode ? DARK_URL : OSM_URL)
-    // Fullt sjøkart → 1.0 (dybdefarger tydelig); ellers blendet oppå OSM
-    kartvTileRef.current.setOpacity(seaChartFull ? 1 : (darkMode ? 0.5 : 0.7))
+    // Fullt sjøkart → tydelige dybdefarger. Natt dempes så hvitt kart ikke blender.
+    kartvTileRef.current.setOpacity(
+      seaChartFull ? (darkMode ? 0.7 : 1) : (darkMode ? 0.45 : 0.6)
+    )
   }, [darkMode, seaChartFull])
 
   // Seamark toggle

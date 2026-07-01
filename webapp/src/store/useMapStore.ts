@@ -304,7 +304,7 @@ export const useMapStore = create<MapStore>((set) => ({
   compassEnabled: loadCompass(),
   darkMode: loadDarkMode(),
   seamarkVisible: loadSeamark(),
-  seaChartFull: loadBool('seaChartFull', false),
+  seaChartFull: loadBool('seaChartFull', true),
   weatherVisible: loadWeather(),
   tideVisible: loadTide(),
   speedUnit: loadSpeedUnit(),
