@@ -216,7 +216,6 @@ export default function MapView() {
   const kartvTileRef    = useRef<L.TileLayer | null>(null)
   const seamarkTileRef  = useRef<L.TileLayer | null>(null)
   const depthTileRef    = useRef<L.TileLayer | null>(null)
-  const depthDetailRef  = useRef<L.TileLayer | null>(null)
   const resumeFollowRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wasMovingRef    = useRef(false)
   const autoLARef       = useRef(false)   // hysteresis state for auto look-ahead
@@ -288,17 +287,13 @@ export default function MapView() {
     kartvTileRef.current = new OfflineTileLayer(SJOKAART_URL, {
       attribution: SJOKAART_ATTR, maxZoom: 19, opacity: isDark ? 0.5 : 0.7,
     }, 'sjokaart').addTo(map)
-    // Kraftige dybdefarger (Kartverket Dybdedata): fargeflater under, tall/koter/farer over.
+    // Kraftige dybdefarger (Kartverket Dybdedata): kun fargeflaten. Dybdetall/koter
+    // kommer fra sjøkartrasteret over — så vi unngår doble tall.
     const depthOn = useMapStore.getState().depthShadeVisible
     depthTileRef.current = L.tileLayer.wms(DYBDE_WMS, {
       layers: 'Dybdelag', format: 'image/png', transparent: true,
       version: '1.3.0', attribution: SJOKAART_ATTR, maxZoom: 19,
       opacity: depthOn ? 0.8 : 0,
-    }).addTo(map)
-    depthDetailRef.current = L.tileLayer.wms(DYBDE_WMS, {
-      layers: 'Dybdekontur,grunne,skjaer_punkt,Dybdepunkt', format: 'image/png', transparent: true,
-      version: '1.3.0', maxZoom: 19,
-      opacity: depthOn ? 1 : 0,
     }).addTo(map)
     seamarkTileRef.current = new OfflineTileLayer(SEAMARK_URL, {
       attribution: SEAMARK_ATTR, maxZoom: 19,
@@ -419,10 +414,9 @@ export default function MapView() {
     )
   }, [darkMode, seaChartFull])
 
-  // Kraftige dybdefarger toggle (flater + tall/koter/farer)
+  // Kraftige dybdefarger toggle (kun fargeflaten – tall kommer fra rasteret)
   useEffect(() => {
     depthTileRef.current?.setOpacity(depthShadeVisible ? 0.8 : 0)
-    depthDetailRef.current?.setOpacity(depthShadeVisible ? 1 : 0)
   }, [depthShadeVisible])
 
   // Seamark toggle
