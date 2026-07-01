@@ -293,6 +293,7 @@ export default function MapView() {
     depthTileRef.current = L.tileLayer.wms(DYBDE_WMS, {
       layers: 'Dybdelag', format: 'image/png', transparent: true,
       version: '1.3.0', attribution: SJOKAART_ATTR, maxZoom: 19,
+      className: 'depth-boost',   // CSS-filter: kraftigere blåtoner uten ekstra data
       opacity: depthOn ? 0.8 : 0,
     }).addTo(map)
     seamarkTileRef.current = new OfflineTileLayer(SEAMARK_URL, {

@@ -2412,3 +2412,6 @@ html, body, #root {
 }
 .crash-btn:active { background: #1d4ed8; }
 .crash-detail { margin-top: 14px; font-size: 11px; color: #94a3b8; word-break: break-word; }
+
+/* Kraftigere dybdefarger uten ekstra data — booster metning/kontrast på WMS-laget */
+.depth-boost { filter: saturate(2.2) contrast(1.25) brightness(0.98); }
