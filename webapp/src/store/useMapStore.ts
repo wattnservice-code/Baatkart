@@ -98,6 +98,7 @@ interface MapStore {
   compassEnabled: boolean
   darkMode: boolean
   seamarkVisible: boolean
+  seaChartFull: boolean
   weatherVisible: boolean
   tideVisible: boolean
   speedUnit: SpeedUnit
@@ -161,6 +162,7 @@ interface MapStore {
   toggleDarkMode: () => void
   setDarkMode: (v: boolean) => void
   toggleSeamark: () => void
+  toggleSeaChartFull: () => void
   toggleWeather: () => void
   toggleTide: () => void
   hideWxTide: () => void
@@ -302,6 +304,7 @@ export const useMapStore = create<MapStore>((set) => ({
   compassEnabled: loadCompass(),
   darkMode: loadDarkMode(),
   seamarkVisible: loadSeamark(),
+  seaChartFull: loadBool('seaChartFull', false),
   weatherVisible: loadWeather(),
   tideVisible: loadTide(),
   speedUnit: loadSpeedUnit(),
@@ -409,6 +412,7 @@ export const useMapStore = create<MapStore>((set) => ({
   setActivePanel: (p) => set({ activePanel: p }),
   toggleCompass: () => set((s) => { const v = !s.compassEnabled; localStorage.setItem('compassEnabled', String(v)); return { compassEnabled: v } }),
   toggleSeamark: () => set((s) => { const v = !s.seamarkVisible; localStorage.setItem('seamarkVisible', String(v)); return { seamarkVisible: v } }),
+  toggleSeaChartFull: () => set((s) => { const v = !s.seaChartFull; localStorage.setItem('seaChartFull', String(v)); return { seaChartFull: v } }),
   toggleWeather: () => set((s) => { const v = !s.weatherVisible; localStorage.setItem('weatherVisible', String(v)); return { weatherVisible: v } }),
   toggleTide: () => set((s) => { const v = !s.tideVisible; localStorage.setItem('tideVisible', String(v)); return { tideVisible: v } }),
   hideWxTide: () => { localStorage.setItem('weatherVisible', 'false'); localStorage.setItem('tideVisible', 'false'); set({ weatherVisible: false, tideVisible: false }) },

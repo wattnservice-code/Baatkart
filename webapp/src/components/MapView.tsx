@@ -253,6 +253,7 @@ export default function MapView() {
   const compassHeading   = useMapStore((s) => s.compassHeading)
   const darkMode         = useMapStore((s) => s.darkMode)
   const seamarkVisible   = useMapStore((s) => s.seamarkVisible)
+  const seaChartFull     = useMapStore((s) => s.seaChartFull)
   const customRingRadius = useMapStore((s) => s.customRingRadius)
   const followingTrack   = useMapStore((s) => s.followingTrack)
   const offlineOnly      = useMapStore((s) => s.offlineOnly)
@@ -396,8 +397,9 @@ export default function MapView() {
   useEffect(() => {
     if (!baseTileRef.current || !kartvTileRef.current) return
     baseTileRef.current.setUrl(darkMode ? DARK_URL : OSM_URL)
-    kartvTileRef.current.setOpacity(darkMode ? 0.5 : 0.7)
-  }, [darkMode])
+    // Fullt sjøkart → 1.0 (dybdefarger tydelig); ellers blendet oppå OSM
+    kartvTileRef.current.setOpacity(seaChartFull ? 1 : (darkMode ? 0.5 : 0.7))
+  }, [darkMode, seaChartFull])
 
   // Seamark toggle
   useEffect(() => {
