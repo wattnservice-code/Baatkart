@@ -216,7 +216,6 @@ export default function MapView() {
   const kartvTileRef    = useRef<L.TileLayer | null>(null)
   const seamarkTileRef  = useRef<L.TileLayer | null>(null)
   const depthTileRef    = useRef<L.TileLayer | null>(null)
-  const depthDetailRef  = useRef<L.TileLayer | null>(null)
   const resumeFollowRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wasMovingRef    = useRef(false)
   const autoLARef       = useRef(false)   // hysteresis state for auto look-ahead
@@ -295,13 +294,7 @@ export default function MapView() {
       layers: 'Dybdelag', format: 'image/png', transparent: true,
       version: '1.3.0', attribution: SJOKAART_ATTR, maxZoom: 19,
       className: 'depth-boost',   // CSS-filter: kraftigere blåtoner uten ekstra data
-      opacity: depthOn ? 0.9 : 0,
-    }).addTo(map)
-    // Gjennomsiktige detaljer OVER den blå flaten: dybdetall, koter, grunner, kystkontur
-    depthDetailRef.current = L.tileLayer.wms(DYBDE_WMS, {
-      layers: 'Dybdekontur,grunne,skjaer_punkt,Dybdepunkt,Kystkontur', format: 'image/png',
-      transparent: true, version: '1.3.0', maxZoom: 19,
-      opacity: depthOn ? 1 : 0,
+      opacity: depthOn ? 0.8 : 0,
     }).addTo(map)
     seamarkTileRef.current = new OfflineTileLayer(SEAMARK_URL, {
       attribution: SEAMARK_ATTR, maxZoom: 19,
@@ -412,23 +405,20 @@ export default function MapView() {
     }
   }, [])
 
-  // Kartlag-opacity: dag/natt + fullt sjøkart + dybde-modus
+  // Dark/day mode tile switch
   useEffect(() => {
     if (!baseTileRef.current || !kartvTileRef.current) return
     baseTileRef.current.setUrl(darkMode ? DARK_URL : OSM_URL)
-    if (depthShadeVisible) {
-      // Dybde-modus: blå bakgrunn (Dybdelag) + gjennomsiktige tall/koter oppå.
-      // Rasteret av → blått ligger bak, tallene blir skarpe (ingen hvit-vask/doble tall).
-      kartvTileRef.current.setOpacity(0)
-      depthTileRef.current?.setOpacity(darkMode ? 0.7 : 0.9)
-      depthDetailRef.current?.setOpacity(1)
-    } else {
-      // Vanlig: offisielt sjøkartraster (m/ dybdetall), ingen blå overlay.
-      kartvTileRef.current.setOpacity(seaChartFull ? (darkMode ? 0.7 : 1) : (darkMode ? 0.45 : 0.6))
-      depthTileRef.current?.setOpacity(0)
-      depthDetailRef.current?.setOpacity(0)
-    }
-  }, [darkMode, seaChartFull, depthShadeVisible])
+    // Fullt sjøkart → tydelige dybdefarger. Natt dempes så hvitt kart ikke blender.
+    kartvTileRef.current.setOpacity(
+      seaChartFull ? (darkMode ? 0.7 : 1) : (darkMode ? 0.45 : 0.6)
+    )
+  }, [darkMode, seaChartFull])
+
+  // Kraftige dybdefarger toggle (kun fargeflaten – tall kommer fra rasteret)
+  useEffect(() => {
+    depthTileRef.current?.setOpacity(depthShadeVisible ? 0.8 : 0)
+  }, [depthShadeVisible])
 
   // Seamark toggle
   useEffect(() => {
