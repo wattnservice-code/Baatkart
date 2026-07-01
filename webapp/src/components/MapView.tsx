@@ -74,6 +74,7 @@ const DARK_URL  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png
 const DARK_ATTR = CARTO_ATTR
 const SJOKAART_URL  = 'https://cache.kartverket.no/v1/wmts/1.0.0/sjokartraster/default/webmercator/{z}/{y}/{x}.png'
 const SJOKAART_ATTR = '&copy; <a href="https://kartverket.no">Kartverket</a>'
+const DYBDE_WMS     = 'https://wms.geonorge.no/skwms1/wms.dybdedata2'
 const SEAMARK_URL   = 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png'
 const SEAMARK_ATTR  = '&copy; <a href="https://openseamap.org">OpenSeaMap</a>'
 
@@ -214,6 +215,7 @@ export default function MapView() {
   const baseTileRef     = useRef<L.TileLayer | null>(null)
   const kartvTileRef    = useRef<L.TileLayer | null>(null)
   const seamarkTileRef  = useRef<L.TileLayer | null>(null)
+  const depthTileRef    = useRef<L.TileLayer | null>(null)
   const resumeFollowRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wasMovingRef    = useRef(false)
   const autoLARef       = useRef(false)   // hysteresis state for auto look-ahead
@@ -254,6 +256,7 @@ export default function MapView() {
   const darkMode         = useMapStore((s) => s.darkMode)
   const seamarkVisible   = useMapStore((s) => s.seamarkVisible)
   const seaChartFull     = useMapStore((s) => s.seaChartFull)
+  const depthShadeVisible = useMapStore((s) => s.depthShadeVisible)
   const customRingRadius = useMapStore((s) => s.customRingRadius)
   const followingTrack   = useMapStore((s) => s.followingTrack)
   const offlineOnly      = useMapStore((s) => s.offlineOnly)
@@ -284,6 +287,12 @@ export default function MapView() {
     kartvTileRef.current = new OfflineTileLayer(SJOKAART_URL, {
       attribution: SJOKAART_ATTR, maxZoom: 19, opacity: isDark ? 0.5 : 0.7,
     }, 'sjokaart').addTo(map)
+    // Kraftige dybdefarger (Kartverket Dybdedata): fargeflater + koter oppå kartet
+    depthTileRef.current = L.tileLayer.wms(DYBDE_WMS, {
+      layers: 'Dybdelag,Dybdekontur', format: 'image/png', transparent: true,
+      version: '1.3.0', attribution: SJOKAART_ATTR, maxZoom: 19,
+      opacity: useMapStore.getState().depthShadeVisible ? 0.55 : 0,
+    }).addTo(map)
     seamarkTileRef.current = new OfflineTileLayer(SEAMARK_URL, {
       attribution: SEAMARK_ATTR, maxZoom: 19,
     }, 'seamark').addTo(map)
@@ -402,6 +411,11 @@ export default function MapView() {
       seaChartFull ? (darkMode ? 0.7 : 1) : (darkMode ? 0.45 : 0.6)
     )
   }, [darkMode, seaChartFull])
+
+  // Kraftige dybdefarger toggle
+  useEffect(() => {
+    depthTileRef.current?.setOpacity(depthShadeVisible ? 0.55 : 0)
+  }, [depthShadeVisible])
 
   // Seamark toggle
   useEffect(() => {

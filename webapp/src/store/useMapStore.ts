@@ -99,6 +99,7 @@ interface MapStore {
   darkMode: boolean
   seamarkVisible: boolean
   seaChartFull: boolean
+  depthShadeVisible: boolean
   weatherVisible: boolean
   tideVisible: boolean
   speedUnit: SpeedUnit
@@ -163,6 +164,7 @@ interface MapStore {
   setDarkMode: (v: boolean) => void
   toggleSeamark: () => void
   toggleSeaChartFull: () => void
+  toggleDepthShade: () => void
   toggleWeather: () => void
   toggleTide: () => void
   hideWxTide: () => void
@@ -305,6 +307,7 @@ export const useMapStore = create<MapStore>((set) => ({
   darkMode: loadDarkMode(),
   seamarkVisible: loadSeamark(),
   seaChartFull: loadBool('seaChartFull', true),
+  depthShadeVisible: loadBool('depthShadeVisible', true),
   weatherVisible: loadWeather(),
   tideVisible: loadTide(),
   speedUnit: loadSpeedUnit(),
@@ -413,6 +416,7 @@ export const useMapStore = create<MapStore>((set) => ({
   toggleCompass: () => set((s) => { const v = !s.compassEnabled; localStorage.setItem('compassEnabled', String(v)); return { compassEnabled: v } }),
   toggleSeamark: () => set((s) => { const v = !s.seamarkVisible; localStorage.setItem('seamarkVisible', String(v)); return { seamarkVisible: v } }),
   toggleSeaChartFull: () => set((s) => { const v = !s.seaChartFull; localStorage.setItem('seaChartFull', String(v)); return { seaChartFull: v } }),
+  toggleDepthShade: () => set((s) => { const v = !s.depthShadeVisible; localStorage.setItem('depthShadeVisible', String(v)); return { depthShadeVisible: v } }),
   toggleWeather: () => set((s) => { const v = !s.weatherVisible; localStorage.setItem('weatherVisible', String(v)); return { weatherVisible: v } }),
   toggleTide: () => set((s) => { const v = !s.tideVisible; localStorage.setItem('tideVisible', String(v)); return { tideVisible: v } }),
   hideWxTide: () => { localStorage.setItem('weatherVisible', 'false'); localStorage.setItem('tideVisible', 'false'); set({ weatherVisible: false, tideVisible: false }) },

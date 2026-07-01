@@ -34,6 +34,8 @@ export default function SettingsPanel({ onClose }: Props) {
   const seamarkVisible = useMapStore((s) => s.seamarkVisible)
   const seaChartFull   = useMapStore((s) => s.seaChartFull)
   const toggleSeaChartFull = useMapStore((s) => s.toggleSeaChartFull)
+  const depthShadeVisible = useMapStore((s) => s.depthShadeVisible)
+  const toggleDepthShade  = useMapStore((s) => s.toggleDepthShade)
   const compassEnabled = useMapStore((s) => s.compassEnabled)
   const speedUnit      = useMapStore((s) => s.speedUnit)
   const distUnit       = useMapStore((s) => s.distUnit)
@@ -115,6 +117,9 @@ export default function SettingsPanel({ onClose }: Props) {
           </button>
           <button className="menu-item" style={{ color: seaChartFull ? '#60a5fa' : undefined }} onClick={toggleSeaChartFull}>
             <Layers size={20} /><span>Fullt sjøkart – dybder {seaChartFull ? '(på)' : '(av)'}</span>
+          </button>
+          <button className="menu-item" style={{ color: depthShadeVisible ? '#60a5fa' : undefined }} onClick={toggleDepthShade}>
+            <Layers size={20} /><span>Kraftige dybdefarger {depthShadeVisible ? '(på)' : '(av)'}</span>
           </button>
           <button className="menu-item" onClick={cycleRingRadius}>
             <Circle size={20} /><span>Avstandsring: {formatRingLabel(customRingRadius)}</span>
