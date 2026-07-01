@@ -380,8 +380,23 @@ export function useAIS() {
   const dangerRef      = useRef<Set<number>>(new Set())
   const lastAlarmRef   = useRef(0)
   const vesselsRef     = useRef<Map<number, AISVessel>>(new Map())
+  const pollRef        = useRef<(() => void) | null>(null)
+  const aisTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const moveDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => { boundsRef.current = mapBounds }, [mapBounds])
+
+  // Hent AIS umiddelbart (debounced) når kartutsnittet endres — så fartøy dukker
+  // opp med en gang du panorerer, ikke først ved neste 15-sek-poll.
+  useEffect(() => {
+    if (!aisVisible) return
+    if (moveDebounceRef.current) clearTimeout(moveDebounceRef.current)
+    moveDebounceRef.current = setTimeout(() => {
+      if (aisTimerRef.current) clearTimeout(aisTimerRef.current)  // avbryt ventende poll
+      pollRef.current?.()                                          // hent nå (poll planlegger neste 15 s)
+    }, 400)
+    return () => { if (moveDebounceRef.current) clearTimeout(moveDebounceRef.current) }
+  }, [mapBounds, aisVisible])
 
   useEffect(() => {
     const map = getMapInstance()
@@ -401,7 +416,6 @@ export function useAIS() {
 
     const setAisStatus = useMapStore.getState().setAisStatus
     let cancelled = false
-    let timer: ReturnType<typeof setTimeout> | null = null
 
     const map = getMapInstance()
     if (!layerRef.current) layerRef.current = L.layerGroup().addTo(map!)
@@ -419,7 +433,7 @@ export function useAIS() {
         if (!r.ok) {
           const { error } = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
           setAisStatus({ state: 'error', count: markersRef.current.size, message: error ?? `HTTP ${r.status}` })
-          if (!cancelled) timer = setTimeout(poll, POLL_MS)
+          if (!cancelled) aisTimerRef.current = setTimeout(poll, POLL_MS)
           return
         }
 
@@ -546,15 +560,16 @@ export function useAIS() {
         if (!cancelled) setAisStatus({ state: 'error', count: markersRef.current.size, message: String(e) })
       }
 
-      if (!cancelled) timer = setTimeout(poll, POLL_MS)
+      if (!cancelled) aisTimerRef.current = setTimeout(poll, POLL_MS)
     }
 
+    pollRef.current = poll
     setAisStatus({ state: 'connecting', count: 0, message: 'Kobler til…' })
     poll()
 
     return () => {
       cancelled = true
-      if (timer) clearTimeout(timer)
+      if (aisTimerRef.current) clearTimeout(aisTimerRef.current)
       layerRef.current?.clearLayers()
       markersRef.current.clear()
       courseLinesRef.current.clear()
