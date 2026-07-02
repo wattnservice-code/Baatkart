@@ -86,16 +86,16 @@ html, body, #root {
 }
 
 .fab {
-  width: 48px; height: 48px;
+  width: 52px; height: 52px;
   border-radius: 50%;
-  background: rgba(15,23,42,0.92);
+  background: rgba(15,23,42,0.95);
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.25);
   color: white; position: relative;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   transition: all 0.15s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 .fab:active { transform: scale(0.94); }
 /* Nett-avhengig funksjon når offline: dempet + liten grå prikk (synlig, men "krever nett") */
@@ -1122,6 +1122,20 @@ html, body, #root {
 .day .quickpin-row-lg { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.08); }
 
 /* ── Quick pin compact popup (sidebar next to FAB) ── */
+.quickpin-chip {
+  position: absolute;
+  right: calc(max(4px, env(safe-area-inset-right)) + 66px);
+  bottom: max(8px, calc(env(safe-area-inset-bottom) + 4px));
+  z-index: 410;
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 14px; min-height: 46px;
+  background: rgba(15,23,42,0.97); backdrop-filter: blur(8px);
+  border: 1px solid #f97316; border-radius: 24px;
+  color: #f97316; font-size: 16px; font-weight: 800; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+.quickpin-chip:active { background: rgba(249,115,22,0.15); }
+.day .quickpin-chip { background: rgba(255,255,255,0.98); }
 .quickpin-popup {
   position: absolute;
   right: calc(max(4px, env(safe-area-inset-right)) + 66px);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Navigation, X, Plus, Minus, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Crosshair } from 'lucide-react'
+import { Navigation, X, Plus, Minus, Globe, Map, Bookmark, Trash2, Sun, Moon, Ship, Crosshair, ChevronDown } from 'lucide-react'
 import { getCurrentBearing } from '../currentBearing'
 import { useOnline } from '../hooks/useOnline'
 import { openGoogleEarth, openGoogleMaps } from '../googleEarth'
@@ -77,6 +77,7 @@ export default function MapControls() {
   const [quickPinListOpen, setQuickPinListOpen] = useState(false)
   const [confirmDelId, setConfirmDelId] = useState<string | null>(null)
   const [confirmClearAll, setConfirmClearAll] = useState(false)
+  const [quickPinMin, setQuickPinMin] = useState(false)
   const [spotWx, setSpotWx]   = useState<{ windSpeed: number; windDir: number; temp: number; symbol: string } | null>(null)
   const [spotWave, setSpotWave] = useState<{ height: number; dir: number; seaTemp?: number } | null>(null)
   const [spotWindSeries, setSpotWindSeries] = useState<SeriesPoint[]>([])
@@ -171,7 +172,7 @@ export default function MapControls() {
 
   // Clear the selected-pin highlight + any pending confirms whenever the list closes
   useEffect(() => {
-    if (!quickPinListOpen) { setHighlightedQuickPin(null); setConfirmDelId(null); setConfirmClearAll(false) }
+    if (!quickPinListOpen) { setHighlightedQuickPin(null); setConfirmDelId(null); setConfirmClearAll(false); setQuickPinMin(false) }
   }, [quickPinListOpen, setHighlightedQuickPin])
 
   // Trykk på et merke på kartet → åpne lista og marker det merket
@@ -327,7 +328,13 @@ export default function MapControls() {
       {activePanel === 'meg' && <SettingsPanel onClose={() => setActivePanel(null)} />}
       {gpsSpot && <SpotDialog lat={gpsSpot.lat} lng={gpsSpot.lng} onClose={() => setGpsSpot(null)} />}
 
-      {quickPinListOpen && (() => {
+      {quickPinListOpen && quickPinMin && (
+        <button className="quickpin-chip" onClick={() => setQuickPinMin(false)} title="Vis merker">
+          <Crosshair size={18} /> {quickPins.length}
+        </button>
+      )}
+
+      {quickPinListOpen && !quickPinMin && (() => {
         const withDist = quickPins.map((p) => ({
           pin: p,
           dist: position ? haversineM(position.lat, position.lng, p.lat, p.lng) : null,
@@ -345,7 +352,10 @@ export default function MapControls() {
                     <Plus size={16} />
                   </button>
                 )}
-                <button className="quickpin-popup-close" onClick={() => setQuickPinListOpen(false)}>
+                <button className="quickpin-popup-close" title="Minimer" onClick={() => setQuickPinMin(true)}>
+                  <ChevronDown size={20} />
+                </button>
+                <button className="quickpin-popup-close" title="Lukk" onClick={() => setQuickPinListOpen(false)}>
                   <X size={16} />
                 </button>
               </div>
