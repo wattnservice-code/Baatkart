@@ -825,6 +825,8 @@ html, body, #root {
 .nav-arrived .nav-name { color: #4ade80; }
 .nav-dist-big { font-size: 40px; font-weight: 900; font-variant-numeric: tabular-nums; color: white; line-height: 1; }
 .nav-eta-big  { font-size: 22px; font-weight: 700; color: #86efac; font-variant-numeric: tabular-nums; }
+.nav-elapsed  { font-size: 14px; font-weight: 600; color: #cbd5e1; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.day .nav-elapsed { color: #334155; }
 .nav-arrived-text { font-size: 13px; color: #4ade80; font-weight: 600; }
 .nav-stop {
   background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);

@@ -110,6 +110,7 @@ interface MapStore {
   spotMenu: { lat: number; lng: number; name: string; id?: string } | null
   navPreview: { lat: number; lng: number; name: string } | null
   navTarget: { lat: number; lng: number; name: string } | null
+  navStartedAt: number | null
   mapBounds: { north: number; south: number; east: number; west: number } | null
   tileSource: 'offline' | 'online' | 'mixed' | null
   activeSpotId: string | null
@@ -318,6 +319,7 @@ export const useMapStore = create<MapStore>((set) => ({
   spotMenu: null,
   navPreview: null,
   navTarget: null,
+  navStartedAt: null,
   mapBounds: null,
   tileSource: null,
   activeSpotId: null,
@@ -448,10 +450,10 @@ export const useMapStore = create<MapStore>((set) => ({
   setSearchPin: (pin) => set({ searchPin: pin }),
   setSpotMenu: (spot) => set({ spotMenu: spot }),
   setNavPreview: (target) => set({ navPreview: target, navTarget: null, followBoat: false }),
-  confirmNav: () => set((s) => ({ navTarget: s.navPreview, navPreview: null })),
+  confirmNav: () => set((s) => ({ navTarget: s.navPreview, navPreview: null, navStartedAt: Date.now() })),
   clearNavPreview: () => set({ navPreview: null }),
-  setNavTarget: (target) => set({ navTarget: target, navPreview: null, followBoat: false }),
-  clearNav: () => set({ navTarget: null, navPreview: null }),
+  setNavTarget: (target) => set({ navTarget: target, navPreview: null, followBoat: false, navStartedAt: Date.now() }),
+  clearNav: () => set({ navTarget: null, navPreview: null, navStartedAt: null }),
   setMapBounds: (b) => set({ mapBounds: b }),
   setTileSource: (source) => set({ tileSource: source }),
   setActiveSpot: (id) => set({ activeSpotId: id }),
