@@ -561,6 +561,8 @@ html, body, #root {
 .mob-active .map-controls .fab,
 .mob-active .map-controls .fab-divider { display: none !important; }
 .mob-active .map-controls .fab-follow-boat { display: flex !important; }
+/* Zoom må være tilgjengelig under MOB (pinch er vanskelig i stress) */
+.mob-active .map-controls .fab-zoom { display: flex !important; }
 .mob-active .ais-status          { display: none !important; }
 .mob-active .speed-badge         { display: none !important; }
 .mob-active .wx-tide-toggle      { display: none !important; }

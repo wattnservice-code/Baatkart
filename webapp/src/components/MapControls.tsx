@@ -278,11 +278,11 @@ export default function MapControls() {
           {darkMode ? <Moon size={22} /> : <Sun size={22} />}
         </button>
         <div className="fab-divider" />
-        <button className="fab" onClick={() => getMapInstance()?.zoomIn()} title="Zoom inn">
-          <Plus size={22} />
+        <button className="fab fab-zoom" onClick={() => getMapInstance()?.zoomIn()} title="Zoom inn">
+          <Plus size={24} />
         </button>
-        <button className="fab" onClick={() => getMapInstance()?.zoomOut()} title="Zoom ut">
-          <Minus size={22} />
+        <button className="fab fab-zoom" onClick={() => getMapInstance()?.zoomOut()} title="Zoom ut">
+          <Minus size={24} />
         </button>
         <button
           className={`fab fab-follow-boat ${followBoat ? 'fab-active' : (position?.speed ?? 0) > 0.3 ? 'fab-locate-lost' : ''}`}
