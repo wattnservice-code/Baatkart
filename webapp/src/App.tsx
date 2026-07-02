@@ -14,6 +14,7 @@ import DisclaimerModal from './components/DisclaimerModal'
 import WeatherOverlay from './components/WeatherOverlay'
 import TideOverlay from './components/TideOverlay'
 import { useAuth } from './hooks/useAuth'
+import { useOnline } from './hooks/useOnline'
 import { useTripSync } from './hooks/useTripSync'
 import { useGPS } from './hooks/useGPS'
 import { useCompass } from './hooks/useCompass'
@@ -28,6 +29,7 @@ export default function App() {
   useWakeLock()
   useAIS()
   const { user } = useAuth()
+  const online = useOnline()
   useTripSync(user)
   // Logg lokal vilkårs-aksept til server når brukeren logger inn (bevis på samtykke)
   useEffect(() => { if (user) void syncAcceptanceOnLogin() }, [user])
@@ -102,12 +104,13 @@ export default function App() {
         <MapView />
         <MapControls />
         <button
-          className={`wx-tide-toggle ${wxTideActive ? 'wx-tide-toggle-active' : ''}`}
+          className={`wx-tide-toggle ${wxTideActive ? 'wx-tide-toggle-active' : ''} ${!online ? 'fab-offline' : ''}`}
           onClick={toggleWxTide}
-          title={wxTideActive ? 'Skjul vær og tidevann' : 'Vis vær og tidevann'}
+          title={!online ? 'Vær og tidevann krever nett' : (wxTideActive ? 'Skjul vær og tidevann' : 'Vis vær og tidevann')}
         >
           <Sun size={16} className="wx-sun-icon" />
           <Waves size={13} className="wx-tide-wave" />
+          {!online && <span className="fab-offline-dot" />}
         </button>
         <div className="map-left-panels">
           <WeatherOverlay />

@@ -98,6 +98,13 @@ html, body, #root {
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 .fab:active { transform: scale(0.94); }
+/* Nett-avhengig funksjon når offline: dempet + liten grå prikk (synlig, men "krever nett") */
+.fab-offline { opacity: 0.45; }
+.fab-offline-dot {
+  position: absolute; top: 2px; right: 2px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: #94a3b8; border: 1.5px solid #0f172a;
+}
 .fab-active { background: #2563eb; border-color: #3b82f6; }
 .fab-dim { background: #1e3a5f; border-color: #2563eb; opacity: 0.75; }
 .fab-divider { height: 1px; background: rgba(255,255,255,0.12); margin: 2px 6px; }

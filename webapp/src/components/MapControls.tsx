@@ -264,11 +264,12 @@ export default function MapControls() {
           <CompassBtn mode={nordMode} rotated={mapRotated} />
         </button>
         <button
-          className={`fab ${aisVisible ? 'fab-active' : ''}`}
+          className={`fab ${aisVisible ? 'fab-active' : ''} ${!isOnline ? 'fab-offline' : ''}`}
           onClick={() => { track('ais_toggle', { on: !aisVisible }); toggleAis() }}
-          title={aisVisible ? 'Skjul AIS-fartøy' : 'Vis AIS-fartøy'}
+          title={!isOnline ? 'AIS krever nett' : (aisVisible ? 'Skjul AIS-fartøy' : 'Vis AIS-fartøy')}
         >
           <Ship size={20} />
+          {!isOnline && <span className="fab-offline-dot" />}
         </button>
         <button
           className={`fab ${!darkMode ? 'fab-active' : ''}`}
